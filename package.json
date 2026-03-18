@@ -12,6 +12,7 @@
     "@3d-dice/dice-box": "^1.1.4",
     "@3d-dice/dice-themes": "^0.2.1",
     "@3d-dice/theme-dice-of-rolling": "^0.2.1",
+    "@3d-dice/theme-smooth": "^0.2.1",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-progress": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
@@ -24,6 +25,7 @@
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

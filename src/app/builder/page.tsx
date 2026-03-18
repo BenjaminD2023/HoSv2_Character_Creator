@@ -55,6 +55,21 @@ type RollToast = {
   crit?: "success" | "fail";
 };
 
+type DiceVisualGroup = "stats" | "hp" | "checks" | "damage";
+
+const DICE_GROUP_STYLE: Record<DiceVisualGroup, { theme: string; themeColor: string }> = {
+  stats: { theme: "smooth", themeColor: "#D62828" },
+  hp: { theme: "smooth", themeColor: "#2A9D8F" },
+  checks: { theme: "smooth", themeColor: "#3A86FF" },
+  damage: { theme: "smooth", themeColor: "#E63946" },
+};
+
+const STAT_ROLL_GROUPS: Array<{ attr: AttributeKey; label: string; themeColor: string; cardClass: string }> = [
+  { attr: "strength", label: "STR", themeColor: "#D62828", cardClass: "border-red-500/50 bg-red-500/10" },
+  { attr: "athletics", label: "ATH", themeColor: "#2A9D2A", cardClass: "border-green-500/50 bg-green-500/10" },
+  { attr: "intelligence", label: "INT", themeColor: "#2563EB", cardClass: "border-blue-500/50 bg-blue-500/10" },
+];
+
 type WeaponRollResult = {
   raw: number;
   mod: number;
@@ -76,8 +91,6 @@ type SavedCharacterState = {
   startingXp: number;
   extraHpRolls: number[];
   skillLevels: Record<string, number>;
-  priestOrder: "Healer" | "Crusader" | "Templar" | "";
-  bardSchool: "Skald" | "Charlatan" | "Troubador" | "";
   enemyArmor: number;
   checkRolls: Partial<Record<AttributeKey | "initiative", number>>;
   charismaCheck: number | null;
@@ -212,17 +225,14 @@ const CLASS_DATA: Record<ClassId, ClassDefinition> = {
     totalStartingArmor: 4,
     skills: [
       { name: "Lay on Hands", tier: "basic" },
-      { name: "Clerical Order", tier: "basic", once: true },
       { name: "Divine Formation", tier: "basic" },
       { name: "Quick Heal", tier: "intermediate" },
       { name: "Holy Aura", tier: "intermediate" },
       { name: "Holy Light", tier: "intermediate" },
       { name: "2 Additional Divine Formation Uses", tier: "intermediate" },
       { name: "3 Additional Divine Formation Uses", tier: "advanced" },
-      { name: "Additional Clerical Order", tier: "advanced", once: true },
       { name: "Clerical Recovery", tier: "advanced" },
       { name: "Inspired Insight", tier: "advanced" },
-      { name: "Additional Clerical Order", tier: "capstone" },
       { name: "5 Additional Divine Formation Uses", tier: "capstone" },
     ],
   },
@@ -245,7 +255,6 @@ const CLASS_DATA: Record<ClassId, ClassDefinition> = {
       { name: "Inspiration", tier: "basic" },
       { name: "Expertise", tier: "basic" },
       { name: "Professional Influencer", tier: "basic" },
-      { name: "Bardic School", tier: "basic", once: true },
       { name: "Lv 3 Spell Slot", tier: "basic" },
       { name: "Lv 4 Spell Slot", tier: "intermediate" },
       { name: "Loremaster", tier: "intermediate" },
@@ -255,8 +264,6 @@ const CLASS_DATA: Record<ClassId, ClassDefinition> = {
       { name: "Soothing Ballad", tier: "advanced" },
       { name: "Martial Epic", tier: "advanced" },
       { name: "Decoy", tier: "advanced" },
-      { name: "Additional Bardic School", tier: "advanced", once: true },
-      { name: "Additional Bardic School", tier: "capstone" },
     ],
   },
 };
@@ -285,7 +292,7 @@ function formatMod(mod: number) {
 }
 
 export default function Home() {
-  const { rollDice, isReady, clearDice } = useDice();
+  const { rollDice, rollDiceBatch, isReady, clearDice } = useDice();
   const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1);
   const [characterName, setCharacterName] = useState("");
 
@@ -311,8 +318,6 @@ export default function Home() {
   const [extraHpRolls, setExtraHpRolls] = useState<number[]>([]);
 
   const [skillLevels, setSkillLevels] = useState<Record<string, number>>({});
-  const [priestOrder, setPriestOrder] = useState<"Healer" | "Crusader" | "Templar" | "">("");
-  const [bardSchool, setBardSchool] = useState<"Skald" | "Charlatan" | "Troubador" | "">("");
 
   const [enemyArmor, setEnemyArmor] = useState(2);
   const [checkRolls, setCheckRolls] = useState<Partial<Record<AttributeKey | "initiative", number>>>({});
@@ -436,8 +441,6 @@ export default function Home() {
     startingXp,
     extraHpRolls,
     skillLevels,
-    priestOrder,
-    bardSchool,
     enemyArmor,
     checkRolls,
     charismaCheck,
@@ -445,7 +448,6 @@ export default function Home() {
   }), [
     activeStep,
     assignment,
-    bardSchool,
     baseHpRoll,
     characterName,
     charismaCheck,
@@ -454,7 +456,6 @@ export default function Home() {
     extraHpRolls,
     manualMode,
     manualStats,
-    priestOrder,
     rollBreakdown,
     rolls,
     selectedClassId,
@@ -476,8 +477,6 @@ export default function Home() {
     setStartingXp(typeof parsed.startingXp === "number" ? parsed.startingXp : 5);
     setExtraHpRolls(Array.isArray(parsed.extraHpRolls) ? parsed.extraHpRolls : []);
     setSkillLevels(parsed.skillLevels ?? {});
-    setPriestOrder(parsed.priestOrder ?? "");
-    setBardSchool(parsed.bardSchool ?? "");
     setEnemyArmor(typeof parsed.enemyArmor === "number" ? parsed.enemyArmor : 2);
     setCheckRolls(parsed.checkRolls ?? {});
     setCharismaCheck(typeof parsed.charismaCheck === "number" ? parsed.charismaCheck : null);
@@ -496,8 +495,6 @@ export default function Home() {
     setStartingXp(5);
     setExtraHpRolls([]);
     setSkillLevels({});
-    setPriestOrder("");
-    setBardSchool("");
     setEnemyArmor(2);
     setCheckRolls({});
     setCharismaCheck(null);
@@ -628,8 +625,6 @@ export default function Home() {
     startingXp,
     extraHpRolls,
     skillLevels,
-    priestOrder,
-    bardSchool,
     enemyArmor,
     checkRolls,
     charismaCheck,
@@ -700,6 +695,27 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    const onDiceEngineRestarted = () => {
+      setIsRolling3d(false);
+      setShowDice(false);
+      setRollToast(null);
+      setShowVanishFx(false);
+      if (hideTimerRef.current) {
+        window.clearTimeout(hideTimerRef.current);
+        hideTimerRef.current = null;
+      }
+      if (fxTimerRef.current) {
+        window.clearTimeout(fxTimerRef.current);
+        fxTimerRef.current = null;
+      }
+      clearDice();
+    };
+
+    window.addEventListener("dice-engine-restarted", onDiceEngineRestarted);
+    return () => window.removeEventListener("dice-engine-restarted", onDiceEngineRestarted);
+  }, [clearDice]);
+
   const dismissRollToast = () => {
     setRollToast(null);
     hideDiceOnClick();
@@ -709,18 +725,53 @@ export default function Home() {
     setRollToast(toast);
   };
 
-  const rollWith3d = async (notation: string) => {
+  const rollWith3dGroup = async (notation: string, group: DiceVisualGroup) => {
     if (!isReady) {
       throw new Error("3D dice are not ready yet.");
     }
     setIsRolling3d(true);
     setShowDice(true);
     try {
-      const results = await rollDice(notation);
+      const style = DICE_GROUP_STYLE[group];
+      const results = await rollDice(notation, { theme: style.theme, themeColor: style.themeColor });
       return results.map((r) => r.value);
     } finally {
       setIsRolling3d(false);
     }
+  };
+
+  const rollBatchWith3d = async (
+    items: Array<{ notation: string; options?: { theme?: string; themeColor?: string } }>
+  ): Promise<Array<Array<{ value: number; modifier?: number; rolls?: number[] }>>> => {
+    if (!isReady) {
+      throw new Error("3D dice are not ready yet.");
+    }
+    setIsRolling3d(true);
+    setShowDice(true);
+    try {
+      return await rollDiceBatch(items);
+    } finally {
+      setIsRolling3d(false);
+    }
+  };
+
+  const rollSingleStat = async () => {
+    if (hideTimerRef.current) {
+      window.clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = null;
+    }
+    clearDice();
+    playVanishFx();
+    setRollToast(null);
+    setShowDice(true);
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    const dice = await rollWith3dGroup("4d6", "stats");
+    if (dice.length < 4) {
+      throw new Error("Roll failed");
+    }
+    const sorted = [...dice].sort((a, b) => a - b);
+    const total = sorted[1] + sorted[2] + sorted[3];
+    return { dice, total };
   };
 
   const resetStatStep = () => {
@@ -732,42 +783,108 @@ export default function Home() {
 
   const handleRollNext = async () => {
     if (!canRollNextStat) return;
+    try {
+      const { dice, total: resultTotal } = await rollSingleStat();
+      const nextRolls = [...rolls, resultTotal];
+      const nextBreakdown = [...rollBreakdown, dice];
+
+      announceRoll({
+        label: `Attribute Roll ${nextRolls.length}`,
+        notation: "4d6 drop lowest",
+        raw: dice,
+        total: resultTotal,
+        final: resultTotal,
+      });
+
+      setRolls(nextRolls);
+      setRollBreakdown(nextBreakdown);
+    } catch {
+      setStatWarning("Roll failed. Please click Roll Next again.");
+    }
+  };
+
+  const handleRollAllStats = async () => {
+    if (manualMode || !isReady || isRolling3d) return;
+
     if (hideTimerRef.current) {
       window.clearTimeout(hideTimerRef.current);
       hideTimerRef.current = null;
     }
+
     clearDice();
     playVanishFx();
     setRollToast(null);
     setShowDice(true);
     await new Promise((resolve) => setTimeout(resolve, 80));
-    const dice = await rollWith3d("4d6");
-    if (dice.length < 4) {
-      setStatWarning("Roll failed. Please click Roll Next again.");
+
+    const groups = await rollBatchWith3d([
+      { notation: "4d6", options: { theme: "smooth", themeColor: "#D62828" } },
+      { notation: "4d6", options: { theme: "smooth", themeColor: "#2A9D2A" } },
+      { notation: "4d6", options: { theme: "smooth", themeColor: "#2563EB" } },
+    ]);
+
+    let breakdown = groups.map((group) => group.map((die) => die.value));
+
+    if (breakdown.length < 3 || breakdown.some((dice) => dice.length < 4)) {
+      setStatWarning("Roll all failed on one throw. Please try again.");
       return;
     }
-    const sorted = [...dice].sort((a, b) => a - b);
-    const resultTotal = sorted[1] + sorted[2] + sorted[3];
-    const nextRolls = [...rolls, resultTotal];
-    const nextBreakdown = [...rollBreakdown, dice];
 
-    announceRoll({
-      label: `Attribute Roll ${nextRolls.length}`,
-      notation: "4d6 drop lowest",
-      raw: dice,
-      total: resultTotal,
-      final: resultTotal,
+    breakdown = breakdown.slice(0, 3);
+    const rolled = breakdown.map((dice) => {
+      const sorted = [...dice].sort((a, b) => a - b);
+      return sorted[1] + sorted[2] + sorted[3];
     });
 
-    if (nextRolls.length === 3 && nextRolls.every((v) => v < 16)) {
-      setStatWarning("All three rolls were below 16, so the system auto-rerolled all three.");
-      setRolls([]);
-      setRollBreakdown([]);
-      setAssignment({ strength: "", intelligence: "", athletics: "" });
+    setStatWarning(null);
+    setRolls(rolled);
+    setRollBreakdown(breakdown);
+    setAssignment({ strength: "0", athletics: "1", intelligence: "2" });
+
+    announceRoll({
+      label: "Roll All Attributes (STR/ATH/INT)",
+      notation: "STR red + ATH green + INT blue (4d6 each)",
+      raw: rolled,
+      total: rolled.reduce((sum, v) => sum + v, 0),
+      final: rolled.reduce((sum, v) => sum + v, 0),
+    });
+  };
+
+  const handleRollAllExtraHp = async () => {
+    if (!selectedClass || baseHp === null || extraDiceCount <= 0 || !isReady || isRolling3d) return;
+
+    if (hideTimerRef.current) {
+      window.clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = null;
+    }
+
+    clearDice();
+    playVanishFx();
+    setRollToast(null);
+    setShowDice(true);
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    const groups = await rollBatchWith3d(
+      Array.from({ length: extraDiceCount }, () => ({
+        notation: `1d${selectedClass.hitDie}`,
+        options: { theme: "smooth", themeColor: DICE_GROUP_STYLE.hp.themeColor },
+      }))
+    );
+
+    if (groups.length < extraDiceCount) {
       return;
     }
-    setRolls(nextRolls);
-    setRollBreakdown(nextBreakdown);
+
+    const values = groups.map((group) => group[0]?.value ?? 0).slice(0, extraDiceCount);
+
+    setExtraHpRolls(values);
+    announceRoll({
+      label: "Roll All Extra HP Dice",
+      notation: `${extraDiceCount}x d${selectedClass.hitDie}`,
+      raw: values,
+      total: values.reduce((sum, v) => sum + v, 0),
+      final: values.reduce((sum, v) => sum + v, 0),
+    });
   };
 
   const usedIndexes = new Set(
@@ -785,8 +902,6 @@ export default function Home() {
     if (skill.tier === "advanced" && tierTotals.intermediate < 4) return false;
     if (skill.tier === "capstone" && tierTotals.advanced < 5) return false;
     if (tierInfo.max !== null && tierTotals[skill.tier] >= tierInfo.max) return false;
-    if (skill.name.includes("Clerical Order") && !priestOrder) return false;
-    if (skill.name.includes("Bardic School") && !bardSchool) return false;
     return true;
   };
 
@@ -942,14 +1057,17 @@ small{color:#bfb7a6}
                     <Button onClick={handleRollNext} disabled={!canRollNextStat || !isReady || isRolling3d}>
                       Roll Next ({rolls.length}/3)
                     </Button>
+                    <Button variant="outline" onClick={handleRollAllStats} disabled={!isReady || isRolling3d}>
+                      Roll All 12 Dice
+                    </Button>
                     <Button variant="outline" onClick={resetStatStep}>Reroll All 3</Button>
                   </div>
                   {!isReady && <p className="text-xs text-amber-400">3D dice loading...</p>}
                   {statWarning && <p className="text-sm text-amber-400">{statWarning}</p>}
                   <div className="grid gap-2 md:grid-cols-3">
-                    {[0, 1, 2].map((i) => (
-                      <div key={i} className="rounded border border-border/60 p-3">
-                        <p className="text-xs text-muted-foreground">Roll {i + 1}</p>
+                    {STAT_ROLL_GROUPS.map((group, i) => (
+                      <div key={group.attr} className={`rounded border p-3 ${rolls[i] !== undefined ? group.cardClass : "border-border/60"}`}>
+                        <p className="text-xs text-muted-foreground">{group.label} Group</p>
                         <p className="text-2xl font-bold">{rolls[i] ?? "-"}</p>
                         {rollBreakdown[i] && (
                           <p className="text-xs text-muted-foreground">[{rollBreakdown[i].join(", ")}]</p>
@@ -1087,7 +1205,7 @@ small{color:#bfb7a6}
                   disabled={!selectedClass || !assignedStats}
                   onClick={async () => {
                     if (!selectedClass) return;
-                    const raw = await rollWith3d(`1d${selectedClass.hitDie}`);
+                    const raw = await rollWith3dGroup(`1d${selectedClass.hitDie}`, "hp");
                     const total = raw[0] ?? 0;
                     setBaseHpRoll(total);
                     announceRoll({
@@ -1174,6 +1292,14 @@ small{color:#bfb7a6}
               {selectedClass && baseHp !== null && (
                 <div className="space-y-2 rounded border border-border/60 p-3">
                   <p className="text-sm font-medium">Extra HP Rolls (no modifier)</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!isReady || isRolling3d || extraDiceCount <= 0}
+                    onClick={handleRollAllExtraHp}
+                  >
+                    Roll All Extra HP Dice
+                  </Button>
                   {Array.from({ length: extraDiceCount }).map((_, idx) => (
                     <div key={idx} className="flex items-center gap-2">
                       <span className="w-16 text-xs text-muted-foreground">d{selectedClass.hitDie} #{idx + 1}</span>
@@ -1195,7 +1321,7 @@ small{color:#bfb7a6}
                         size="sm"
                         disabled={!isReady || isRolling3d}
                         onClick={async () => {
-                          const raw = await rollWith3d(`1d${selectedClass.hitDie}`);
+                          const raw = await rollWith3dGroup(`1d${selectedClass.hitDie}`, "hp");
                           const total = raw[0] ?? 0;
                           setExtraHpRolls((prev) => {
                             const next = [...prev];
@@ -1237,41 +1363,6 @@ small{color:#bfb7a6}
 
               {selectedClass && (
                 <>
-                  {(selectedClass.id === "priest" || selectedClass.id === "bard") && (
-                    <div className="grid gap-2 md:grid-cols-2">
-                      {selectedClass.id === "priest" && (
-                        <div>
-                          <label className="mb-1 block text-xs text-muted-foreground">Clerical Order (required)</label>
-                          <select
-                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            value={priestOrder}
-                            onChange={(e) => setPriestOrder(e.target.value as "Healer" | "Crusader" | "Templar" | "")}
-                          >
-                            <option value="">Select Order</option>
-                            <option value="Healer">Healer</option>
-                            <option value="Crusader">Crusader</option>
-                            <option value="Templar">Templar</option>
-                          </select>
-                        </div>
-                      )}
-                      {selectedClass.id === "bard" && (
-                        <div>
-                          <label className="mb-1 block text-xs text-muted-foreground">Bardic School (required)</label>
-                          <select
-                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            value={bardSchool}
-                            onChange={(e) => setBardSchool(e.target.value as "Skald" | "Charlatan" | "Troubador" | "")}
-                          >
-                            <option value="">Select School</option>
-                            <option value="Skald">Skald</option>
-                            <option value="Charlatan">Charlatan</option>
-                            <option value="Troubador">Troubador</option>
-                          </select>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
                   <div className="rounded border border-border/60 p-3">
                     <div className="mb-3 flex items-center justify-between text-sm">
                       <span>XP Spent: {spentXp}</span>
@@ -1359,7 +1450,7 @@ small{color:#bfb7a6}
                         variant="outline"
                         disabled={!isReady || isRolling3d}
                         onClick={async () => {
-                          const raw = await rollWith3d("1d20");
+                          const raw = await rollWith3dGroup("1d20", "checks");
                           const d20 = raw[0] ?? 0;
                           const final = d20 + modifiers[attr];
                           setCheckRolls((prev) => ({ ...prev, [attr]: final }));
@@ -1391,7 +1482,7 @@ small{color:#bfb7a6}
                       variant="outline"
                       disabled={!isReady || isRolling3d}
                       onClick={async () => {
-                        const raw = await rollWith3d("1d20");
+                        const raw = await rollWith3dGroup("1d20", "checks");
                         const d20 = raw[0] ?? 0;
                         const final = d20 + modifiers.athletics;
                         setCheckRolls((prev) => ({ ...prev, initiative: final }));
@@ -1416,7 +1507,7 @@ small{color:#bfb7a6}
                       variant="outline"
                       disabled={!isReady || isRolling3d}
                       onClick={async () => {
-                        const raw = await rollWith3d(`1d${selectedClass.charismaDie}`);
+                        const raw = await rollWith3dGroup(`1d${selectedClass.charismaDie}`, "checks");
                         const total = raw[0] ?? 0;
                         setCharismaCheck(total);
                         announceRoll({
@@ -1462,8 +1553,8 @@ small{color:#bfb7a6}
                                   disabled={!isReady || isRolling3d}
                                   onClick={async () => {
                                     const damageDice = w.damageDice!;
-                                    const raw = await rollWith3d(damageDice);
-                                    const rolledRaw = raw.reduce((sum, v) => sum + v, 0);
+                                    const raw = await rollWith3dGroup(damageDice, "damage");
+                                    const rolledRaw = raw.reduce((sum: number, v: number) => sum + v, 0);
                                     const withMod = rolledRaw + mod;
                                     const finalDamage = Math.max(0, withMod - enemyArmor);
                                     setWeaponRolls((prev) => ({

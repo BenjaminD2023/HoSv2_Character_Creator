@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Alegreya_Sans } from "next/font/google";
 import "./globals.css";
 import { DiceProvider } from "@/contexts";
+import { DiceEngineControls } from "@/components/DiceEngineControls";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +38,7 @@ export default function RootLayout({
       >
         <DiceProvider>
           {children}
+          <DiceEngineControls />
         </DiceProvider>
       </body>
     </html>

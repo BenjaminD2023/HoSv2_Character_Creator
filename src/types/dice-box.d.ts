@@ -21,10 +21,25 @@ declare module "@3d-dice/dice-box" {
     modifier?: number;
   }
 
+  interface RollOptions {
+    theme?: string;
+    themeColor?: string;
+  }
+
+  interface RollNotationObject {
+    qty: number;
+    sides: number | string;
+    theme?: string;
+    themeColor?: string;
+    groupId?: string;
+    modifier?: number;
+    rolls?: number[];
+  }
+
   export default class DiceBox {
     constructor(config: DiceBoxConfig);
     init(): Promise<void>;
-    roll(notation: string): Promise<DiceResult[]>;
+    roll(notation: string | RollNotationObject[], options?: RollOptions): Promise<DiceResult[]>;
     clear(): void;
     hide(): void;
     show(): void;

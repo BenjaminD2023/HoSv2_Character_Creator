@@ -5,15 +5,30 @@ import React, { createContext, useContext, useRef, useState, useCallback } from 
 interface DiceResult {
   value: number;
   modifier?: number;
+  rolls?: number[];
 }
 
 interface DiceRollValue {
   value: number;
+  rolls?: number[];
+  modifier?: number;
+}
+
+interface DiceRollOptions {
+  theme?: string;
+  themeColor?: string;
+  newStartPoint?: boolean;
+}
+
+interface DiceBatchItem {
+  notation: string;
+  options?: DiceRollOptions;
 }
 
 interface DiceBoxInstance {
   init: () => Promise<void>;
-  roll: (notation: string) => Promise<DiceRollValue[]>;
+  roll: (notation: string, options?: DiceRollOptions) => Promise<DiceRollValue[]>;
+  add?: (notation: string, options?: DiceRollOptions) => Promise<DiceRollValue[]>;
   clear?: () => void;
   hide?: () => void;
   show?: () => void;
@@ -31,9 +46,11 @@ interface DiceContextType {
   isError: boolean;
   error: string | null;
   results: Map<string, DiceResult>;
-  rollDice: (notation: string, callback?: (results: DiceResult[]) => void) => Promise<DiceResult[]>;
+  rollDice: (notation: string, options?: DiceRollOptions) => Promise<DiceResult[]>;
+  rollDiceBatch: (items: DiceBatchItem[]) => Promise<DiceResult[][]>;
   initDiceBox: (canvasContainer: HTMLDivElement) => Promise<void>;
   clearDice: () => void;
+  restartDiceEngine: () => Promise<void>;
 }
 
 const DiceContext = createContext<DiceContextType | null>(null);
@@ -67,8 +84,11 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
   const [results, setResults] = useState<Map<string, DiceResult>>(new Map());
   const diceBoxRef = useRef<DiceBoxInstance | null>(null);
   const isInitializingRef = useRef(false);
+  const canvasContainerRef = useRef<HTMLDivElement | null>(null);
 
   const initDiceBox = useCallback(async (canvasContainer: HTMLDivElement) => {
+    canvasContainerRef.current = canvasContainer;
+
     // Prevent double initialization from React Strict Mode
     if (diceBoxRef.current || isInitializingRef.current) {
       console.log("DiceBox initialization skipped - already initialized or in progress");
@@ -109,15 +129,16 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
         throwForce: 8,
         spinForce: 15,
         scale: 6,
-        theme: "diceOfRolling",
-        themeColor: "#8b0000",
+        theme: "smooth",
+        themeColor: "#D62828",
+        preloadThemes: ["smooth", "default"],
         offscreen: false,
         onRollComplete: (rollResults: unknown[]) => {
           console.log("Roll complete:", rollResults);
         },
       };
 
-      const diceBox = new DiceBox(config);
+      const diceBox = new DiceBox(config) as unknown as DiceBoxInstance;
 
       console.log("DiceBox instance created, calling init()...");
       await diceBox.init();
@@ -147,7 +168,7 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const rollDice = useCallback(
-    async (notation: string, callback?: (results: DiceResult[]) => void): Promise<DiceResult[]> => {
+    async (notation: string, options?: DiceRollOptions): Promise<DiceResult[]> => {
       if (!diceBoxRef.current || isRolling) return [];
 
       setIsRolling(true);
@@ -160,7 +181,7 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
           diceBoxRef.current.show();
         }
 
-        const rollResult = await diceBoxRef.current.roll(notation);
+        const rollResult = await diceBoxRef.current.roll(notation, options);
 
         // Parse results - dice-box returns an array of roll results
         const parsedResults: DiceResult[] = rollResult.map((roll) => ({
@@ -172,13 +193,65 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
         newResults.set(Date.now().toString(), parsedResults[0] || { value: 0 });
         setResults(newResults);
 
-        if (callback) {
-          callback(parsedResults);
-        }
-
         return parsedResults;
       } catch (error) {
         console.error("Roll failed:", error);
+        return [];
+      } finally {
+        setIsRolling(false);
+      }
+    },
+    [isRolling, results]
+  );
+
+  const rollDiceBatch = useCallback(
+    async (items: DiceBatchItem[]): Promise<DiceResult[][]> => {
+      if (!diceBoxRef.current || isRolling || items.length === 0) return [];
+
+      setIsRolling(true);
+
+      try {
+        const canvasContainer = document.getElementById("dice-box-container") as HTMLDivElement | null;
+        syncDiceCanvasSize(canvasContainer);
+
+        if (typeof diceBoxRef.current.show === "function") {
+          diceBoxRef.current.show();
+        }
+
+        const [first, ...rest] = items;
+        const promises: Promise<DiceRollValue[]>[] = [
+          diceBoxRef.current.roll(first.notation, first.options),
+        ];
+
+        for (const item of rest) {
+          if (typeof diceBoxRef.current.add === "function") {
+            promises.push(
+              diceBoxRef.current.add(item.notation, {
+                ...item.options,
+                newStartPoint: false,
+              })
+            );
+          } else {
+            promises.push(diceBoxRef.current.roll(item.notation, item.options));
+          }
+        }
+
+        const parsedGroups: DiceResult[][] = (await Promise.all(promises)).map((group) =>
+          group.map((die) => ({
+            value: die.value,
+            rolls: die.rolls,
+            modifier: die.modifier,
+          }))
+        );
+
+        const newResults = new Map(results);
+        const firstDie = parsedGroups[0]?.[0] ?? { value: 0 };
+        newResults.set(Date.now().toString(), firstDie);
+        setResults(newResults);
+
+        return parsedGroups;
+      } catch (error) {
+        console.error("Batch roll failed:", error);
         return [];
       } finally {
         setIsRolling(false);
@@ -194,8 +267,46 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const restartDiceEngine = useCallback(async () => {
+    const container = canvasContainerRef.current;
+
+    try {
+      // Force-clear transient states so restart works even if a roll promise is stuck
+      setIsRolling(false);
+      isInitializingRef.current = false;
+      setIsError(false);
+      setError(null);
+      setIsReady(false);
+
+      if (diceBoxRef.current) {
+        if (typeof diceBoxRef.current.clear === "function") {
+          diceBoxRef.current.clear();
+        }
+        if (typeof diceBoxRef.current.hide === "function") {
+          diceBoxRef.current.hide();
+        }
+      }
+
+      diceBoxRef.current = null;
+
+      if (!container) {
+        window.dispatchEvent(new Event("dice-engine-restarted"));
+        return;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 120));
+      await initDiceBox(container);
+      window.dispatchEvent(new Event("dice-engine-restarted"));
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      setIsError(true);
+      setError(`Failed to restart dice engine: ${errorMessage}`);
+      window.dispatchEvent(new Event("dice-engine-restarted"));
+    }
+  }, [initDiceBox]);
+
   return (
-    <DiceContext.Provider value={{ isReady, isRolling, isError, error, results, rollDice, initDiceBox, clearDice }}>
+    <DiceContext.Provider value={{ isReady, isRolling, isError, error, results, rollDice, rollDiceBatch, initDiceBox, clearDice, restartDiceEngine }}>
       {children}
     </DiceContext.Provider>
   );
