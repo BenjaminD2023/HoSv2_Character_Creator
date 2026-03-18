@@ -7,19 +7,19 @@
   --card-foreground: 0 0% 95%;
   --popover: 240 10% 8%;
   --popover-foreground: 0 0% 95%;
-  --primary: 280 60% 50%;
+  --primary: 18 82% 54%;
   --primary-foreground: 0 0% 100%;
   --secondary: 240 10% 15%;
   --secondary-foreground: 0 0% 95%;
   --muted: 240 10% 15%;
   --muted-foreground: 240 5% 65%;
-  --accent: 280 60% 50%;
+  --accent: 205 82% 54%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 70% 50%;
   --destructive-foreground: 0 0% 100%;
   --border: 240 10% 20%;
   --input: 240 10% 20%;
-  --ring: 280 60% 50%;
+  --ring: 18 82% 54%;
   --radius: 0.5rem;
 }
 
@@ -47,7 +47,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-alegreya-sans);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -58,7 +58,7 @@ html {
 body {
   background: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: "Alegreya Sans", var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
 /* Custom scrollbar */
@@ -110,6 +110,36 @@ body {
 
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes dice-vanish {
+  0% {
+    opacity: 0;
+    filter: blur(0px);
+    transform: scale(1);
+  }
+  12% {
+    opacity: 0.45;
+  }
+  35% {
+    opacity: 0.4;
+    filter: blur(1px);
+    transform: scale(1.005);
+  }
+  68% {
+    opacity: 0.24;
+    filter: blur(4px);
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(8px);
+    transform: scale(1.05);
+  }
+}
+
+.animate-dice-vanish {
+  animation: dice-vanish 2200ms cubic-bezier(0.19, 1, 0.22, 1) forwards;
 }
 
 #dice-box-container > .dice-box-canvas {

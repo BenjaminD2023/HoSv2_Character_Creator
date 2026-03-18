@@ -5,7 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import type { CharacterData } from "@/app/page";
+
+type CharacterData = {
+  name: string;
+  class?: {
+    name: string;
+    hitDie: number;
+    primaryStat: string;
+    saves: string[];
+    skills: string[];
+    icon: string;
+    color: string;
+    description: string;
+  };
+  stats?: {
+    strength: number;
+    intelligence: number;
+    athletics: number;
+  };
+  level: number;
+  hitPoints?: number;
+};
 
 interface CharacterSheetProps {
   character: CharacterData;

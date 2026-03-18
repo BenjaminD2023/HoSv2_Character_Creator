@@ -1,305 +1,81 @@
-"use client";
-
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { StatsRoller } from "@/components/StatsRoller";
-import { ClassSelector } from "@/components/ClassSelector";
-import { CharacterSheet } from "@/components/CharacterSheet";
 
-export type CharacterClass = {
-  id: string;
-  name: string;
-  description: string;
-  hitDie: number;
-  primaryStat: string;
-  saves: string[];
-  skills: string[];
-  icon: string;
-  color: string;
-};
-
-export type CharacterStats = {
-  strength: number;
-  intelligence: number;
-  athletics: number;
-};
-
-export type CharacterData = {
-  name: string;
-  class?: CharacterClass;
-  stats?: CharacterStats;
-  level: number;
-  hitPoints?: number;
-};
-
-const CHARACTER_CLASSES: CharacterClass[] = [
-  {
-    id: "fighter",
-    name: "Fighter",
-    description: "Masters of martial combat, skilled with all manner of weapons and armor. They are the frontline warriors who protect their allies.",
-    hitDie: 10,
-    primaryStat: "strength",
-    saves: ["strength", "athletics"],
-    skills: ["Combat", "Defense", "Tactics", "Endurance"],
-    icon: "⚔️",
-    color: "from-red-700 to-rose-900",
-  },
-  {
-    id: "archer",
-    name: "Archer",
-    description: "Expert marksmen who strike from a distance with deadly precision. They prefer to eliminate threats before they can close in.",
-    hitDie: 8,
-    primaryStat: "athletics",
-    saves: ["athletics", "intelligence"],
-    skills: ["Marksmanship", "Stealth", "Tracking", "Survival"],
-    icon: "🏹",
-    color: "from-green-700 to-emerald-900",
-  },
-  {
-    id: "wizard",
-    name: "Wizard",
-    description: "Scholars of arcane magic who wield powerful spells. Their vast knowledge makes them formidable opponents.",
-    hitDie: 6,
-    primaryStat: "intelligence",
-    saves: ["intelligence", "athletics"],
-    skills: ["Arcana", "Spellcasting", "Lore", "Alchemy"],
-    icon: "🔮",
-    color: "from-purple-700 to-violet-900",
-  },
-  {
-    id: "priest",
-    name: "Priest",
-    description: "Devoted servants of divine powers who channel holy magic to heal allies and smite enemies.",
-    hitDie: 8,
-    primaryStat: "intelligence",
-    saves: ["intelligence", "strength"],
-    skills: ["Divine Magic", "Healing", "Religion", "Leadership"],
-    icon: "🕯️",
-    color: "from-amber-700 to-orange-900",
-  },
-  {
-    id: "bard",
-    name: "Bard",
-    description: "Wandering performers who use music, storytelling, and charm to inspire allies and manipulate foes.",
-    hitDie: 8,
-    primaryStat: "athletics",
-    saves: ["athletics", "intelligence"],
-    skills: ["Performance", "Persuasion", "Lore", "Streetwise"],
-    icon: "🎵",
-    color: "from-pink-700 to-rose-900",
-  },
-];
-
-export default function Home() {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [character, setCharacter] = useState<CharacterData>({
-    name: "",
-    level: 1,
-  });
-
-  const handleNameChange = (name: string) => {
-    setCharacter((prev) => ({ ...prev, name }));
-  };
-
-  const handleClassSelect = (characterClass: CharacterClass) => {
-    setCharacter((prev) => ({ ...prev, class: characterClass }));
-  };
-
-  const handleStatsRolled = (stats: CharacterStats) => {
-    // House of Shadows: HP = Hit Die + modifier based on class's primary stat
-    const primaryStat = character.class?.primaryStat;
-    let modifier = 0;
-
-    if (primaryStat === "strength") {
-      modifier = Math.floor((stats.strength - 10) / 2);
-    } else if (primaryStat === "athletics") {
-      modifier = Math.floor((stats.athletics - 10) / 2);
-    } else if (primaryStat === "intelligence") {
-      modifier = Math.floor((stats.intelligence - 10) / 2);
-    }
-
-    const hitDie = character.class?.hitDie || 8;
-    const hitPoints = hitDie + Math.max(0, modifier);
-
-    setCharacter((prev) => ({
-      ...prev,
-      stats,
-      hitPoints,
-    }));
-  };
-
-  const handleReset = () => {
-    setCharacter({
-      name: "",
-      level: 1,
-    });
-    setStep(1);
-  };
-
-  const canProceedToStep2 = character.name.trim().length > 0;
-  const canProceedToStep3 = character.class !== undefined;
-
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/20">
-      {/* Header */}
-      <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-purple-900 flex items-center justify-center animate-pulse-glow">
-              <span className="text-xl">🌑</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight glow-text">
-                House of Shadows
-              </h1>
-              <p className="text-xs text-muted-foreground">Character Creator</p>
-            </div>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.2),_transparent_45%),linear-gradient(to_bottom,_hsl(var(--background)),_hsl(var(--secondary)/0.35))]">
+      <main className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 md:py-20">
+        <header className="animate-in fade-in slide-in-from-top-4 duration-500">
+          <Badge variant="outline" className="mb-4">House of Shadows v2.2.0-alpha</Badge>
+          <h1 className="text-4xl font-black tracking-tight md:text-6xl">Forge Heroes in the Dark</h1>
+          <p className="mt-4 max-w-2xl text-base text-muted-foreground md:text-lg">
+            Build complete House of Shadows characters with SRD-accurate stats, XP-tier skill progression,
+            armor-as-damage-reduction combat math, and cinematic 3D dice rolls.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button asChild size="lg" className="shadow-lg shadow-primary/30">
+              <Link href="/builder">Open Character Builder</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/builder#final-sheet">Jump to Final Sheet</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/characters">Character Management</Link>
+            </Button>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Badge variant={step >= 1 ? "default" : "secondary"} className="cursor-pointer" onClick={() => setStep(1)}>
-                1. Identity
-              </Badge>
-              <div className="w-4 h-px bg-border" />
-              <Badge variant={step >= 2 ? "default" : "secondary"} className={canProceedToStep2 ? "cursor-pointer" : "opacity-50"} onClick={() => canProceedToStep2 && setStep(2)}>
-                2. Class
-              </Badge>
-              <div className="w-4 h-px bg-border" />
-              <Badge variant={step >= 3 ? "default" : "secondary"} className={canProceedToStep3 ? "cursor-pointer" : "opacity-50"} onClick={() => canProceedToStep3 && setStep(3)}>
-                3. Stats
-              </Badge>
-            </div>
-          </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        {/* Step 1: Name & Identity */}
-        {step === 1 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold glow-text">Who are you?</h2>
-              <p className="text-muted-foreground">Enter your character&apos;s name to begin their dark journey.</p>
-            </div>
+        <section className="grid gap-4 md:grid-cols-3 animate-in fade-in slide-in-from-bottom-6 duration-700">
+          <Card className="bg-card/60 backdrop-blur-sm border-border/60">
+            <CardHeader>
+              <CardTitle>Step-Driven Flow</CardTitle>
+              <CardDescription>Guided 7-step creator from stats to final sheet.</CardDescription>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              Sequential progression with unlock rules keeps data valid and avoids broken state.
+            </CardContent>
+          </Card>
 
-            <Card className="max-w-md mx-auto border-border/50 bg-card/50 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle>Character Name</CardTitle>
-                <CardDescription>
-                  Choose a name worthy of the shadows...
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Input
-                  placeholder="Enter name..."
-                  value={character.name}
-                  onChange={(e) => handleNameChange(e.target.value)}
-                  className="text-lg"
-                  autoFocus
-                />
-                <Button
-                  onClick={() => setStep(2)}
-                  disabled={!canProceedToStep2}
-                  className="w-full"
-                  size="lg"
-                >
-                  Continue to Class Selection
-                </Button>
-              </CardContent>
-            </Card>
+          <Card className="bg-card/60 backdrop-blur-sm border-border/60">
+            <CardHeader>
+              <CardTitle>3D Dice + Roll Feed</CardTitle>
+              <CardDescription>Every major roll uses 3D dice with result popups.</CardDescription>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              Includes critical success/failure styling and auto-dismiss behavior.
+            </CardContent>
+          </Card>
 
-            {/* Quick name suggestions */}
-            <div className="max-w-md mx-auto">
-              <p className="text-sm text-muted-foreground mb-2">Suggested names:</p>
-              <div className="flex flex-wrap gap-2">
-                {["Malachar", "Vespera", "Thorne", "Seraphine", "Grimwald", "Noctis", "Morgath", "Lilith"].map((name) => (
-                  <Button
-                    key={name}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleNameChange(name)}
-                  >
-                    {name}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+          <Card className="bg-card/60 backdrop-blur-sm border-border/60">
+            <CardHeader>
+              <CardTitle>HoS Rules Accurate</CardTitle>
+              <CardDescription>Built for your custom d20 system, not D&D defaults.</CardDescription>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              3-attribute model, XP skill tiers, and armor as damage reduction are fully represented.
+            </CardContent>
+          </Card>
+        </section>
 
-        {/* Step 2: Class Selection */}
-        {step === 2 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold glow-text">Choose Your Path</h2>
-                <p className="text-muted-foreground">
-                  Welcome, <span className="text-primary font-medium">{character.name}</span>. Select your calling...
-                </p>
-              </div>
-              <Button variant="outline" onClick={() => setStep(1)}>
-                Back
+        <section className="animate-in fade-in slide-in-from-bottom-6 duration-1000">
+          <Card className="bg-card/60 backdrop-blur-sm border-border/60">
+            <CardHeader>
+              <CardTitle>Character Management</CardTitle>
+              <CardDescription>Use dedicated save management with multiple slots and exports.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-3">
+              <Button asChild>
+                <Link href="/characters">Open Character Management</Link>
               </Button>
-            </div>
-
-            <ClassSelector
-              classes={CHARACTER_CLASSES}
-              selectedClass={character.class}
-              onSelect={handleClassSelect}
-            />
-
-            {character.class && (
-              <div className="flex justify-end">
-                <Button onClick={() => setStep(3)} size="lg">
-                  Continue to Stats
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Step 3: Stats & Finalize */}
-        {step === 3 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold glow-text">Forge Your Stats</h2>
-                <p className="text-muted-foreground">
-                  Roll the dice to determine your character&apos;s abilities.
-                </p>
-              </div>
-              <Button variant="outline" onClick={() => setStep(2)}>
-                Back
+              <Button asChild variant="outline">
+                <Link href="/builder">Create New Character</Link>
               </Button>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <StatsRoller
-                onStatsRolled={handleStatsRolled}
-                primaryStat={character.class?.primaryStat}
-              />
-
-              {character.stats && (
-                <CharacterSheet
-                  character={character}
-                  onReset={handleReset}
-                />
-              )}
-            </div>
-          </div>
-        )}
+            </CardContent>
+          </Card>
+        </section>
       </main>
-
-      {/* Footer */}
-      <footer className="border-t border-border/50 mt-12">
-        <div className="max-w-6xl mx-auto px-4 py-6 text-center text-sm text-muted-foreground">
-          <p>House of Shadows RPG &copy; 2024 - Enter the darkness</p>
-        </div>
-      </footer>
     </div>
   );
 }

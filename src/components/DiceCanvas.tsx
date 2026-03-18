@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDice } from "@/contexts";
 import { cn } from "@/lib/utils";
@@ -15,17 +15,23 @@ interface DiceCanvasProps {
 export function DiceCanvas({ className, visible = true, onClose }: DiceCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { initDiceBox, isReady, isRolling, isError, error } = useDice();
-  const portalTarget = typeof document !== "undefined" ? document.body : null;
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (containerRef.current && !isReady && !isError) {
+    setMounted(true);
+  }, []);
+
+  const portalTarget = mounted ? document.body : null;
+
+  useEffect(() => {
+    if (mounted && containerRef.current && !isReady && !isError) {
       // Small delay to ensure DOM is ready and container has dimensions
       const timer = setTimeout(() => {
         initDiceBox(containerRef.current!);
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [initDiceBox, isReady, isError]);
+  }, [initDiceBox, isReady, isError, mounted]);
 
   if (!portalTarget) {
     return null;
@@ -53,7 +59,12 @@ export function DiceCanvas({ className, visible = true, onClose }: DiceCanvasPro
       <div
         ref={containerRef}
         id="dice-box-container"
-        className={cn("absolute inset-0", visible ? "pointer-events-auto" : "pointer-events-none")}
+        className={cn(
+          "absolute inset-0 transition-all duration-[1600ms] ease-[cubic-bezier(0.19,1,0.22,1)]",
+          visible
+            ? "pointer-events-auto opacity-100 scale-100 blur-0"
+            : "pointer-events-none opacity-0 scale-[1.08] blur-[5px] saturate-50"
+        )}
         style={{
           background: "transparent",
           width: "100vw",

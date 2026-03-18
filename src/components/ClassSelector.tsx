@@ -4,7 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { CharacterClass } from "@/app/page";
+
+type CharacterClass = {
+  id: string;
+  name: string;
+  description: string;
+  hitDie: number;
+  primaryStat: string;
+  saves: string[];
+  skills: string[];
+  icon: string;
+  color: string;
+};
 
 interface ClassSelectorProps {
   classes: CharacterClass[];

@@ -14,6 +14,8 @@ interface DiceRollValue {
 interface DiceBoxInstance {
   init: () => Promise<void>;
   roll: (notation: string) => Promise<DiceRollValue[]>;
+  clear?: () => void;
+  hide?: () => void;
   show?: () => void;
 }
 
@@ -31,12 +33,10 @@ interface DiceContextType {
   results: Map<string, DiceResult>;
   rollDice: (notation: string, callback?: (results: DiceResult[]) => void) => Promise<DiceResult[]>;
   initDiceBox: (canvasContainer: HTMLDivElement) => Promise<void>;
+  clearDice: () => void;
 }
 
 const DiceContext = createContext<DiceContextType | null>(null);
-
-// Track initialization state across Strict Mode remounts
-let isInitializing = false;
 
 function syncDiceCanvasSize(container: HTMLDivElement | null) {
   if (!container) return;
@@ -66,15 +66,16 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<Map<string, DiceResult>>(new Map());
   const diceBoxRef = useRef<DiceBoxInstance | null>(null);
+  const isInitializingRef = useRef(false);
 
   const initDiceBox = useCallback(async (canvasContainer: HTMLDivElement) => {
     // Prevent double initialization from React Strict Mode
-    if (diceBoxRef.current || isInitializing) {
+    if (diceBoxRef.current || isInitializingRef.current) {
       console.log("DiceBox initialization skipped - already initialized or in progress");
       return;
     }
 
-    isInitializing = true;
+    isInitializingRef.current = true;
 
     try {
       console.log("Starting DiceBox initialization...");
@@ -101,6 +102,7 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
       }
 
       const config = {
+        container: "#dice-box-container",
         assetPath: "/assets/dice-box/",
         gravity: 1,
         startPosition: { x: 0, y: 10, z: 0 },
@@ -115,7 +117,7 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
         },
       };
 
-      const diceBox = new DiceBox("#dice-box-container", config);
+      const diceBox = new DiceBox(config);
 
       console.log("DiceBox instance created, calling init()...");
       await diceBox.init();
@@ -140,7 +142,7 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
       setIsError(true);
       setError(`Failed to initialize dice: ${errorMessage}`);
     } finally {
-      isInitializing = false;
+      isInitializingRef.current = false;
     }
   }, []);
 
@@ -185,8 +187,15 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
     [isRolling, results]
   );
 
+  const clearDice = useCallback(() => {
+    if (!diceBoxRef.current) return;
+    if (typeof diceBoxRef.current.clear === "function") {
+      diceBoxRef.current.clear();
+    }
+  }, []);
+
   return (
-    <DiceContext.Provider value={{ isReady, isRolling, isError, error, results, rollDice, initDiceBox }}>
+    <DiceContext.Provider value={{ isReady, isRolling, isError, error, results, rollDice, initDiceBox, clearDice }}>
       {children}
     </DiceContext.Provider>
   );

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Alegreya_Sans } from "next/font/google";
 import "./globals.css";
 import { DiceProvider } from "@/contexts";
 
@@ -11,6 +12,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const alegreyaSans = Alegreya_Sans({
+  variable: "--font-alegreya-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -26,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} ${alegreyaSans.variable} antialiased bg-background text-foreground min-h-screen`}
       >
         <DiceProvider>
           {children}
