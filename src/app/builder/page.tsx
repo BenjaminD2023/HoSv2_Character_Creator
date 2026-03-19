@@ -789,7 +789,7 @@ export default function Home() {
       const nextBreakdown = [...rollBreakdown, dice];
 
       announceRoll({
-        label: `Attribute Roll ${nextRolls.length}`,
+        label: `Roll ${nextRolls.length}`,
         notation: "4d6 drop lowest",
         raw: dice,
         total: resultTotal,
@@ -842,8 +842,8 @@ export default function Home() {
     setAssignment({ strength: "0", athletics: "1", intelligence: "2" });
 
     announceRoll({
-      label: "Roll All Attributes (STR/ATH/INT)",
-      notation: "STR red + ATH green + INT blue (4d6 each)",
+      label: "Roll All Stats",
+      notation: "3 groups of 4d6 (red, green, blue)",
       raw: rolled,
       total: rolled.reduce((sum, v) => sum + v, 0),
       final: rolled.reduce((sum, v) => sum + v, 0),
@@ -1067,7 +1067,6 @@ small{color:#bfb7a6}
                   <div className="grid gap-2 md:grid-cols-3">
                     {STAT_ROLL_GROUPS.map((group, i) => (
                       <div key={group.attr} className={`rounded border p-3 ${rolls[i] !== undefined ? group.cardClass : "border-border/60"}`}>
-                        <p className="text-xs text-muted-foreground">{group.label} Group</p>
                         <p className="text-2xl font-bold">{rolls[i] ?? "-"}</p>
                         {rollBreakdown[i] && (
                           <p className="text-xs text-muted-foreground">[{rollBreakdown[i].join(", ")}]</p>
