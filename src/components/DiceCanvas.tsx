@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDice } from "@/contexts";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,13 @@ export function DiceCanvas({ className, visible = true, onClose }: DiceCanvasPro
     }
   }, [initDiceBox, isReady, isError, mounted]);
 
+  // Handle close
+  const handleClose = useCallback(() => {
+    if (visible && !isRolling && onClose) {
+      onClose();
+    }
+  }, [visible, isRolling, onClose]);
+
   if (!portalTarget) {
     return null;
   }
@@ -47,7 +54,7 @@ export function DiceCanvas({ className, visible = true, onClose }: DiceCanvasPro
     >
       {/* Toast notification */}
       {visible && isRolling && (
-        <div className="pointer-events-auto absolute top-4 left-1/2 -translate-x-1/2 z-50">
+        <div className="pointer-events-auto absolute top-4 left-1/2 -translate-x-1/2 z-[60]">
           <div className="bg-background/90 backdrop-blur-md border border-border/50 rounded-lg px-4 py-2 shadow-lg flex items-center gap-3">
             <span className="animate-spin">🎲</span>
             <span className="text-sm font-medium">Rolling dice...</span>
@@ -55,28 +62,38 @@ export function DiceCanvas({ className, visible = true, onClose }: DiceCanvasPro
         </div>
       )}
 
-      {/* Canvas container - pointer-events-auto to allow interaction */}
+      {/* Canvas container */}
       <div
         ref={containerRef}
         id="dice-box-container"
         className={cn(
-          "absolute inset-0 transition-all duration-[1600ms] ease-[cubic-bezier(0.19,1,0.22,1)]",
+          "absolute inset-0",
           visible
-            ? "pointer-events-auto opacity-100 scale-100 blur-0"
-            : "pointer-events-none opacity-0 scale-[1.08] blur-[5px] saturate-50"
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
         )}
         style={{
           background: "transparent",
           width: "100vw",
           height: "100vh",
+          zIndex: 51,
         }}
       >
         {/* Canvas will be created here by DiceBox */}
       </div>
 
+      {/* Click overlay - covers everything to catch clicks when rolling is done */}
+      {visible && !isRolling && (
+        <div
+          className="fixed inset-0 pointer-events-auto cursor-pointer animate-decompose"
+          onClick={handleClose}
+          style={{ zIndex: 52, background: 'transparent' }}
+        />
+      )}
+
       {/* Loading indicator */}
       {visible && !isReady && !isError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm pointer-events-auto">
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm pointer-events-auto" style={{ zIndex: 53 }}>
           <div className="text-center space-y-2">
             <div className="animate-spin text-4xl">🎲</div>
             <p className="text-muted-foreground text-sm">Loading 3D Dice...</p>
@@ -86,7 +103,7 @@ export function DiceCanvas({ className, visible = true, onClose }: DiceCanvasPro
 
       {/* Error state */}
       {visible && isError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm pointer-events-auto">
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm pointer-events-auto" style={{ zIndex: 53 }}>
           <div className="text-center space-y-3 max-w-md px-4">
             <AlertCircle className="h-10 w-10 text-destructive mx-auto" />
             <div>
@@ -106,8 +123,9 @@ export function DiceCanvas({ className, visible = true, onClose }: DiceCanvasPro
       {/* Close button */}
       {visible && onClose && (
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="pointer-events-auto absolute top-4 right-4 p-2 bg-background/80 backdrop-blur-sm hover:bg-muted rounded-full transition-colors border border-border/50 shadow-lg"
+          style={{ zIndex: 54 }}
         >
           <X className="h-5 w-5" />
         </button>

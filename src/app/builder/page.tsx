@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { DiceCanvas } from "@/components/DiceCanvas";
 import { useDice } from "@/contexts";
+import { Sword, Brain, Zap, RotateCcw, Check, GripVertical } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type AttributeKey = "strength" | "intelligence" | "athletics";
 type Tier = "basic" | "intermediate" | "advanced" | "capstone";
@@ -55,13 +57,17 @@ type RollToast = {
   crit?: "success" | "fail";
 };
 
-type DiceVisualGroup = "stats" | "hp" | "checks" | "damage";
+type DiceVisualGroup = "str" | "ath" | "int" | "charisma" | "hp" | "initiative" | "damage" | "checks";
 
-const DICE_GROUP_STYLE: Record<DiceVisualGroup, { theme: string; themeColor: string }> = {
-  stats: { theme: "smooth", themeColor: "#D62828" },
-  hp: { theme: "smooth", themeColor: "#2A9D8F" },
-  checks: { theme: "smooth", themeColor: "#3A86FF" },
-  damage: { theme: "smooth", themeColor: "#E63946" },
+const DICE_GROUP_STYLE: Record<DiceVisualGroup, { theme: string; themeColor: string; label: string }> = {
+  str: { theme: "smooth", themeColor: "#D62828", label: "STR" },
+  ath: { theme: "smooth", themeColor: "#2A9D2A", label: "ATH" },
+  int: { theme: "smooth", themeColor: "#2563EB", label: "INT" },
+  charisma: { theme: "smooth", themeColor: "#F4D03F", label: "CHA" },
+  hp: { theme: "smooth", themeColor: "#2A9D8F", label: "HP" },
+  initiative: { theme: "smooth", themeColor: "#2A9D2A", label: "INIT" },
+  damage: { theme: "smooth", themeColor: "#E63946", label: "DMG" },
+  checks: { theme: "smooth", themeColor: "#3A86FF", label: "CHK" },
 };
 
 const STAT_ROLL_GROUPS: Array<{ attr: AttributeKey; label: string; themeColor: string; cardClass: string }> = [
@@ -95,6 +101,17 @@ type SavedCharacterState = {
   checkRolls: Partial<Record<AttributeKey | "initiative", number>>;
   charismaCheck: number | null;
   weaponRolls: Record<string, WeaponRollResult>;
+  // Additional computed fields for sheet view
+  hitDie: number;
+  charismaDie: number;
+  baseHpModifierAttr: AttributeKey;
+  primaryStat: AttributeKey;
+  skills: string[];
+  weapons: { name: string; damageDice?: string; flatDamage?: number; mod?: AttributeKey }[];
+  armorPieces: { name: string; armor: number }[];
+  totalStartingArmor: number;
+  saves: string[];
+  equipmentMisc?: string[];
 };
 
 const CHARACTER_STORAGE_KEY = "hos.character-builder.v1";
@@ -426,26 +443,41 @@ export default function Home() {
     return 7;
   }, [step1Ready, step2Ready, step3Ready, step4Ready, step5Ready, step6Ready]);
 
-  const buildSavedState = useCallback((): SavedCharacterState => ({
-    version: 1,
-    savedAt: new Date().toISOString(),
-    activeStep,
-    characterName,
-    rolls,
-    rollBreakdown,
-    assignment,
-    manualMode,
-    manualStats,
-    selectedClassId,
-    baseHpRoll,
-    startingXp,
-    extraHpRolls,
-    skillLevels,
-    enemyArmor,
-    checkRolls,
-    charismaCheck,
-    weaponRolls,
-  }), [
+  const buildSavedState = useCallback((): SavedCharacterState => {
+    const cls = selectedClassId ? CLASS_DATA[selectedClassId] : null;
+    const purchasedSkills = cls ? cls.skills.filter((s) => (skillLevels[s.name] ?? 0) > 0).map((s) => s.name) : [];
+    return {
+      version: 1,
+      savedAt: new Date().toISOString(),
+      activeStep,
+      characterName,
+      rolls,
+      rollBreakdown,
+      assignment,
+      manualMode,
+      manualStats,
+      selectedClassId,
+      baseHpRoll,
+      startingXp,
+      extraHpRolls,
+      skillLevels,
+      enemyArmor,
+      checkRolls,
+      charismaCheck,
+      weaponRolls,
+      // Computed fields for sheet
+      hitDie: cls?.hitDie ?? 8,
+      charismaDie: cls?.charismaDie ?? 6,
+      baseHpModifierAttr: cls?.baseHpModifierAttr ?? "strength",
+      primaryStat: cls?.baseHpModifierAttr ?? "strength",
+      skills: purchasedSkills,
+      weapons: cls?.equipment.weapons ?? [],
+      armorPieces: cls?.equipment.armorPieces ?? [],
+      totalStartingArmor: cls?.totalStartingArmor ?? 0,
+      saves: cls ? [cls.baseHpModifierAttr, "athletics"] : ["strength", "athletics"],
+      equipmentMisc: cls?.equipment.misc,
+    };
+  }, [
     activeStep,
     assignment,
     baseHpRoll,
@@ -765,7 +797,10 @@ export default function Home() {
     setRollToast(null);
     setShowDice(true);
     await new Promise((resolve) => setTimeout(resolve, 80));
-    const dice = await rollWith3dGroup("4d6", "stats");
+    // Determine dice color based on roll index (0=red/str, 1=green/ath, 2=blue/int)
+    const statGroups: DiceVisualGroup[] = ["str", "ath", "int"];
+    const group = statGroups[rolls.length] ?? "str";
+    const dice = await rollWith3dGroup("4d6", group);
     if (dice.length < 4) {
       throw new Error("Roll failed");
     }
@@ -839,7 +874,8 @@ export default function Home() {
     setStatWarning(null);
     setRolls(rolled);
     setRollBreakdown(breakdown);
-    setAssignment({ strength: "0", athletics: "1", intelligence: "2" });
+    // Clear assignment so user can manually assign
+    setAssignment({ strength: "", athletics: "", intelligence: "" });
 
     announceRoll({
       label: "Roll All Stats",
@@ -990,6 +1026,7 @@ small{color:#bfb7a6}
             <Button size="sm" variant="outline" onClick={() => saveCharacterToLocal(true)}>Save Character</Button>
             <Button size="sm" variant="ghost" onClick={() => clearSavedCharacter()}>Clear Save</Button>
             <Button size="sm" variant="ghost" asChild><Link href="/characters">Manage</Link></Button>
+            <Button size="sm" variant="secondary" asChild><Link href="/sheet">View Sheet</Link></Button>
             {saveFlash && <span className="text-xs text-emerald-400">Saved</span>}
           </div>
         </div>
@@ -1064,36 +1101,182 @@ small{color:#bfb7a6}
                   </div>
                   {!isReady && <p className="text-xs text-amber-400">3D dice loading...</p>}
                   {statWarning && <p className="text-sm text-amber-400">{statWarning}</p>}
-                  <div className="grid gap-2 md:grid-cols-3">
-                    {STAT_ROLL_GROUPS.map((group, i) => (
-                      <div key={group.attr} className={`rounded border p-3 ${rolls[i] !== undefined ? group.cardClass : "border-border/60"}`}>
-                        <p className="text-2xl font-bold">{rolls[i] ?? "-"}</p>
-                        {rollBreakdown[i] && (
-                          <p className="text-xs text-muted-foreground">[{rollBreakdown[i].join(", ")}]</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+
+                  {/* Rolled Values Pool - Compact with Drag & Drop */}
                   {rolls.length === 3 && (
+                    <div className="space-y-4">
+                      {/* Compact Available Values */}
+                      <div className="rounded-lg border border-border/50 bg-secondary/20 p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            Available Rolls
+                          </h3>
+                          <Badge variant="secondary" className="text-[10px]">
+                            {3 - usedIndexes.size} to assign
+                          </Badge>
+                        </div>
+                        <div className="flex gap-2 justify-center">
+                          {rolls.map((value, index) => {
+                            const isAssigned = usedIndexes.has(index);
+                            const assignedTo = (Object.entries(assignment).find(([, v]) => v === String(index))?.[0] ?? null) as AttributeKey | null;
+                            // Get the color based on dice position (0=red/STR, 1=green/ATH, 2=blue/INT)
+                            const diceGroup = STAT_ROLL_GROUPS[index];
+                            const diceColor = diceGroup.themeColor;
+                            const diceBorder = diceGroup.cardClass.split(" ")[0]; // Get border class
+                            const diceBg = diceGroup.cardClass.split(" ")[1]; // Get bg class
+
+                            return (
+                              <div
+                                key={index}
+                                draggable={!isAssigned}
+                                onDragStart={(e) => {
+                                  e.dataTransfer.setData("rollIndex", String(index));
+                                  e.dataTransfer.effectAllowed = "move";
+                                }}
+                                onClick={() => {
+                                  if (isAssigned && assignedTo) {
+                                    setAssignment((prev) => ({ ...prev, [assignedTo]: "" }));
+                                  }
+                                }}
+                                className={cn(
+                                  "relative w-14 h-14 rounded-lg border-2 flex items-center justify-center transition-all duration-200 cursor-grab active:cursor-grabbing",
+                                  isAssigned
+                                    ? "opacity-40 cursor-pointer hover:opacity-60 border-muted-foreground/30"
+                                    : `${diceBg} ${diceBorder} hover:scale-105 shadow-md`
+                                )}
+                                title={isAssigned ? `Assigned to ${assignedTo ? ATTR_LABELS[assignedTo] : ""}, click to unassign` : `${diceGroup.label} dice - Drag to assign`}
+                              >
+                                <span className="text-xl font-bold text-white drop-shadow-md">{value}</span>
+                                {/* Dice color indicator */}
+                                <div
+                                  className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border border-white/50"
+                                  style={{ backgroundColor: diceColor }}
+                                />
+                                {isAssigned && (
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="w-full h-0.5 bg-muted-foreground/50 rotate-45" />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Compact Assignment Section - STR | ATH | INT */}
+                      <div className="grid grid-cols-3 gap-2">
+                        {STAT_ROLL_GROUPS.map((group) => {
+                          const currentAssignment = assignment[group.attr];
+                          const assignedValue = currentAssignment !== "" ? rolls[Number(currentAssignment)] : null;
+                          const Icon = group.attr === "strength" ? Sword : group.attr === "intelligence" ? Brain : Zap;
+                          const isComplete = assignedValue !== null;
+
+                          return (
+                            <div
+                              key={group.attr}
+                              onDragOver={(e) => {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = "move";
+                              }}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                const rollIndex = e.dataTransfer.getData("rollIndex");
+                                if (rollIndex && !usedIndexes.has(Number(rollIndex))) {
+                                  setAssignment((prev) => ({ ...prev, [group.attr]: rollIndex }));
+                                }
+                              }}
+                              className={cn(
+                                "relative rounded-lg border-2 p-2 transition-all duration-200",
+                                isComplete
+                                  ? `${group.cardClass} shadow-md`
+                                  : "border-dashed border-border/40 bg-secondary/10 hover:border-primary/40 hover:bg-secondary/20"
+                              )}
+                            >
+                              {/* Compact Header */}
+                              <div className="flex items-center gap-1.5 mb-2">
+                                <div
+                                  className={cn(
+                                    "w-6 h-6 rounded flex items-center justify-center text-white",
+                                    isComplete ? "" : "opacity-50"
+                                  )}
+                                  style={{ backgroundColor: group.themeColor }}
+                                >
+                                  <Icon className="w-3 h-3" />
+                                </div>
+                                <div>
+                                  <p className="font-bold text-sm leading-none">{group.label}</p>
+                                </div>
+                              </div>
+
+                              {/* Value or Drop Zone */}
+                              {isComplete ? (
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="text-2xl font-bold text-foreground leading-none">{assignedValue}</p>
+                                    <p className="text-[10px] text-muted-foreground">
+                                      {formatMod(getModifier(assignedValue))}
+                                    </p>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                    onClick={() => setAssignment((prev) => ({ ...prev, [group.attr]: "" }))}
+                                  >
+                                    <RotateCcw className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="space-y-1">
+                                  <select
+                                    className="w-full rounded border border-input bg-background px-2 py-1 text-xs focus:border-primary focus:ring-1 focus:ring-primary"
+                                    value={assignment[group.attr]}
+                                    onChange={(e) => setAssignment((prev) => ({ ...prev, [group.attr]: e.target.value }))}
+                                  >
+                                    <option value="">Select...</option>
+                                    {rolls.map((value, index) => {
+                                      const inUse = usedIndexes.has(index);
+                                      return (
+                                        <option key={index} value={index} disabled={inUse}>
+                                          {value}
+                                        </option>
+                                      );
+                                    })}
+                                  </select>
+                                  <p className="text-[9px] text-muted-foreground text-center">
+                                    Drop or select
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Completion indicator */}
+                              {isComplete && (
+                                <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center">
+                                  <Check className="w-2.5 h-2.5 text-white" />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Drag hint */}
+                      <p className="text-[10px] text-center text-muted-foreground">
+                        <GripVertical className="w-3 h-3 inline mr-1" />
+                        Drag rolls to assign, or use the dropdowns
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Initial Roll Display */}
+                  {rolls.length > 0 && rolls.length < 3 && (
                     <div className="grid gap-2 md:grid-cols-3">
-                      {(["strength", "intelligence", "athletics"] as AttributeKey[]).map((attr) => (
-                        <div key={attr}>
-                          <label className="mb-1 block text-xs text-muted-foreground">Assign {ATTR_LABELS[attr]}</label>
-                          <select
-                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            value={assignment[attr]}
-                            onChange={(e) => setAssignment((prev) => ({ ...prev, [attr]: e.target.value }))}
-                          >
-                            <option value="">Select Roll</option>
-                            {rolls.map((value, index) => {
-                              const inUse = usedIndexes.has(index) && assignment[attr] !== String(index);
-                              return (
-                                <option key={`${value}-${index}`} value={index} disabled={inUse}>
-                                  Roll {index + 1}: {value}
-                                </option>
-                              );
-                            })}
-                          </select>
+                      {STAT_ROLL_GROUPS.map((group, i) => (
+                        <div key={group.attr} className={`rounded border p-3 ${rolls[i] !== undefined ? group.cardClass : "border-border/60"}`}>
+                          <p className="text-2xl font-bold">{rolls[i] ?? "-"}</p>
+                          {rollBreakdown[i] && (
+                            <p className="text-xs text-muted-foreground">[{rollBreakdown[i].join(", ")}]</p>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -1103,7 +1286,7 @@ small{color:#bfb7a6}
 
               {manualMode && (
                 <div className="grid gap-2 md:grid-cols-3">
-                  {(["strength", "intelligence", "athletics"] as AttributeKey[]).map((attr) => (
+                  {(["strength", "athletics", "intelligence"] as AttributeKey[]).map((attr) => (
                     <div key={attr}>
                       <label className="mb-1 block text-xs text-muted-foreground">{ATTR_LABELS[attr]}</label>
                       <Input
@@ -1125,7 +1308,7 @@ small{color:#bfb7a6}
 
               {assignedStats && modifiers && (
                 <div className="grid grid-cols-3 gap-2 rounded border border-border/60 p-3">
-                  {(["strength", "intelligence", "athletics"] as AttributeKey[]).map((attr) => (
+                  {(["strength", "athletics", "intelligence"] as AttributeKey[]).map((attr) => (
                     <div key={attr} className="text-center">
                       <p className="text-xs text-muted-foreground">{ATTR_LABELS[attr]}</p>
                       <p className="text-lg font-bold">{assignedStats[attr]}</p>
@@ -1449,7 +1632,9 @@ small{color:#bfb7a6}
                         variant="outline"
                         disabled={!isReady || isRolling3d}
                         onClick={async () => {
-                          const raw = await rollWith3dGroup("1d20", "checks");
+                          // Determine dice color based on attribute
+                          const diceGroup = attr === "strength" ? "str" : attr === "athletics" ? "ath" : "int";
+                          const raw = await rollWith3dGroup("1d20", diceGroup);
                           const d20 = raw[0] ?? 0;
                           const final = d20 + modifiers[attr];
                           setCheckRolls((prev) => ({ ...prev, [attr]: final }));
@@ -1481,7 +1666,7 @@ small{color:#bfb7a6}
                       variant="outline"
                       disabled={!isReady || isRolling3d}
                       onClick={async () => {
-                        const raw = await rollWith3dGroup("1d20", "checks");
+                        const raw = await rollWith3dGroup("1d20", "initiative");
                         const d20 = raw[0] ?? 0;
                         const final = d20 + modifiers.athletics;
                         setCheckRolls((prev) => ({ ...prev, initiative: final }));
@@ -1506,7 +1691,7 @@ small{color:#bfb7a6}
                       variant="outline"
                       disabled={!isReady || isRolling3d}
                       onClick={async () => {
-                        const raw = await rollWith3dGroup(`1d${selectedClass.charismaDie}`, "checks");
+                        const raw = await rollWith3dGroup(`1d${selectedClass.charismaDie}`, "charisma");
                         const total = raw[0] ?? 0;
                         setCharismaCheck(total);
                         announceRoll({

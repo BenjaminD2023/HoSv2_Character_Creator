@@ -99,7 +99,19 @@ export default function CharactersPage() {
                 <CardContent className="space-y-2">
                   <p className="text-xs text-muted-foreground">{item?.savedAt ? `Saved: ${new Date(item.savedAt).toLocaleString()}` : "No data"}</p>
                   <div className="flex flex-wrap gap-2">
-                    <Button size="sm" asChild><Link href={`/builder?slot=${slot}`}>{item ? "Open" : "Create"}</Link></Button>
+                    <Button size="sm" asChild><Link href={`/builder?slot=${slot}`}>{item ? "Edit" : "Create"}</Link></Button>
+                    {item && (
+                      <Button size="sm" variant="secondary" asChild>
+                        <Link href="/sheet" onClick={() => {
+                          // Load this slot's data into the main storage for the sheet
+                          const raw = window.localStorage.getItem(slotKey(slot));
+                          if (raw) {
+                            window.localStorage.setItem(CHARACTER_STORAGE_KEY, raw);
+                            window.localStorage.setItem(CHARACTER_ACTIVE_SLOT_KEY, String(slot));
+                          }
+                        }}>View Sheet</Link>
+                      </Button>
+                    )}
                     <Button size="sm" variant="outline" onClick={() => setActive(slot)}>Set Active</Button>
                     <Button size="sm" variant="outline" onClick={() => exportSlotJson(slot)} disabled={!item}>Export</Button>
                     <Button size="sm" variant="ghost" onClick={() => clearSlot(slot)} disabled={!item}>Clear</Button>
