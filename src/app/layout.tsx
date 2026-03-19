@@ -4,6 +4,7 @@ import { Alegreya_Sans } from "next/font/google";
 import "./globals.css";
 import { DiceProvider } from "@/contexts";
 import { DiceEngineControls } from "@/components/DiceEngineControls";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +41,7 @@ export default function RootLayout({
           {children}
           <DiceEngineControls />
         </DiceProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
