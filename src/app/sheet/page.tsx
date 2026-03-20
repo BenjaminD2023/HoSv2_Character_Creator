@@ -183,7 +183,7 @@ export default function CharacterSheetPage() {
             intelligence: parsed.rolls?.[Number(parsed.assignment.intelligence)] || 10,
           } : { strength: 10, intelligence: 10, athletics: 10 },
           maxHp: parsed.maxHp || 10,
-          xp: parsed.xp || 0,
+          xp: parsed.startingXp ?? parsed.xp ?? 0,
           proficiencyBonus: parsed.proficiencyBonus || 2,
           skills: parsed.skills || [],
           weapons: startingWeapons,
@@ -408,7 +408,7 @@ export default function CharacterSheetPage() {
   if (!character) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0c]">
-        <Card className="w-full max-w-md border-white/10 bg-white/5 backdrop-blur-xl">
+        <Card className="w-full max-w-md border-white/10 bg-white/5">
           <CardContent className="p-8 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-600/20 flex items-center justify-center">
               <Sparkles className="w-8 h-8 text-amber-400" />
@@ -444,7 +444,7 @@ export default function CharacterSheetPage() {
         {/* Header - Character Identity */}
         <header
           className={cn(
-            "flex items-center justify-between mb-6 transition-all duration-700",
+            "flex items-center justify-between mb-6 transition-opacity duration-700",
             isLoaded ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
           )}
         >
@@ -472,7 +472,7 @@ export default function CharacterSheetPage() {
             size="sm"
             variant="outline"
             onClick={() => router.push("/builder")}
-            className="border-white/10 bg-white/5 hover:bg-white/10 hover:border-amber-500/30 transition-all"
+            className="border-white/10 bg-white/5 hover:bg-white/10 hover:border-amber-500/30 transition-colors"
           >
             <Edit2 className="w-4 h-4 mr-2" />
             Edit Character
@@ -484,7 +484,7 @@ export default function CharacterSheetPage() {
           {/* Left Column - Stats & XP (4 cols) */}
           <div
             className={cn(
-              "col-span-4 flex flex-col gap-4 transition-all duration-700 delay-100",
+              "col-span-4 flex flex-col gap-4 transition-opacity duration-700 delay-100",
               isLoaded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
             )}
           >
@@ -502,8 +502,8 @@ export default function CharacterSheetPage() {
                     onClick={() => rollCheck(attr)}
                     disabled={!isReady}
                     className={cn(
-                      "group relative overflow-hidden rounded-2xl border transition-all duration-300 hover:scale-105",
-                      "bg-gradient-to-b backdrop-blur-sm",
+                      "group relative overflow-hidden rounded-2xl border transition-transform duration-300 hover:scale-105",
+                      "bg-gradient-to-b",
                       ATTR_GRADIENTS[attr],
                       isPrimary
                         ? "border-amber-500/40 shadow-lg shadow-amber-500/10"
@@ -556,7 +556,7 @@ export default function CharacterSheetPage() {
 
             {/* Armor & Initiative Row */}
             <div className="grid grid-cols-2 gap-3">
-              <Card className="border-white/10 bg-white/5 backdrop-blur-md overflow-hidden">
+              <Card className="border-white/10 bg-white/5 overflow-hidden">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-500/20 to-slate-600/20 border border-slate-500/30 flex items-center justify-center">
@@ -588,7 +588,7 @@ export default function CharacterSheetPage() {
               <button
                 onClick={rollInitiative}
                 disabled={!isReady}
-                className="group relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-green-600/5 backdrop-blur-md transition-all hover:scale-105 hover:border-emerald-500/50"
+                className="group relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-green-600/5 transition-transform hover:scale-105 hover:border-emerald-500/50"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="relative p-4 flex items-center gap-3">
@@ -607,13 +607,13 @@ export default function CharacterSheetPage() {
 
             {/* Hit Die & Proficiency */}
             <div className="grid grid-cols-2 gap-3">
-              <Card className="border-white/10 bg-white/5 backdrop-blur-md">
+              <Card className="border-white/10 bg-white/5">
                 <CardContent className="p-4 text-center">
                   <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Hit Die</p>
                   <p className="text-2xl font-bold text-amber-400">d{character.hitDie}</p>
                 </CardContent>
               </Card>
-              <Card className="border-white/10 bg-white/5 backdrop-blur-md">
+              <Card className="border-white/10 bg-white/5">
                 <CardContent className="p-4 text-center">
                   <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Proficiency</p>
                   <p className="text-2xl font-bold text-emerald-400">+{character.proficiencyBonus}</p>
@@ -625,12 +625,12 @@ export default function CharacterSheetPage() {
           {/* Middle Column - HP & Weapons (4 cols) */}
           <div
             className={cn(
-              "col-span-4 flex flex-col gap-4 transition-all duration-700 delay-200",
+              "col-span-4 flex flex-col gap-4 transition-opacity duration-700 delay-200",
               isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             )}
           >
             {/* HP Card */}
-            <Card className="border-white/10 bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl overflow-hidden">
+            <Card className="border-white/10 bg-gradient-to-b from-white/10 to-white/5 overflow-hidden">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -788,7 +788,7 @@ export default function CharacterSheetPage() {
             </Card>
 
             {/* Weapons */}
-            <Card className="border-white/10 bg-white/5 backdrop-blur-md flex-1 overflow-hidden">
+            <Card className="border-white/10 bg-white/5 flex-1 overflow-hidden">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-xs text-white/40 uppercase tracking-wider flex items-center gap-2">
@@ -936,7 +936,7 @@ export default function CharacterSheetPage() {
                       return (
                         <div
                           key={w.id}
-                          className="group flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all cursor-pointer"
+                          className="group flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-colors cursor-pointer"
                           onClick={() => startEditItem(w)}
                         >
                           <div>
@@ -978,19 +978,19 @@ export default function CharacterSheetPage() {
           {/* Right Column - Skills & Inventory (4 cols) */}
           <div
             className={cn(
-              "col-span-4 flex flex-col gap-4 transition-all duration-700 delay-300",
+              "col-span-4 flex flex-col gap-4 transition-opacity duration-700 delay-300",
               isLoaded ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
             )}
           >
             {/* Quick Actions */}
-            <Card className="border-white/10 bg-white/5 backdrop-blur-md">
+            <Card className="border-white/10 bg-white/5">
               <CardContent className="p-5">
                 <p className="text-xs text-white/40 uppercase tracking-wider mb-4">Quick Rolls</p>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={rollInitiative}
                     disabled={!isReady}
-                    className="group relative overflow-hidden rounded-xl p-4 border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-green-600/5 transition-all hover:scale-105 hover:border-emerald-500/50"
+                    className="group relative overflow-hidden rounded-xl p-4 border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-green-600/5 transition-transform hover:scale-105 hover:border-emerald-500/50"
                   >
                     <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <Zap className="w-6 h-6 text-emerald-400 mb-2 mx-auto group-hover:scale-110 transition-transform" />
@@ -1001,7 +1001,7 @@ export default function CharacterSheetPage() {
                   <button
                     onClick={rollCharisma}
                     disabled={!isReady}
-                    className="group relative overflow-hidden rounded-xl p-4 border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-yellow-600/5 transition-all hover:scale-105 hover:border-amber-500/50"
+                    className="group relative overflow-hidden rounded-xl p-4 border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-yellow-600/5 transition-transform hover:scale-105 hover:border-amber-500/50"
                   >
                     <div className="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <Sparkles className="w-6 h-6 text-amber-400 mb-2 mx-auto group-hover:scale-110 transition-transform" />
@@ -1013,7 +1013,7 @@ export default function CharacterSheetPage() {
             </Card>
 
             {/* Skills */}
-            <Card className="border-white/10 bg-white/5 backdrop-blur-md">
+            <Card className="border-white/10 bg-white/5">
               <CardContent className="p-5">
                 <p className="text-xs text-white/40 uppercase tracking-wider mb-4 flex items-center gap-2">
                   <Sparkles className="w-3 h-3" />
@@ -1024,7 +1024,7 @@ export default function CharacterSheetPage() {
                     <Badge
                       key={skill}
                       variant="secondary"
-                      className="px-3 py-1.5 text-xs bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:border-amber-500/30 hover:text-amber-200 transition-all cursor-default"
+                      className="px-3 py-1.5 text-xs bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:border-amber-500/30 hover:text-amber-200 transition-colors cursor-default"
                       style={{ animationDelay: `${idx * 20}ms` }}
                     >
                       {skill}
@@ -1035,7 +1035,7 @@ export default function CharacterSheetPage() {
             </Card>
 
             {/* Inventory */}
-            <Card className="border-white/10 bg-white/5 backdrop-blur-md flex-1 overflow-hidden">
+            <Card className="border-white/10 bg-white/5 flex-1 overflow-hidden">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-xs text-white/40 uppercase tracking-wider flex items-center gap-2">
@@ -1067,7 +1067,7 @@ export default function CharacterSheetPage() {
                     items.map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between p-2.5 rounded-lg bg-black/20 border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-all cursor-pointer"
+                        className="flex items-center justify-between p-2.5 rounded-lg bg-black/20 border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-colors cursor-pointer"
                         onClick={() => startEditItem(item)}
                       >
                         <div className="flex items-center gap-2">

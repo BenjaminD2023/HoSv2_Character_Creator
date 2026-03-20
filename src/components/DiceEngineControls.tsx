@@ -24,7 +24,7 @@ export function DiceEngineControls() {
       <Button
         variant="outline"
         size="sm"
-        className="bg-background/95 backdrop-blur-sm border-border/70 shadow-2xl ring-1 ring-primary/30"
+        className="bg-background/95 border-border/70 shadow-2xl ring-1 ring-primary/30"
         onClick={onRestart}
         disabled={isRestarting}
       >

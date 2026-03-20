@@ -66,8 +66,13 @@ function syncDiceCanvasSize(container: HTMLDivElement | null) {
 
   const canvases = container.querySelectorAll("canvas");
   canvases.forEach((canvas) => {
-    if (canvas.width !== width) canvas.width = width;
-    if (canvas.height !== height) canvas.height = height;
+    // OffscreenCanvas transferred contexts can't have width/height set directly
+    try {
+      if (canvas.width !== width) canvas.width = width;
+      if (canvas.height !== height) canvas.height = height;
+    } catch {
+      // Canvas is controlled by OffscreenCanvas, skip direct resize
+    }
 
     canvas.style.position = "absolute";
     canvas.style.inset = "0";
@@ -84,17 +89,17 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
   const [results, setResults] = useState<Map<string, DiceResult>>(new Map());
   const diceBoxRef = useRef<DiceBoxInstance | null>(null);
   const isInitializingRef = useRef(false);
+  const hasInitializedRef = useRef(false);
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
 
   const initDiceBox = useCallback(async (canvasContainer: HTMLDivElement) => {
-    canvasContainerRef.current = canvasContainer;
-
-    // Prevent double initialization from React Strict Mode
-    if (diceBoxRef.current || isInitializingRef.current) {
-      console.log("DiceBox initialization skipped - already initialized or in progress");
+    // STRICT: Never re-initialize if already initialized or initializing
+    if (hasInitializedRef.current || isInitializingRef.current || diceBoxRef.current) {
+      console.log("DiceBox initialization skipped - already initialized");
       return;
     }
 
+    canvasContainerRef.current = canvasContainer;
     isInitializingRef.current = true;
 
     try {
@@ -125,14 +130,18 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
         container: "#dice-box-container",
         assetPath: "/assets/dice-box/",
         gravity: 1,
-        startPosition: { x: 0, y: 10, z: 0 },
-        throwForce: 8,
-        spinForce: 15,
-        scale: 6,
+        startPosition: { x: 0, y: 8, z: 0 },
+        throwForce: 5,
+        spinForce: 8,
+        scale: 5,
         theme: "smooth",
         themeColor: "#D62828",
-        preloadThemes: ["smooth", "default"],
-        offscreen: false,
+        preloadThemes: ["smooth"],
+        shadowOpacity: 0.3,
+        lightIntensity: 0.8,
+        // Transparent background - no clear color
+        transparent: true,
+        backgroundColor: "transparent",
         onRollComplete: (rollResults: unknown[]) => {
           console.log("Roll complete:", rollResults);
         },
@@ -154,6 +163,7 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
       }
 
       diceBoxRef.current = diceBox;
+      hasInitializedRef.current = true; // STRICT: Mark as initialized
       setIsReady(true);
       setIsError(false);
       setError(null);
@@ -174,13 +184,7 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
       setIsRolling(true);
 
       try {
-        const canvasContainer = document.getElementById("dice-box-container") as HTMLDivElement | null;
-        syncDiceCanvasSize(canvasContainer);
-
-        if (typeof diceBoxRef.current.show === "function") {
-          diceBoxRef.current.show();
-        }
-
+        // STRICT: Do NOT sync canvas size or call show() here - just roll on existing instance
         const rollResult = await diceBoxRef.current.roll(notation, options);
 
         // Parse results - dice-box returns an array of roll results
@@ -211,13 +215,7 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
       setIsRolling(true);
 
       try {
-        const canvasContainer = document.getElementById("dice-box-container") as HTMLDivElement | null;
-        syncDiceCanvasSize(canvasContainer);
-
-        if (typeof diceBoxRef.current.show === "function") {
-          diceBoxRef.current.show();
-        }
-
+        // STRICT: Do NOT sync canvas size or call show() here - just roll on existing instance
         const [first, ...rest] = items;
         const promises: Promise<DiceRollValue[]>[] = [
           diceBoxRef.current.roll(first.notation, first.options),

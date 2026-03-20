@@ -632,6 +632,10 @@ export default function Home() {
     window.localStorage.setItem(CHARACTER_ACTIVE_SLOT_KEY, String(activeSlot));
   }, [activeSlot, hasLoadedLocalData]);
 
+  // Debounced auto-save to reduce performance impact
+  const saveTimeoutRef = useRef<number | null>(null);
+  const lastSavedStateRef = useRef<string>("");
+
   useEffect(() => {
     if (!hasLoadedLocalData) return;
     const hasMeaningfulData = Boolean(
@@ -642,7 +646,33 @@ export default function Home() {
       Object.values(skillLevels).some((sl) => sl > 0)
     );
     if (!hasMeaningfulData) return;
-    saveCharacterToLocal(false, activeSlot, false);
+
+    // Clear any pending save
+    if (saveTimeoutRef.current) {
+      window.clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Debounce save by 500ms to batch rapid state changes
+    saveTimeoutRef.current = window.setTimeout(() => {
+      const currentState = JSON.stringify({
+        characterName,
+        selectedClassId,
+        rolls,
+        baseHpRoll,
+        skillLevels,
+      });
+      // Only save if state actually changed
+      if (currentState !== lastSavedStateRef.current) {
+        lastSavedStateRef.current = currentState;
+        saveCharacterToLocal(false, activeSlot, false);
+      }
+    }, 500);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        window.clearTimeout(saveTimeoutRef.current);
+      }
+    };
   }, [
     hasLoadedLocalData,
     activeStep,
@@ -781,7 +811,23 @@ export default function Home() {
     setIsRolling3d(true);
     setShowDice(true);
     try {
-      return await rollDiceBatch(items);
+      // Stagger rolls by 150ms to reduce physics load and improve visual clarity
+      const staggeredItems = items.map((item, index) => ({
+        ...item,
+        delay: index * 150,
+      }));
+
+      const results: Array<Array<{ value: number; modifier?: number; rolls?: number[] }>> = [];
+
+      for (const item of staggeredItems) {
+        if (item.delay > 0) {
+          await new Promise((resolve) => setTimeout(resolve, item.delay));
+        }
+        const result = await rollDice(item.notation, item.options);
+        results.push(result);
+      }
+
+      return results;
     } finally {
       setIsRolling3d(false);
     }
@@ -1008,10 +1054,10 @@ small{color:#bfb7a6}
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/30">
       <div className="relative">
         <DiceCanvas visible={showDice || isRolling3d} onClose={dismissRollToast} />
-        {(showVanishFx || isRolling3d) && (
+        {(showVanishFx) && (
           <div
             key={dicePulse}
-            className="pointer-events-none fixed inset-0 z-[45] bg-gradient-to-b from-transparent via-black/30 to-black/55 animate-dice-vanish"
+            className="pointer-events-none fixed inset-0 z-[45] bg-gradient-to-t from-primary/60 via-background/40 to-transparent animate-dice-vanish"
           />
         )}
       </div>
@@ -1031,7 +1077,7 @@ small{color:#bfb7a6}
           </div>
         </div>
 
-        <div className="mb-6 rounded-2xl border border-border/60 bg-card/40 p-4 backdrop-blur-sm">
+        <div className="mb-6 rounded-2xl border border-border/60 bg-card/40 p-4">
           <div className="mb-3 flex flex-wrap gap-2">
             {[
               "1. Stats",
@@ -1049,7 +1095,7 @@ small{color:#bfb7a6}
                   type="button"
                   onClick={() => step <= maxUnlockedStep && setActiveStep(step)}
                   className={[
-                    "rounded-full px-3 py-1 text-xs transition-all",
+                    "rounded-full px-3 py-1 text-xs transition-colors",
                     activeStep === step
                       ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                       : step <= maxUnlockedStep
@@ -1064,7 +1110,7 @@ small{color:#bfb7a6}
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-secondary/60">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-primary to-cyan-400 transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-primary to-cyan-400 transition-transform duration-500"
               style={{ width: `${(activeStep / 7) * 100}%` }}
             />
           </div>
@@ -1139,7 +1185,7 @@ small{color:#bfb7a6}
                                   }
                                 }}
                                 className={cn(
-                                  "relative w-14 h-14 rounded-lg border-2 flex items-center justify-center transition-all duration-200 cursor-grab active:cursor-grabbing",
+                                  "relative w-14 h-14 rounded-lg border-2 flex items-center justify-center transition-transform duration-200 cursor-grab active:cursor-grabbing",
                                   isAssigned
                                     ? "opacity-40 cursor-pointer hover:opacity-60 border-muted-foreground/30"
                                     : `${diceBg} ${diceBorder} hover:scale-105 shadow-md`
@@ -1186,7 +1232,7 @@ small{color:#bfb7a6}
                                 }
                               }}
                               className={cn(
-                                "relative rounded-lg border-2 p-2 transition-all duration-200",
+                                "relative rounded-lg border-2 p-2 transition-colors duration-200",
                                 isComplete
                                   ? `${group.cardClass} shadow-md`
                                   : "border-dashed border-border/40 bg-secondary/10 hover:border-primary/40 hover:bg-secondary/20"
@@ -1604,17 +1650,17 @@ small{color:#bfb7a6}
             {canShowFinal && selectedClass && assignedStats && modifiers && maxHp !== null && (
               <>
                 <div className="grid gap-4 md:grid-cols-3">
-                  <div className="rounded-xl border border-amber-200/20 bg-black/25 p-4 backdrop-blur-sm shadow-inner">
+                  <div className="rounded-xl border border-amber-200/20 bg-black/25 p-4 shadow-inner">
                     <p className="text-xs text-muted-foreground">Character</p>
                     <p className="text-xl font-black tracking-wide">{characterName || "Unnamed"}</p>
                     <p className="text-sm text-amber-200/80">{selectedClass.name}</p>
                   </div>
-                  <div className="rounded-xl border border-emerald-300/20 bg-emerald-950/20 p-4 backdrop-blur-sm shadow-inner">
+                  <div className="rounded-xl border border-emerald-300/20 bg-emerald-950/20 p-4 shadow-inner">
                     <p className="text-xs text-muted-foreground">Max HP</p>
                     <p className="text-3xl font-black text-emerald-200">{maxHp}</p>
                     <p className="text-xs text-muted-foreground">Base {baseHp} + Extra {extraHpRolls.reduce((a, b) => a + b, 0)}</p>
                   </div>
-                  <div className="rounded-xl border border-sky-300/20 bg-sky-950/20 p-4 backdrop-blur-sm shadow-inner">
+                  <div className="rounded-xl border border-sky-300/20 bg-sky-950/20 p-4 shadow-inner">
                     <p className="text-xs text-muted-foreground">Armor (DR)</p>
                     <p className="text-3xl font-black text-sky-200">{selectedClass.totalStartingArmor}</p>
                     <p className="text-xs text-muted-foreground">Armor subtracts from weapon damage</p>
@@ -1623,7 +1669,7 @@ small{color:#bfb7a6}
 
                 <div className="grid gap-2 md:grid-cols-3">
                   {(["strength", "intelligence", "athletics"] as AttributeKey[]).map((attr) => (
-                    <div key={attr} className="rounded-xl border border-amber-100/15 bg-black/25 p-4 text-center backdrop-blur-sm transition hover:border-amber-300/30 hover:bg-black/35">
+                    <div key={attr} className="rounded-xl border border-amber-100/15 bg-black/25 p-4 text-center transition hover:border-amber-300/30 hover:bg-black/35">
                       <p className="text-xs uppercase tracking-widest text-amber-100/70">{ATTR_LABELS[attr]}</p>
                       <p className="text-3xl font-black">{assignedStats[attr]}</p>
                       <p className="text-sm text-amber-100/80">{formatMod(modifiers[attr])}</p>
@@ -1657,7 +1703,7 @@ small{color:#bfb7a6}
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-xl border border-rose-300/20 bg-rose-950/20 p-4 backdrop-blur-sm">
+                  <div className="rounded-xl border border-rose-300/20 bg-rose-950/20 p-4">
                     <p className="mb-2 text-sm font-semibold tracking-wide text-rose-100/90">Combat Derived</p>
                     <p className="text-sm">Initiative: 1d20 {formatMod(modifiers.athletics)}</p>
                     <Button
@@ -1711,7 +1757,7 @@ small{color:#bfb7a6}
                     )}
                   </div>
 
-                  <div className="rounded-xl border border-indigo-300/20 bg-indigo-950/20 p-4 backdrop-blur-sm">
+                  <div className="rounded-xl border border-indigo-300/20 bg-indigo-950/20 p-4">
                     <p className="mb-2 text-sm font-semibold tracking-wide text-indigo-100/90">Damage vs Enemy Armor</p>
                     <div className="mb-2 flex items-center gap-2">
                       <label className="text-xs text-muted-foreground">Enemy Armor</label>
@@ -1773,7 +1819,7 @@ small{color:#bfb7a6}
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-fuchsia-300/20 bg-fuchsia-950/20 p-4 backdrop-blur-sm">
+                <div className="rounded-xl border border-fuchsia-300/20 bg-fuchsia-950/20 p-4">
                   <p className="mb-2 text-sm font-semibold tracking-wide text-fuchsia-100/90">Purchased Skills</p>
                   <div className="flex flex-wrap gap-2">
                     {Object.entries(skillLevels)
@@ -1787,7 +1833,7 @@ small{color:#bfb7a6}
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-amber-200/20 bg-black/35 p-4 backdrop-blur-sm">
+                <div className="rounded-xl border border-amber-200/20 bg-black/35 p-4">
                   <p className="mb-2 text-sm font-semibold tracking-wide text-amber-100/90">Exports</p>
                   <div className="flex flex-wrap gap-2">
                     <Button variant="outline" onClick={exportCharacterSheetHtml}>Export Character Sheet (HTML)</Button>
@@ -1808,7 +1854,7 @@ small{color:#bfb7a6}
         <div className="fixed bottom-4 right-4 z-[80] w-[320px] animate-in slide-in-from-bottom-4 fade-in duration-300">
           <div
             className={[
-              "rounded-xl border p-4 shadow-2xl backdrop-blur-md",
+              "rounded-xl border p-4 shadow-2xl",
               rollToast.crit === "success"
                 ? "border-emerald-400/60 bg-emerald-950/80"
                 : rollToast.crit === "fail"

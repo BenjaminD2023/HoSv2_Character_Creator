@@ -4,6 +4,27 @@ import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { X, Sparkles, Skull } from "lucide-react";
 
+// Performance-optimized glow component using CSS transforms only
+function CritGlow({ isCrit, isCritFail }: { isCrit: boolean; isCritFail: boolean }) {
+  return (
+    <div
+      className={cn(
+        "absolute inset-0 pointer-events-none transition-opacity duration-500",
+        isCrit ? "opacity-100" : "opacity-0"
+      )}
+      style={{
+        background: isCrit
+          ? "radial-gradient(circle at 50% 50%, rgba(234, 179, 8, 0.4) 0%, transparent 60%)"
+          : isCritFail
+          ? "radial-gradient(circle at 50% 50%, rgba(239, 68, 68, 0.4) 0%, transparent 60%)"
+          : "none",
+        transform: "translateZ(0)", // Force GPU layer
+        willChange: "opacity",
+      }}
+    />
+  );
+}
+
 export type RollType = "strength" | "intelligence" | "athletics" | "initiative" | "charisma" | "damage" | "save";
 
 interface RollResult {
@@ -35,7 +56,6 @@ const TYPE_COLORS: Record<RollType, string> = {
 export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
   const [show, setShow] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; delay: number; size: number }>>([]);
   const isCrit = result?.crit || false;
   const isCritFail = result?.critFail || false;
 
@@ -43,11 +63,11 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
     if (isClosing) return;
     setIsClosing(true);
     setShow(false);
-    // Wait for decompose animation to finish before calling onClose
+    // Wait for fade animation to finish before calling onClose
     setTimeout(() => {
       onClose();
       setIsClosing(false);
-    }, 600);
+    }, 300);
   }, [isClosing, onClose]);
 
   useEffect(() => {
@@ -55,24 +75,10 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
       setShow(true);
       setIsClosing(false);
 
-      // Generate particles for crit effects
-      if (isCrit || isCritFail) {
-        const newParticles = Array.from({ length: 30 }, (_, i) => ({
-          id: i,
-          x: Math.random() * 100,
-          y: Math.random() * 100,
-          delay: Math.random() * 0.3,
-          size: Math.random() * 6 + 2,
-        }));
-        setParticles(newParticles);
-      } else {
-        setParticles([]);
-      }
-
       // Auto-close after appropriate time
       const timeout = setTimeout(() => {
         handleClose();
-      }, isCrit || isCritFail ? 5000 : 3000);
+      }, isCrit || isCritFail ? 4000 : 3000);
 
       return () => clearTimeout(timeout);
     }
@@ -90,56 +96,40 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
         <div
           onClick={handleClose}
           className={cn(
-            "fixed inset-0 z-[200] transition-all duration-1000 cursor-pointer",
+            "fixed inset-0 z-[200] transition-opacity duration-500 cursor-pointer",
             show ? "opacity-100" : "opacity-0",
-            isClosing && "animate-decompose"
+            isClosing && "opacity-0"
           )}
         >
-          {/* Background flash */}
+          {/* Background flash - simplified, no blur */}
           <div
             className={cn(
-              "absolute inset-0 animate-pulse",
-              isCrit && "bg-gradient-to-b from-yellow-500/30 via-amber-500/20 to-transparent",
-              isCritFail && "bg-gradient-to-b from-red-600/40 via-red-900/30 to-transparent"
+              "absolute inset-0 transition-opacity duration-300",
+              isCrit && "bg-gradient-to-b from-yellow-500/20 via-amber-500/10 to-transparent",
+              isCritFail && "bg-gradient-to-b from-red-600/30 via-red-900/20 to-transparent"
             )}
           />
 
-          {/* Particle explosion */}
-          {particles.map((p) => (
-            <div
-              key={p.id}
-              className={cn(
-                "absolute rounded-full animate-ping",
-                isCrit ? "bg-yellow-400" : "bg-red-600"
-              )}
-              style={{
-                left: `${p.x}%`,
-                top: `${p.y}%`,
-                width: p.size,
-                height: p.size,
-                animationDelay: `${p.delay}s`,
-                animationDuration: "1s",
-              }}
-            />
-          ))}
+          {/* Static glow effect instead of animated particles */}
+          <CritGlow isCrit={isCrit} isCritFail={isCritFail} />
 
           {/* Center banner for crit */}
           <div
             className={cn(
-              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center transition-all duration-700",
-              show ? "scale-100 opacity-100" : "scale-50 opacity-0"
+              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center transition-transform duration-500",
+              show ? "scale-100 opacity-100" : "scale-95 opacity-0"
             )}
           >
             <div
               className={cn(
-                "px-12 py-6 rounded-2xl border-2 backdrop-blur-xl",
+                "px-12 py-6 rounded-2xl border-2",
                 isCrit && "bg-gradient-to-r from-yellow-500/90 via-amber-500/90 to-yellow-500/90 border-yellow-300 shadow-2xl shadow-yellow-500/50",
                 isCritFail && "bg-gradient-to-r from-red-600/90 via-red-800/90 to-red-600/90 border-red-400 shadow-2xl shadow-red-600/50"
               )}
             >
               <div className="flex items-center gap-4">
-                {isCrit && <Sparkles className="w-12 h-12 text-white animate-spin" style={{ animationDuration: '2s' }} />}
-                {isCritFail && <Skull className="w-12 h-12 text-white animate-pulse" />}
+                {isCrit && <Sparkles className="w-12 h-12 text-white" />}
+                {isCritFail && <Skull className="w-12 h-12 text-white" />}
                 <div>
                   <p className={cn("text-4xl font-black text-white uppercase tracking-wider", isCrit && "text-shadow-lg")}>
                     {isCrit ? "Critical Success!" : "Critical Fail!"}
@@ -148,19 +138,19 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
                     Rolled a {result.naturalRoll}!
                   </p>
                 </div>
-                {isCrit && <Sparkles className="w-12 h-12 text-white animate-spin" style={{ animationDuration: '2s', animationDirection: 'reverse' }} />}
-                {isCritFail && <Skull className="w-12 h-12 text-white animate-pulse" style={{ animationDelay: '0.5s' }} />}
+                {isCrit && <Sparkles className="w-12 h-12 text-white" />}
+                {isCritFail && <Skull className="w-12 h-12 text-white" />}
               </div>
             </div>
           </div>
 
-          {/* Vignette effect */}
+          {/* Vignette effect - simplified */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               background: isCrit
-                ? "radial-gradient(circle at center, transparent 20%, rgba(255, 215, 0, 0.3) 60%, rgba(255, 215, 0, 0.5) 100%)"
-                : "radial-gradient(circle at center, transparent 20%, rgba(139, 0, 0, 0.4) 60%, rgba(139, 0, 0, 0.6) 100%)",
+                ? "radial-gradient(circle at center, transparent 30%, rgba(234, 179, 8, 0.2) 70%, rgba(234, 179, 8, 0.3) 100%)"
+                : "radial-gradient(circle at center, transparent 30%, rgba(220, 38, 38, 0.3) 70%, rgba(220, 38, 38, 0.4) 100%)",
             }}
           />
         </div>
@@ -170,24 +160,24 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
       <div
         onClick={handleClose}
         className={cn(
-          "fixed bottom-4 right-4 z-[150] transition-all duration-300 cursor-pointer",
+          "fixed bottom-4 right-4 z-[150] transition-transform transition-opacity duration-300 cursor-pointer",
           show ? "translate-x-0 opacity-100" : "translate-x-full opacity-0",
-          isClosing && "animate-decompose"
+          isClosing && "opacity-0"
         )}
       >
         <div
           className={cn(
-            "relative rounded-xl border backdrop-blur-xl overflow-hidden shadow-2xl",
+            "relative rounded-xl border overflow-hidden shadow-2xl",
             isCrit && "border-yellow-500/50 shadow-yellow-500/30",
             isCritFail && "border-red-500/50 shadow-red-500/30",
             !isCrit && !isCritFail && "border-white/10 shadow-black/50"
           )}
           style={{
             background: isCrit
-              ? "linear-gradient(135deg, rgba(234, 179, 8, 0.2), rgba(0, 0, 0, 0.9))"
+              ? "linear-gradient(135deg, rgba(234, 179, 8, 0.3), rgba(0, 0, 0, 0.95))"
               : isCritFail
-              ? "linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(0, 0, 0, 0.9))"
-              : "linear-gradient(135deg, rgba(30, 30, 35, 0.95), rgba(10, 10, 12, 0.98))",
+              ? "linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(0, 0, 0, 0.95))"
+              : "linear-gradient(135deg, rgba(30, 30, 35, 0.98), rgba(10, 10, 12, 0.99))",
           }}
         >
           {/* Glow border */}
@@ -239,9 +229,9 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
                 <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Natural</p>
                 <div
                   className={cn(
-                    "w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-bold border",
-                    isCrit && "bg-yellow-500 border-yellow-400 text-black animate-pulse",
-                    isCritFail && "bg-red-600 border-red-500 text-white animate-pulse",
+                    "w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-bold border transition-transform duration-200",
+                    isCrit && "bg-yellow-500 border-yellow-400 text-black scale-105",
+                    isCritFail && "bg-red-600 border-red-500 text-white scale-105",
                     !isCrit && !isCritFail && "bg-gray-800 border-white/20 text-white"
                   )}
                 >

@@ -28,7 +28,7 @@ export default function HomePage() {
         </header>
 
         <section className="grid gap-4 md:grid-cols-3 animate-in fade-in slide-in-from-bottom-6 duration-700">
-          <Card className="bg-card/60 backdrop-blur-sm border-border/60">
+          <Card className="bg-card/60 border-border/60">
             <CardHeader>
               <CardTitle>Step-Driven Flow</CardTitle>
               <CardDescription>Guided 7-step creator from stats to final sheet.</CardDescription>
@@ -38,7 +38,7 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-card/60 backdrop-blur-sm border-border/60">
+          <Card className="bg-card/60 border-border/60">
             <CardHeader>
               <CardTitle>3D Dice + Roll Feed</CardTitle>
               <CardDescription>Every major roll uses 3D dice with result popups.</CardDescription>
@@ -48,7 +48,7 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-card/60 backdrop-blur-sm border-border/60">
+          <Card className="bg-card/60 border-border/60">
             <CardHeader>
               <CardTitle>HoS Rules Accurate</CardTitle>
               <CardDescription>Built for your custom d20 system, not D&D defaults.</CardDescription>
@@ -60,7 +60,7 @@ export default function HomePage() {
         </section>
 
         <section className="animate-in fade-in slide-in-from-bottom-6 duration-1000">
-          <Card className="bg-card/60 backdrop-blur-sm border-border/60">
+          <Card className="bg-card/60 border-border/60">
             <CardHeader>
               <CardTitle>Character Management</CardTitle>
               <CardDescription>Use dedicated save management with multiple slots and exports.</CardDescription>

@@ -56,7 +56,7 @@ export function CharacterSheet({ character, onReset }: CharacterSheetProps) {
   const proficiencyBonus = Math.floor((level - 1) / 4) + 2;
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+    <Card className="border-border/50 bg-card/50 overflow-hidden">
       {/* Header with Class Gradient */}
       <div
         className={cn(

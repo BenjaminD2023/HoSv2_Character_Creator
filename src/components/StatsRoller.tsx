@@ -199,7 +199,7 @@ export function StatsRoller({ onStatsRolled, primaryStat }: StatsRollerProps) {
   const assignedValues = Object.values(assignedStats).filter((v): v is number => v !== null);
 
   return (
-    <Card className="border-border/50 bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-xl overflow-hidden">
+    <Card className="border-border/50 bg-gradient-to-b from-card/80 to-card/40 overflow-hidden">
       {/* Background glow effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
 
@@ -234,12 +234,12 @@ export function StatsRoller({ onStatsRolled, primaryStat }: StatsRollerProps) {
         {phase === "initial" && (
           <div className="text-center py-8 space-y-6">
             <div className="relative">
-              <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
+              <div className="absolute inset-0 bg-primary/10 rounded-full" />
               <Button
                 onClick={rollAllStats}
                 disabled={!isReady}
                 size="lg"
-                className="relative w-full max-w-sm h-20 text-xl font-bold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="relative w-full max-w-sm h-20 text-xl font-bold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/25 transition-transform hover:scale-[1.02] active:scale-[0.98]"
               >
                 <span className="flex items-center gap-3">
                   <span className="text-2xl">🎲</span>
@@ -261,7 +261,7 @@ export function StatsRoller({ onStatsRolled, primaryStat }: StatsRollerProps) {
                 <div
                   key={i}
                   className={cn(
-                    "w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold transition-all duration-300",
+                    "w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold transition-colors duration-300",
                     i < rolledValues.length
                       ? "bg-gradient-to-br from-emerald-500/30 to-emerald-600/30 border border-emerald-500/50 text-emerald-300"
                       : i === rollingStatIndex
@@ -304,7 +304,7 @@ export function StatsRoller({ onStatsRolled, primaryStat }: StatsRollerProps) {
                       onClick={() => !isAssigned && handleValueSelect(value)}
                       disabled={isAssigned}
                       className={cn(
-                        "relative aspect-square rounded-xl flex flex-col items-center justify-center transition-all duration-200",
+                        "relative aspect-square rounded-xl flex flex-col items-center justify-center transition-transform duration-200",
                         isAssigned
                           ? "bg-secondary/30 border border-border/30 opacity-40"
                           : isSelected
@@ -359,7 +359,7 @@ export function StatsRoller({ onStatsRolled, primaryStat }: StatsRollerProps) {
                       key={stat.key}
                       onClick={() => isClickable && handleStatAssign(stat.key)}
                       className={cn(
-                        "relative group rounded-xl border transition-all duration-300 overflow-hidden",
+                        "relative group rounded-xl border transition-colors duration-300 overflow-hidden",
                         assignedValue
                           ? "bg-secondary/50 border-border/50"
                           : isClickable
@@ -440,7 +440,7 @@ export function StatsRoller({ onStatsRolled, primaryStat }: StatsRollerProps) {
                         ) : (
                           <div
                             className={cn(
-                              "px-4 py-2 rounded-lg border text-sm font-medium transition-all",
+                              "px-4 py-2 rounded-lg border text-sm font-medium transition-colors",
                               isClickable
                                 ? "bg-primary text-primary-foreground border-primary"
                                 : "bg-secondary/50 border-border/50 text-muted-foreground"
@@ -470,7 +470,7 @@ export function StatsRoller({ onStatsRolled, primaryStat }: StatsRollerProps) {
                 onClick={handleConfirm}
                 disabled={!isAllAssigned}
                 className={cn(
-                  "flex-1 h-12 font-semibold transition-all",
+                  "flex-1 h-12 font-semibold transition-colors",
                   isAllAssigned
                     ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 shadow-lg shadow-emerald-500/25"
                     : "opacity-50 cursor-not-allowed"
@@ -496,7 +496,7 @@ export function StatsRoller({ onStatsRolled, primaryStat }: StatsRollerProps) {
                   <div
                     key={stat.key}
                     className={cn(
-                      "relative p-4 rounded-xl border text-center transition-all",
+                      "relative p-4 rounded-xl border text-center transition-transform",
                       isPrimary
                         ? "bg-gradient-to-b from-primary/20 to-primary/5 border-primary/50"
                         : "bg-secondary/30 border-border/30"

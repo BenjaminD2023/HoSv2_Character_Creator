@@ -33,7 +33,7 @@ export function ClassSelector({ classes, selectedClass, onSelect }: ClassSelecto
           <Card
             key={characterClass.id}
             className={cn(
-              "cursor-pointer transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden group",
+              "cursor-pointer transition-transform duration-300 border-border/50 bg-card/50 overflow-hidden group",
               isSelected
                 ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.02]"
                 : "hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1"
