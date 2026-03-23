@@ -469,6 +469,8 @@ export default function CharacterSheetPage() {
       total: naturalRoll,
       type: "charisma",
       diceSize: character.charismaDie,
+      crit: naturalRoll === character.charismaDie,
+      critFail: naturalRoll === 1,
     });
   };
 
