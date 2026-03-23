@@ -53,10 +53,10 @@ Fix both dice rolling issues so that:
 - Verified working popups for all roll scenarios
 
 ### Definition of Done
-- [ ] Advantage/disadvantage rolls visually show both dice rolling at the same time
-- [ ] Custom rolls with advantage/disadvantage show the result popup with both roll values
-- [ ] Stat check rolls with advantage/disadvantage show the result popup
-- [ ] All existing normal rolls continue to work correctly
+- [x] Advantage/disadvantage rolls visually show both dice rolling at the same time
+- [x] Custom rolls with advantage/disadvantage show the result popup with both roll values
+- [x] Stat check rolls with advantage/disadvantage show the result popup
+- [x] All existing normal rolls continue to work correctly
 
 ### Must Have
 - Parallel execution of advantage/disadvantage rolls
@@ -107,7 +107,7 @@ Wave 1:
 
 ## TODOs
 
-- [ ] 1. Fix sequential rolling in rollCheckWithMode()
+- [x] 1. Fix sequential rolling in rollCheckWithMode()
 
   **What to do**:
   - Modify `rollCheckWithMode()` in `src/app/sheet/page.tsx` (lines 521-539)
@@ -195,7 +195,7 @@ Wave 1:
   - Message: `fix(dice): roll advantage/disadvantage dice simultaneously`
   - Files: `src/app/sheet/page.tsx`
 
-- [ ] 2. Fix popup not showing for custom advantage/disadvantage rolls
+- [x] 2. Fix popup not showing for custom advantage/disadvantage rolls
 
   **What to do**:
   - Debug and fix `rollCustomDice()` in `src/app/sheet/page.tsx` (lines 443-508)
@@ -302,7 +302,7 @@ Wave 1:
 
 ## Final Verification Wave
 
-- [ ] F1. **Comprehensive Dice Rolling Test** - `unspecified-high` (+ `playwright` skill)
+- [x] F1. **Comprehensive Dice Rolling Test** - `unspecified-high` (+ `playwright` skill)
   Test ALL roll scenarios to ensure no regressions:
   1. Normal stat check (click STR card)
   2. Stat check with advantage (right-click STR → Advantage)
@@ -337,10 +337,10 @@ npm run test  # Run e2e tests if available
 ```
 
 ### Final Checklist
-- [ ] Advantage rolls show both dice rolling at once
-- [ ] Disadvantage rolls show both dice rolling at once
-- [ ] Custom advantage rolls show popup with both values
-- [ ] Custom disadvantage rolls show popup with both values
-- [ ] All existing roll types continue to work
-- [ ] No console errors during dice rolling
-- [ ] TypeScript compilation passes
+- [x] Advantage rolls show both dice rolling at once
+- [x] Disadvantage rolls show both dice rolling at once
+- [x] Custom advantage rolls show popup with both values
+- [x] Custom disadvantage rolls show popup with both values
+- [x] All existing roll types continue to work
+- [x] No console errors during dice rolling
+- [x] TypeScript compilation passes
