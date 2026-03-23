@@ -116,7 +116,7 @@ function generateId(): string {
 
 export default function CharacterSheetPage() {
   const router = useRouter();
-  const { rollDice, isReady } = useDice();
+  const { rollDice, rollDiceBatch, isReady } = useDice();
   const [character, setCharacter] = useState<CharacterData | null>(null);
   const [currentHp, setCurrentHp] = useState(0);
   const [tempHp, setTempHp] = useState(0);
@@ -452,11 +452,13 @@ export default function CharacterSheetPage() {
       const group1Color = "#00FFFF"; // Cyan
       const group2Color = "#7400b8"; // Purple
 
-      // Roll both simultaneously for visual effect
-      const [results1, results2] = await Promise.all([
-        rollDice(diceNotation, { theme: "smooth", themeColor: group1Color }),
-        rollDice(diceNotation, { theme: "smooth", themeColor: group2Color }),
+      // Roll both simultaneously using batch
+      const batchResults = await rollDiceBatch([
+        { notation: diceNotation, options: { theme: "smooth", themeColor: group1Color } },
+        { notation: diceNotation, options: { theme: "smooth", themeColor: group2Color } }
       ]);
+      const results1 = batchResults[0] || [];
+      const results2 = batchResults[1] || [];
 
       const total1 = results1.reduce((sum, r) => sum + r.value, 0);
       const total2 = results2.reduce((sum, r) => sum + r.value, 0);
@@ -519,11 +521,13 @@ export default function CharacterSheetPage() {
     let kept: "roll1" | "roll2" | undefined;
 
     if (mode === "advantage" || mode === "disadvantage") {
-      // Roll both dice simultaneously
-      const [results1, results2] = await Promise.all([
-        rollDice("1d20", { theme: "smooth", themeColor: color }),
-        rollDice("1d20", { theme: "smooth", themeColor: color })
+      // Roll both dice simultaneously using batch
+      const batchResults = await rollDiceBatch([
+        { notation: "1d20", options: { theme: "smooth", themeColor: color } },
+        { notation: "1d20", options: { theme: "smooth", themeColor: color } }
       ]);
+      const results1 = batchResults[0] || [{ value: 0 }];
+      const results2 = batchResults[1] || [{ value: 0 }];
 
       roll1 = results1[0]?.value || 0;
       roll2 = results2[0]?.value || 0;
