@@ -1482,6 +1482,7 @@ export default function CharacterSheetPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={rollInitiative}
+                    onContextMenu={(e) => handleContextMenu(e, "initiative")}
                     disabled={!isReady}
                     className="group relative overflow-hidden rounded-xl p-4 border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-green-600/5 transition-transform hover:scale-105 hover:border-emerald-500/50"
                   >
