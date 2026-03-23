@@ -935,6 +935,14 @@ export default function Home() {
   const handleRollAllExtraHp = async () => {
     if (!selectedClass || baseHp === null || extraDiceCount <= 0 || !isReady || isRolling3d) return;
 
+    // Warning: check if user already has rolls that will be overwritten
+    if (extraHpRolls.length > 0) {
+      const confirmOverwrite = window.confirm(
+        `You already have ${extraHpRolls.length} Extra HP roll(s) totaling ${extraHpRolls.reduce((a, b) => a + b, 0)}.\n\nRolling all Extra HP dice will OVERWRITE your previous rolls.\n\nDo you want to continue?`
+      );
+      if (!confirmOverwrite) return;
+    }
+
     if (hideTimerRef.current) {
       window.clearTimeout(hideTimerRef.current);
       hideTimerRef.current = null;
@@ -946,27 +954,35 @@ export default function Home() {
     setShowDice(true);
     await new Promise((resolve) => setTimeout(resolve, 80));
 
-    const groups = await rollBatchWith3d(
-      Array.from({ length: extraDiceCount }, () => ({
-        notation: `1d${selectedClass.hitDie}`,
-        options: { theme: "smooth", themeColor: DICE_GROUP_STYLE.hp.themeColor },
-      }))
-    );
+    // Roll all dice at once without staggering
+    const items = Array.from({ length: extraDiceCount }, () => ({
+      notation: `1d${selectedClass.hitDie}`,
+      options: { theme: "smooth", themeColor: DICE_GROUP_STYLE.hp.themeColor },
+    }));
 
-    if (groups.length < extraDiceCount) {
-      return;
+    try {
+      // Use dice context's batch roll directly (no staggering)
+      const groups = await rollDiceBatch(items);
+
+      if (groups.length < extraDiceCount) {
+        return;
+      }
+
+      const values = groups.map((group) => group[0]?.value ?? 0).slice(0, extraDiceCount);
+
+      setExtraHpRolls(values);
+      announceRoll({
+        label: "Roll All Extra HP Dice",
+        notation: `${extraDiceCount}x d${selectedClass.hitDie}`,
+        raw: values,
+        total: values.reduce((sum, v) => sum + v, 0),
+        final: values.reduce((sum, v) => sum + v, 0),
+      });
+    } catch (error) {
+      console.error("Extra HP roll failed:", error);
+    } finally {
+      setIsRolling3d(false);
     }
-
-    const values = groups.map((group) => group[0]?.value ?? 0).slice(0, extraDiceCount);
-
-    setExtraHpRolls(values);
-    announceRoll({
-      label: "Roll All Extra HP Dice",
-      notation: `${extraDiceCount}x d${selectedClass.hitDie}`,
-      raw: values,
-      total: values.reduce((sum, v) => sum + v, 0),
-      final: values.reduce((sum, v) => sum + v, 0),
-    });
   };
 
   const usedIndexes = new Set(
@@ -1476,7 +1492,7 @@ small{color:#bfb7a6}
         )}
 
         {activeStep === 4 && (
-          <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <Card>
             <CardHeader>
               <CardTitle>Step 4: XP Input</CardTitle>
               <CardDescription>Set starting XP and determine extra hit dice thresholds.</CardDescription>
@@ -1851,7 +1867,7 @@ small{color:#bfb7a6}
       </main>
 
       {rollToast && (
-        <div className="fixed bottom-4 right-4 z-[80] w-[320px] animate-in slide-in-from-bottom-4 fade-in duration-300">
+        <div className="fixed bottom-4 right-4 z-[80] w-[320px]">
           <div
             className={[
               "rounded-xl border p-4 shadow-2xl",

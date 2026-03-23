@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Edit2, Minus, Plus, Heart, Sword, Brain, Zap, Shield, Sparkles, Dices, Trash2, Package } from "lucide-react";
+import { Edit2, Minus, Plus, Heart, Sword, Brain, Zap, Shield, Sparkles, Dices, Trash2, Package, Settings2 } from "lucide-react";
 import { DiceCanvas } from "@/components/DiceCanvas";
 import { RollResultPopup, RollType } from "@/components/RollResultPopup";
 import { useDice } from "@/contexts";
@@ -30,6 +30,7 @@ type InventoryItem = {
   damageDice?: string;
   flatDamage?: number;
   mod?: AttributeKey;
+  customMod?: number;
 };
 
 type CharacterData = {
@@ -133,6 +134,10 @@ export default function CharacterSheetPage() {
     diceSize?: number;
     crit?: boolean;
     critFail?: boolean;
+    mode?: "normal" | "advantage" | "disadvantage";
+    roll1?: number;
+    roll2?: number;
+    kept?: "roll1" | "roll2";
   } | null>(null);
 
   // Inventory dialog state
@@ -141,9 +146,26 @@ export default function CharacterSheetPage() {
   const [newItemQuantity, setNewItemQuantity] = useState(1);
   const [newItemType, setNewItemType] = useState<"item" | "weapon">("item");
   const [newWeaponDamage, setNewWeaponDamage] = useState("");
-  const [newWeaponMod, setNewWeaponMod] = useState<AttributeKey>("strength");
+  const [newWeaponMod, setNewWeaponMod] = useState<AttributeKey | undefined>(undefined);
+  const [newWeaponCustomMod, setNewWeaponCustomMod] = useState<number>(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+
+  // Custom dice roller state
+  const [customDiceOpen, setCustomDiceOpen] = useState(false);
+  const [diceCount, setDiceCount] = useState(1);
+  const [diceType, setDiceType] = useState(20);
+  const [diceModifier, setDiceModifier] = useState(0);
+  const [rollMode, setRollMode] = useState<"normal" | "advantage" | "disadvantage">("normal");
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    show: boolean;
+    x: number;
+    y: number;
+    type: "stat" | "roll";
+    key?: AttributeKey | string;
+  }>({ show: false, x: 0, y: 0, type: "stat" });
 
   useEffect(() => {
     const saved = localStorage.getItem(CHARACTER_STORAGE_KEY);
@@ -160,7 +182,7 @@ export default function CharacterSheetPage() {
         }));
 
         // Convert weapons to inventory format
-        const startingWeapons: InventoryItem[] = (parsed.weapons || []).map((w: any) => ({
+        const startingWeapons: InventoryItem[] = (parsed.weapons || []).map((w: { name: string; damageDice?: string; flatDamage?: number; mod?: AttributeKey; customMod?: number }) => ({
           id: generateId(),
           name: w.name,
           quantity: 1,
@@ -168,6 +190,7 @@ export default function CharacterSheetPage() {
           damageDice: w.damageDice,
           flatDamage: w.flatDamage,
           mod: w.mod,
+          customMod: w.customMod,
         }));
 
         const charData: CharacterData = {
@@ -242,19 +265,24 @@ export default function CharacterSheetPage() {
     }
   };
 
+  const applyDamage = (amount: number) => {
+    if (amount <= 0) return;
+    if (tempHp > 0) {
+      const tempAbsorb = Math.min(tempHp, amount);
+      setTempHp((prev) => prev - tempAbsorb);
+      const remaining = amount - tempAbsorb;
+      if (remaining > 0) {
+        setCurrentHp((prev) => Math.max(0, prev - remaining));
+      }
+    } else {
+      setCurrentHp((prev) => Math.max(0, prev - amount));
+    }
+  };
+
   const handleDamage = () => {
     const amount = parseInt(hpInput) || 0;
     if (amount > 0) {
-      if (tempHp > 0) {
-        const tempAbsorb = Math.min(tempHp, amount);
-        setTempHp((prev) => prev - tempAbsorb);
-        const remaining = amount - tempAbsorb;
-        if (remaining > 0) {
-          setCurrentHp((prev) => Math.max(0, prev - remaining));
-        }
-      } else {
-        setCurrentHp((prev) => Math.max(0, prev - amount));
-      }
+      applyDamage(amount);
       setHpInput("");
     }
   };
@@ -272,6 +300,9 @@ export default function CharacterSheetPage() {
     setXp((prev) => prev + amount);
   };
 
+  // Make addXp available for future use
+  void addXp;
+
   // Inventory handlers
   const addInventoryItem = () => {
     if (!newItemName.trim()) return;
@@ -285,6 +316,7 @@ export default function CharacterSheetPage() {
       ...(newItemType === "weapon" && {
         damageDice: newWeaponDamage.trim() || undefined,
         mod: newWeaponMod,
+        customMod: newWeaponCustomMod || undefined,
       }),
     };
 
@@ -310,7 +342,8 @@ export default function CharacterSheetPage() {
     setNewItemQuantity(item.quantity);
     setNewItemType(item.type);
     setNewWeaponDamage(item.damageDice || "");
-    setNewWeaponMod(item.mod || "strength");
+    setNewWeaponMod(item.mod);
+    setNewWeaponCustomMod(item.customMod || 0);
     setDialogOpen(true);
   };
 
@@ -320,7 +353,8 @@ export default function CharacterSheetPage() {
     setNewItemQuantity(1);
     setNewItemType("item");
     setNewWeaponDamage("");
-    setNewWeaponMod("strength");
+    setNewWeaponMod(undefined);
+    setNewWeaponCustomMod(0);
     setEditingItem(null);
   };
 
@@ -405,6 +439,159 @@ export default function CharacterSheetPage() {
     });
   };
 
+  // Custom dice roller with advantage/disadvantage support
+  const rollCustomDice = async () => {
+    if (!isReady) return;
+    setShowDice(true);
+    setCustomDiceOpen(false);
+
+    const diceNotation = `${diceCount}d${diceType}`;
+
+    if (rollMode === "advantage" || rollMode === "disadvantage") {
+      // Roll both groups together with different colors
+      const group1Color = "#00FFFF"; // Cyan
+      const group2Color = "#7400b8"; // Purple
+
+      // Roll both simultaneously for visual effect
+      const [results1, results2] = await Promise.all([
+        rollDice(diceNotation, { theme: "smooth", themeColor: group1Color }),
+        rollDice(diceNotation, { theme: "smooth", themeColor: group2Color }),
+      ]);
+
+      const total1 = results1.reduce((sum, r) => sum + r.value, 0);
+      const total2 = results2.reduce((sum, r) => sum + r.value, 0);
+
+      const finalRoll = rollMode === "advantage" ? Math.max(total1, total2) : Math.min(total1, total2);
+      const kept: "roll1" | "roll2" = rollMode === "advantage"
+        ? (total1 > total2 ? "roll1" : "roll2")
+        : (total1 < total2 ? "roll1" : "roll2");
+
+      const total = finalRoll + diceModifier;
+      const isCrit = diceType === 20 && finalRoll === 20;
+      const isCritFail = diceType === 20 && finalRoll === 1;
+
+      setRollResult({
+        label: `Custom ${diceNotation} (${rollMode})`,
+        naturalRoll: finalRoll,
+        modifier: diceModifier,
+        total,
+        type: "save",
+        diceSize: diceType,
+        crit: isCrit,
+        critFail: isCritFail,
+        mode: rollMode,
+        roll1: total1,
+        roll2: total2,
+        kept,
+      });
+    } else {
+      // Normal roll - use orange color
+      const themeColor = "#FF7F00";
+      const results = await rollDice(diceNotation, { theme: "smooth", themeColor });
+      const finalRoll = results.reduce((sum, r) => sum + r.value, 0);
+      const total = finalRoll + diceModifier;
+      const isCrit = diceType === 20 && finalRoll === 20;
+      const isCritFail = diceType === 20 && finalRoll === 1;
+
+      setRollResult({
+        label: `Custom ${diceNotation}`,
+        naturalRoll: finalRoll,
+        modifier: diceModifier,
+        total,
+        type: "save",
+        diceSize: diceType,
+        crit: isCrit,
+        critFail: isCritFail,
+        mode: "normal",
+      });
+    }
+  };
+
+  // Roll check with advantage/disadvantage
+  const rollCheckWithMode = async (attr: AttributeKey, mode: "normal" | "advantage" | "disadvantage") => {
+    if (!isReady || !character) return;
+    setShowDice(true);
+    const color = ATTR_COLORS[attr];
+
+    let finalRoll: number;
+    let roll1: number | undefined;
+    let roll2: number | undefined;
+    let kept: "roll1" | "roll2" | undefined;
+
+    if (mode === "advantage" || mode === "disadvantage") {
+      // Roll both dice simultaneously
+      const [results1, results2] = await Promise.all([
+        rollDice("1d20", { theme: "smooth", themeColor: color }),
+        rollDice("1d20", { theme: "smooth", themeColor: color })
+      ]);
+
+      roll1 = results1[0]?.value || 0;
+      roll2 = results2[0]?.value || 0;
+
+      if (mode === "advantage") {
+        finalRoll = Math.max(roll1, roll2);
+        kept = roll1 > roll2 ? "roll1" : "roll2";
+      } else {
+        finalRoll = Math.min(roll1, roll2);
+        kept = roll1 < roll2 ? "roll1" : "roll2";
+      }
+    } else {
+      const results = await rollDice("1d20", { theme: "smooth", themeColor: color });
+      finalRoll = results[0]?.value || 0;
+    }
+
+    const modifier = getModifier(character.stats[attr]);
+    const total = finalRoll + modifier;
+
+    setRollResult({
+      label: `${ATTR_LABELS[attr]}`,
+      naturalRoll: finalRoll,
+      modifier,
+      total,
+      type: attr as RollType,
+      diceSize: 20,
+      crit: finalRoll === 20,
+      critFail: finalRoll === 1,
+      mode,
+      roll1,
+      roll2,
+      kept,
+    });
+
+    setContextMenu(prev => ({ ...prev, show: false }));
+  };
+
+  // Context menu handlers
+  const handleContextMenu = (e: React.MouseEvent, type: "stat" | "roll", key?: AttributeKey | string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({
+      show: true,
+      x: e.clientX,
+      y: e.clientY,
+      type,
+      key,
+    });
+  };
+
+  const closeContextMenu = () => {
+    setContextMenu(prev => ({ ...prev, show: false }));
+  };
+
+  // Close context menu on click outside
+  useEffect(() => {
+    if (contextMenu.show) {
+      const handleClick = () => closeContextMenu();
+      const handleScroll = () => closeContextMenu();
+      document.addEventListener("click", handleClick);
+      document.addEventListener("scroll", handleScroll);
+      return () => {
+        document.removeEventListener("click", handleClick);
+        document.removeEventListener("scroll", handleScroll);
+      };
+    }
+  }, [contextMenu.show]);
+
   if (!character) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0c]">
@@ -438,6 +625,154 @@ export default function CharacterSheetPage() {
 
       <DiceCanvas visible={showDice} onClose={() => setShowDice(false)} />
       <RollResultPopup result={rollResult} onClose={() => setRollResult(null)} />
+
+      {/* Context Menu */}
+      {contextMenu.show && (
+        <div
+          className="fixed z-[300] bg-gray-900 border border-white/20 rounded-lg shadow-xl py-1 min-w-[140px]"
+          style={{
+            left: Math.min(contextMenu.x, window.innerWidth - 160),
+            top: Math.min(contextMenu.y, window.innerHeight - 120),
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {contextMenu.type === "stat" && contextMenu.key && (
+            <>
+              <button
+                className="w-full px-3 py-2 text-left text-sm text-emerald-400 hover:bg-white/10 transition-colors flex items-center gap-2"
+                onClick={() => rollCheckWithMode(contextMenu.key as AttributeKey, "advantage")}
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                Advantage
+              </button>
+              <button
+                className="w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                onClick={() => rollCheckWithMode(contextMenu.key as AttributeKey, "normal")}
+              >
+                <span className="w-2 h-2 rounded-full bg-white/50" />
+                Flat Roll
+              </button>
+              <button
+                className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-white/10 transition-colors flex items-center gap-2"
+                onClick={() => rollCheckWithMode(contextMenu.key as AttributeKey, "disadvantage")}
+              >
+                <span className="w-2 h-2 rounded-full bg-red-400" />
+                Disadvantage
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Custom Dice Roller Dialog */}
+      <Dialog open={customDiceOpen} onOpenChange={setCustomDiceOpen}>
+        <DialogContent className="bg-gray-900 border-white/10 text-white max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Dices className="w-5 h-5 text-purple-400" />
+              Custom Dice Roller
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            {/* Dice Count */}
+            <div>
+              <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Number of Dice</label>
+              <Input
+                type="number"
+                min={1}
+                value={diceCount}
+                onChange={(e) => setDiceCount(Math.max(1, parseInt(e.target.value) || 1))}
+                className="bg-black/20 border-white/10 text-white"
+              />
+            </div>
+
+            {/* Dice Type */}
+            <div>
+              <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Dice Type</label>
+              <div className="flex gap-1">
+                {[4, 6, 8, 10, 12, 20, 100].map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => setDiceType(d)}
+                    className={cn(
+                      "flex-1 py-2 rounded text-sm font-medium transition-colors",
+                      diceType === d
+                        ? "bg-amber-600 text-white"
+                        : "bg-white/5 text-white/60 hover:bg-white/10"
+                    )}
+                  >
+                    d{d}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Roll Mode */}
+            <div>
+              <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Roll Mode</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setRollMode("normal")}
+                  className={cn(
+                    "flex-1 py-2 rounded text-sm font-medium transition-colors",
+                    rollMode === "normal"
+                      ? "bg-blue-600 text-white"
+                      : "bg-white/5 text-white/60 hover:bg-white/10"
+                  )}
+                >
+                  Normal
+                </button>
+                <button
+                  onClick={() => setRollMode("advantage")}
+                  className={cn(
+                    "flex-1 py-2 rounded text-sm font-medium transition-colors",
+                    rollMode === "advantage"
+                      ? "bg-emerald-600 text-white"
+                      : "bg-white/5 text-white/60 hover:bg-white/10"
+                  )}
+                >
+                  Advantage
+                </button>
+                <button
+                  onClick={() => setRollMode("disadvantage")}
+                  className={cn(
+                    "flex-1 py-2 rounded text-sm font-medium transition-colors",
+                    rollMode === "disadvantage"
+                      ? "bg-red-600 text-white"
+                      : "bg-white/5 text-white/60 hover:bg-white/10"
+                  )}
+                >
+                  Disadvantage
+                </button>
+              </div>
+            </div>
+
+            {/* Modifier */}
+            <div>
+              <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Modifier</label>
+              <Input
+                type="number"
+                value={diceModifier}
+                onChange={(e) => setDiceModifier(parseInt(e.target.value) || 0)}
+                placeholder="0"
+                className="bg-black/20 border-white/10 text-white"
+              />
+            </div>
+
+            {/* Roll Button */}
+            <Button
+              className="w-full bg-purple-600 hover:bg-purple-500"
+              onClick={rollCustomDice}
+              disabled={!isReady}
+            >
+              <Dices className="w-4 h-4 mr-2" />
+              Roll {diceCount}d{diceType}
+              {diceModifier !== 0 && ` ${diceModifier >= 0 ? '+' : ''}${diceModifier}`}
+              {rollMode !== "normal" && ` (${rollMode})`}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Main container - optimized for 2.5k display */}
       <div className="relative z-10 h-screen p-4 md:p-6 lg:p-8 flex flex-col">
@@ -500,6 +835,7 @@ export default function CharacterSheetPage() {
                   <button
                     key={attr}
                     onClick={() => rollCheck(attr)}
+                    onContextMenu={(e) => handleContextMenu(e, "stat", attr)}
                     disabled={!isReady}
                     className={cn(
                       "group relative overflow-hidden rounded-2xl border transition-transform duration-300 hover:scale-105",
@@ -675,7 +1011,7 @@ export default function CharacterSheetPage() {
                     size="sm"
                     variant="outline"
                     className="h-8 text-xs font-medium border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 px-1"
-                    onClick={() => setCurrentHp((prev) => Math.max(0, prev - 10))}
+                    onClick={() => applyDamage(10)}
                   >
                     <Minus className="w-3 h-3 mr-0.5" />
                     10
@@ -684,7 +1020,7 @@ export default function CharacterSheetPage() {
                     size="sm"
                     variant="outline"
                     className="h-8 text-xs font-medium border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 px-1"
-                    onClick={() => setCurrentHp((prev) => Math.max(0, prev - 5))}
+                    onClick={() => applyDamage(5)}
                   >
                     <Minus className="w-3 h-3 mr-0.5" />
                     5
@@ -693,7 +1029,7 @@ export default function CharacterSheetPage() {
                     size="sm"
                     variant="outline"
                     className="h-8 text-xs font-medium border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 px-1"
-                    onClick={() => setCurrentHp((prev) => Math.max(0, prev - 2))}
+                    onClick={() => applyDamage(2)}
                   >
                     <Minus className="w-3 h-3 mr-0.5" />
                     2
@@ -702,7 +1038,7 @@ export default function CharacterSheetPage() {
                     size="sm"
                     variant="outline"
                     className="h-8 text-xs font-medium border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 px-1"
-                    onClick={() => setCurrentHp((prev) => Math.max(0, prev - 1))}
+                    onClick={() => applyDamage(1)}
                   >
                     <Minus className="w-3 h-3 mr-0.5" />
                     1
@@ -865,6 +1201,15 @@ export default function CharacterSheetPage() {
                             <div>
                               <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Modifier Attribute</label>
                               <div className="flex gap-2">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant={newWeaponMod === undefined ? "default" : "outline"}
+                                  className={newWeaponMod === undefined ? "bg-gray-600" : ""}
+                                  onClick={() => setNewWeaponMod(undefined)}
+                                >
+                                  None
+                                </Button>
                                 {(Object.keys(ATTR_LABELS) as AttributeKey[]).map((attr) => (
                                   <Button
                                     key={attr}
@@ -878,6 +1223,16 @@ export default function CharacterSheetPage() {
                                   </Button>
                                 ))}
                               </div>
+                            </div>
+                            <div>
+                              <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Custom Modifier (optional)</label>
+                              <Input
+                                type="number"
+                                value={newWeaponCustomMod || ""}
+                                onChange={(e) => setNewWeaponCustomMod(parseInt(e.target.value) || 0)}
+                                placeholder="e.g., +2 or -1"
+                                className="bg-black/20 border-white/10 text-white"
+                              />
                             </div>
                           </>
                         )}
@@ -932,7 +1287,10 @@ export default function CharacterSheetPage() {
                     <p className="text-sm text-white/30 text-center py-4">No weapons</p>
                   ) : (
                     weapons.map((w) => {
-                      const mod = w.mod ? getModifier(character.stats[w.mod]) : 0;
+                      const statMod = w.mod ? getModifier(character.stats[w.mod]) : 0;
+                      const customMod = w.customMod || 0;
+                      const totalMod = statMod + customMod;
+                      const hasAnyMod = w.mod || customMod !== 0;
                       return (
                         <div
                           key={w.id}
@@ -941,9 +1299,12 @@ export default function CharacterSheetPage() {
                         >
                           <div>
                             <p className="font-medium text-white">{w.name}</p>
-                            {w.mod && (
+                            {hasAnyMod && (
                               <p className="text-xs text-white/40">
-                                {ATTR_LABELS[w.mod]} {formatMod(mod)}
+                                {w.mod && `${ATTR_LABELS[w.mod]} ${formatMod(statMod)}`}
+                                {w.mod && customMod !== 0 && " + "}
+                                {customMod !== 0 && `custom ${formatMod(customMod)}`}
+                                {totalMod !== 0 && ` = ${formatMod(totalMod)}`}
                               </p>
                             )}
                           </div>
@@ -954,7 +1315,7 @@ export default function CharacterSheetPage() {
                               className="h-8 px-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 hover:border-red-500/50"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                rollDamage(w.name, w.damageDice!, mod);
+                                rollDamage(w.name, w.damageDice!, totalMod);
                               }}
                               disabled={!isReady}
                             >
@@ -985,7 +1346,18 @@ export default function CharacterSheetPage() {
             {/* Quick Actions */}
             <Card className="border-white/10 bg-white/5">
               <CardContent className="p-5">
-                <p className="text-xs text-white/40 uppercase tracking-wider mb-4">Quick Rolls</p>
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs text-white/40 uppercase tracking-wider">Quick Rolls</p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 px-2 text-xs text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
+                    onClick={() => setCustomDiceOpen(true)}
+                  >
+                    <Settings2 className="w-3 h-3 mr-1" />
+                    Custom
+                  </Button>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={rollInitiative}

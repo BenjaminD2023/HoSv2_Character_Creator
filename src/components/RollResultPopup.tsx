@@ -36,6 +36,11 @@ interface RollResult {
   diceSize?: number;
   crit?: boolean;
   critFail?: boolean;
+  // For advantage/disadvantage display
+  roll1?: number;
+  roll2?: number;
+  kept?: "roll1" | "roll2";
+  mode?: "normal" | "advantage" | "disadvantage";
 }
 
 interface RollResultPopupProps {
@@ -77,12 +82,17 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
 
       // Auto-close after appropriate time
       const timeout = setTimeout(() => {
-        handleClose();
-      }, isCrit || isCritFail ? 4000 : 3000);
+        setIsClosing(true);
+        setShow(false);
+        setTimeout(() => {
+          onClose();
+          setIsClosing(false);
+        }, 300);
+      }, result.crit || result.critFail ? 4000 : 3000);
 
       return () => clearTimeout(timeout);
     }
-  }, [result, isCrit, isCritFail, handleClose]);
+  }, [result, onClose]);
 
   if (!result) return null;
 
@@ -223,55 +233,92 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
             </div>
 
             {/* Roll Result */}
-            <div className="flex items-center justify-center gap-3">
-              {/* Natural Roll */}
-              <div className="text-center">
-                <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Natural</p>
-                <div
-                  className={cn(
-                    "w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-bold border transition-transform duration-200",
-                    isCrit && "bg-yellow-500 border-yellow-400 text-black scale-105",
-                    isCritFail && "bg-red-600 border-red-500 text-white scale-105",
-                    !isCrit && !isCritFail && "bg-gray-800 border-white/20 text-white"
-                  )}
-                >
-                  {result.naturalRoll}
-                </div>
-              </div>
-
-              {/* Modifier */}
-              {result.modifier !== 0 && (
-                <>
-                  <div className="text-lg text-white/40 font-light">+</div>
+            <div className="flex flex-col items-center gap-2">
+              {/* Advantage/Disadvantage - Show both rolls */}
+              {(result.mode === "advantage" || result.mode === "disadvantage") && (
+                <div className="flex items-center justify-center gap-2 mb-1">
                   <div className="text-center">
-                    <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Mod</p>
+                    <p className="text-[9px] text-cyan-400/70 uppercase tracking-wider mb-1">Roll 1</p>
                     <div
                       className={cn(
-                        "w-12 h-12 rounded-lg flex items-center justify-center text-xl font-bold border",
-                        modPositive
-                          ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
-                          : "bg-red-500/20 border-red-500/40 text-red-400"
+                        "w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold border",
+                        result.kept === "roll1"
+                          ? "bg-cyan-500/30 border-cyan-400 text-cyan-100"
+                          : "bg-gray-800/50 border-cyan-500/30 text-cyan-400/50"
                       )}
                     >
-                      {modPositive ? `+${result.modifier}` : result.modifier}
+                      {result.roll1}
                     </div>
                   </div>
-                </>
+                  <div className="text-white/30 text-xs">vs</div>
+                  <div className="text-center">
+                    <p className="text-[9px] text-purple-400/70 uppercase tracking-wider mb-1">Roll 2</p>
+                    <div
+                      className={cn(
+                        "w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold border",
+                        result.kept === "roll2"
+                          ? "bg-purple-500/30 border-purple-400 text-purple-100"
+                          : "bg-gray-800/50 border-purple-500/30 text-purple-400/50"
+                      )}
+                    >
+                      {result.roll2}
+                    </div>
+                  </div>
+                </div>
               )}
 
-              {/* Total */}
-              <div className="text-center">
-                <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Total</p>
-                <div
-                  className={cn(
-                    "w-16 h-16 rounded-xl flex items-center justify-center text-3xl font-bold border-2",
-                    isCrit && "bg-gradient-to-br from-yellow-400 to-amber-500 border-yellow-300 text-black",
-                    isCritFail && "bg-gradient-to-br from-red-600 to-red-800 border-red-500 text-white",
-                    !isCrit && !isCritFail && "bg-gradient-to-br from-gray-700 to-gray-800 border-white/30 text-white"
-                  )}
-                  style={!isCrit && !isCritFail ? { boxShadow: `0 0 20px ${color}30` } : {}}
-                >
-                  {result.total}
+              <div className="flex items-center justify-center gap-3">
+                {/* Natural Roll / Kept Roll */}
+                <div className="text-center">
+                  <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">
+                    {result.mode === "advantage" || result.mode === "disadvantage" ? "Kept" : "Natural"}
+                  </p>
+                  <div
+                    className={cn(
+                      "w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-bold border transition-transform duration-200",
+                      isCrit && "bg-yellow-500 border-yellow-400 text-black scale-105",
+                      isCritFail && "bg-red-600 border-red-500 text-white scale-105",
+                      !isCrit && !isCritFail && "bg-gray-800 border-white/20 text-white"
+                    )}
+                  >
+                    {result.naturalRoll}
+                  </div>
+                </div>
+
+                {/* Modifier */}
+                {result.modifier !== 0 && (
+                  <>
+                    <div className="text-lg text-white/40 font-light">+</div>
+                    <div className="text-center">
+                      <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Mod</p>
+                      <div
+                        className={cn(
+                          "w-12 h-12 rounded-lg flex items-center justify-center text-xl font-bold border",
+                          modPositive
+                            ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                            : "bg-red-500/20 border-red-500/40 text-red-400"
+                        )}
+                      >
+                        {modPositive ? `+${result.modifier}` : result.modifier}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Total */}
+                <div className="text-center">
+                  <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Total</p>
+                  <div
+                    className={cn(
+                      "w-16 h-16 rounded-xl flex items-center justify-center text-3xl font-bold border-2",
+                      isCrit && "bg-gradient-to-br from-yellow-400 to-amber-500 border-yellow-300 text-black",
+                      isCritFail && "bg-gradient-to-br from-red-600 to-red-800 border-red-500 text-white",
+                      !isCrit && !isCritFail && "bg-gradient-to-br from-gray-700 to-gray-800 border-white/30 text-white"
+                    )}
+                    style={!isCrit && !isCritFail ? { boxShadow: `0 0 20px ${color}30` } : {}}
+                  >
+                    {result.total}
+                  </div>
                 </div>
               </div>
             </div>
