@@ -163,7 +163,7 @@ export default function CharacterSheetPage() {
     show: boolean;
     x: number;
     y: number;
-    type: "stat" | "roll";
+    type: "stat" | "roll" | "initiative" | "charisma";
     key?: AttributeKey | string;
   }>({ show: false, x: 0, y: 0, type: "stat" });
 
@@ -422,6 +422,39 @@ export default function CharacterSheetPage() {
     });
   };
 
+  // Roll initiative with advantage/disadvantage
+  const rollInitiativeWithMode = async (mode: "normal" | "advantage" | "disadvantage") => {
+    if (!isReady || !character) return;
+    setShowDice(true);
+    let finalRoll: number;
+    let roll1: number | undefined;
+    let roll2: number | undefined;
+    let kept: "roll1" | "roll2" | undefined;
+    
+    if (mode === "advantage" || mode === "disadvantage") {
+      const batchResults = await rollDiceBatch([
+        { notation: "1d20", options: { theme: "smooth", themeColor: "#2A9D2A" } },
+        { notation: "1d20", options: { theme: "smooth", themeColor: "#2A9D2A" } }
+      ]);
+      const results1 = batchResults[0] || [{ value: 0 }];
+      const results2 = batchResults[1] || [{ value: 0 }];
+      roll1 = results1[0]?.value || 0;
+      roll2 = results2[0]?.value || 0;
+      finalRoll = mode === "advantage" ? Math.max(roll1, roll2) : Math.min(roll1, roll2);
+      kept = mode === "advantage" ? (roll1 > roll2 ? "roll1" : "roll2") : (roll1 < roll2 ? "roll1" : "roll2");
+    } else {
+      const results = await rollDice("1d20", { theme: "smooth", themeColor: "#2A9D2A" });
+      finalRoll = results[0]?.value || 0;
+    }
+    const modifier = getModifier(character.stats.athletics);
+    setRollResult({
+      label: "Initiative", naturalRoll: finalRoll, modifier, total: finalRoll + modifier,
+      type: "initiative", diceSize: 20, crit: finalRoll === 20, critFail: finalRoll === 1,
+      mode, roll1, roll2, kept,
+    });
+    setContextMenu(prev => ({ ...prev, show: false }));
+  };
+
   const rollCharisma = async () => {
     if (!isReady || !character) return;
     setShowDice(true);
@@ -437,6 +470,39 @@ export default function CharacterSheetPage() {
       type: "charisma",
       diceSize: character.charismaDie,
     });
+  };
+
+  // Roll charisma with advantage/disadvantage
+  const rollCharismaWithMode = async (mode: "normal" | "advantage" | "disadvantage") => {
+    if (!isReady || !character) return;
+    setShowDice(true);
+    const diceNotation = `1d${character.charismaDie}`;
+    let finalRoll: number;
+    let roll1: number | undefined;
+    let roll2: number | undefined;
+    let kept: "roll1" | "roll2" | undefined;
+    if (mode === "advantage" || mode === "disadvantage") {
+      const batchResults = await rollDiceBatch([
+        { notation: diceNotation, options: { theme: "smooth", themeColor: "#F4D03F" } },
+        { notation: diceNotation, options: { theme: "smooth", themeColor: "#F4D03F" } }
+      ]);
+      const results1 = batchResults[0] || [{ value: 0 }];
+      const results2 = batchResults[1] || [{ value: 0 }];
+      roll1 = results1[0]?.value || 0;
+      roll2 = results2[0]?.value || 0;
+      finalRoll = mode === "advantage" ? Math.max(roll1, roll2) : Math.min(roll1, roll2);
+      kept = mode === "advantage" ? (roll1 > roll2 ? "roll1" : "roll2") : (roll1 < roll2 ? "roll1" : "roll2");
+    } else {
+      const results = await rollDice(diceNotation, { theme: "smooth", themeColor: "#F4D03F" });
+      finalRoll = results[0]?.value || 0;
+    }
+    setRollResult({
+      label: "Charisma", naturalRoll: finalRoll, modifier: 0, total: finalRoll,
+      type: "charisma", diceSize: character.charismaDie,
+      crit: finalRoll === character.charismaDie, critFail: finalRoll === 1,
+      mode, roll1, roll2, kept,
+    });
+    setContextMenu(prev => ({ ...prev, show: false }));
   };
 
   // Custom dice roller with advantage/disadvantage support
@@ -566,7 +632,7 @@ export default function CharacterSheetPage() {
   };
 
   // Context menu handlers
-  const handleContextMenu = (e: React.MouseEvent, type: "stat" | "roll", key?: AttributeKey | string) => {
+  const handleContextMenu = (e: React.MouseEvent, type: "stat" | "roll" | "initiative" | "charisma", key?: AttributeKey | string) => {
     e.preventDefault();
     e.stopPropagation();
     setContextMenu({
@@ -659,6 +725,56 @@ export default function CharacterSheetPage() {
               <button
                 className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-white/10 transition-colors flex items-center gap-2"
                 onClick={() => rollCheckWithMode(contextMenu.key as AttributeKey, "disadvantage")}
+              >
+                <span className="w-2 h-2 rounded-full bg-red-400" />
+                Disadvantage
+              </button>
+            </>
+          )}
+          {contextMenu.type === "initiative" && (
+            <>
+              <button
+                className="w-full px-3 py-2 text-left text-sm text-emerald-400 hover:bg-white/10 transition-colors flex items-center gap-2"
+                onClick={() => rollInitiativeWithMode("advantage")}
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                Advantage
+              </button>
+              <button
+                className="w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                onClick={() => rollInitiativeWithMode("normal")}
+              >
+                <span className="w-2 h-2 rounded-full bg-white/50" />
+                Flat Roll
+              </button>
+              <button
+                className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-white/10 transition-colors flex items-center gap-2"
+                onClick={() => rollInitiativeWithMode("disadvantage")}
+              >
+                <span className="w-2 h-2 rounded-full bg-red-400" />
+                Disadvantage
+              </button>
+            </>
+          )}
+          {contextMenu.type === "charisma" && (
+            <>
+              <button
+                className="w-full px-3 py-2 text-left text-sm text-emerald-400 hover:bg-white/10 transition-colors flex items-center gap-2"
+                onClick={() => rollCharismaWithMode("advantage")}
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                Advantage
+              </button>
+              <button
+                className="w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                onClick={() => rollCharismaWithMode("normal")}
+              >
+                <span className="w-2 h-2 rounded-full bg-white/50" />
+                Flat Roll
+              </button>
+              <button
+                className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-white/10 transition-colors flex items-center gap-2"
+                onClick={() => rollCharismaWithMode("disadvantage")}
               >
                 <span className="w-2 h-2 rounded-full bg-red-400" />
                 Disadvantage
@@ -927,6 +1043,7 @@ export default function CharacterSheetPage() {
 
               <button
                 onClick={rollInitiative}
+                onContextMenu={(e) => handleContextMenu(e, "initiative")}
                 disabled={!isReady}
                 className="group relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-green-600/5 transition-transform hover:scale-105 hover:border-emerald-500/50"
               >
@@ -1376,6 +1493,7 @@ export default function CharacterSheetPage() {
 
                   <button
                     onClick={rollCharisma}
+                    onContextMenu={(e) => handleContextMenu(e, "charisma")}
                     disabled={!isReady}
                     className="group relative overflow-hidden rounded-xl p-4 border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-yellow-600/5 transition-transform hover:scale-105 hover:border-amber-500/50"
                   >
