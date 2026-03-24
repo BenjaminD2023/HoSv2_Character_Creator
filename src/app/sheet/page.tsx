@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { Edit2, Minus, Plus, Heart, Sword, Brain, Zap, Shield, Sparkles, Dices, Trash2, Package, Settings2 } from "lucide-react";
 import { DiceCanvas } from "@/components/DiceCanvas";
 import { RollResultPopup, RollType } from "@/components/RollResultPopup";
+import { SkillRenderer } from "@/components/play-mode";
 import { useDice } from "@/contexts";
 import {
   Dialog,
@@ -85,6 +86,55 @@ const ATTR_GRADIENTS: Record<AttributeKey, string> = {
   strength: "from-red-500/20 to-orange-600/10",
   intelligence: "from-blue-500/20 to-cyan-600/10",
   athletics: "from-green-500/20 to-emerald-600/10",
+};
+
+const SKILL_NAME_TO_ID: Record<string, string> = {
+  'Ferocious Attack': 'ferocious-attack',
+  'Second Wind': 'second-wind',
+  'Block': 'block',
+  'Great Weapon Fighting': 'great-weapon-fighting',
+  'Enchanted Weapon': 'enchanted-weapon',
+  'Heroic Deed': 'heroic-deed',
+  'Rage': 'rage',
+  "Zephyrus' Echo": 'zephyrus-echo',
+  'Indomitable': 'indomitable',
+  'Flexible Shots': 'flexible-shots',
+  'Sneak Attack': 'sneak-attack',
+  'Enchanted Bow': 'enchanted-bow',
+  'Covering Fire': 'covering-fire',
+  'Dash': 'dash',
+  'Precision Attack': 'precision-attack',
+  'Ambush': 'ambush',
+  'Explosive Bounding': 'explosive-bounding',
+  'Lightning Speed': 'lightning-speed',
+  "Immeral's Chaotic Metamagic": 'chaotic-metamagic',
+  "Opheria's Bardic Magic": 'bardic-magic',
+  'Concentration': 'concentration',
+  'Control Time': 'control-time',
+  'Lay on Hands': 'lay-on-hands',
+  'Mass Heal': 'mass-heal',
+  'Holy Smite': 'holy-smite',
+  'Bulwark': 'bulwark',
+  'Quick Heal': 'quick-heal',
+  'Divine Formation I': 'divine-formation-i',
+  'Divine Formation II': 'divine-formation-ii',
+  'Divine Formation III': 'divine-formation-iii',
+  'Holy Aura': 'holy-aura',
+  'Holy Light': 'holy-light',
+  'Clerical Recovery': 'clerical-recovery',
+  'Inspired Insight': 'inspired-insight',
+  'Inspiration': 'inspiration',
+  'Expertise': 'expertise',
+  'Professional Influencer': 'professional-influencer',
+  'Battle Support': 'battle-support',
+  'Deception': 'deception',
+  'Pacify': 'pacify',
+  'Loremaster': 'loremaster',
+  'Soothing Ballad': 'soothing-ballad',
+  "Skald's War Beat": 'skald-war-beat',
+  'Martial Epic': 'martial-epic',
+  'Evasion': 'evasion',
+  'Decoy': 'decoy',
 };
 
 function getModifier(value: number): number {
@@ -1525,6 +1575,42 @@ export default function CharacterSheetPage() {
                     </Badge>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Resource Tracker */}
+            <Card className="border-white/10 bg-white/5">
+              <CardContent className="p-5">
+                <p className="text-xs text-white/40 uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Shield className="w-3 h-3" />
+                  Resources
+                </p>
+                {(() => {
+                  const classPrefix = character.className.toLowerCase()
+                  const mappedSkills = character.skills
+                    .map((skillName) => {
+                      const skillId = SKILL_NAME_TO_ID[skillName]
+                      if (!skillId) {
+                        console.warn(`Skill not found: ${skillName}`)
+                        return null
+                      }
+                      return {
+                        id: `${classPrefix}-${skillId}`,
+                        level: 1,
+                      }
+                    })
+                    .filter(Boolean) as Array<{ id: string; level: number }>
+                  
+                  if (mappedSkills.length === 0) return null
+                  
+                  return (
+                    <SkillRenderer
+                      characterId={`sheet-${character.name}`}
+                      classId={character.className.toLowerCase() as 'fighter' | 'archer' | 'wizard' | 'priest' | 'bard'}
+                      skills={mappedSkills}
+                    />
+                  )
+                })()}
               </CardContent>
             </Card>
 
