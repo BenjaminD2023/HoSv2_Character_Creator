@@ -469,8 +469,6 @@ export default function CharacterSheetPage() {
       total: naturalRoll,
       type: "charisma",
       diceSize: character.charismaDie,
-      crit: naturalRoll === character.charismaDie,
-      critFail: naturalRoll === 1,
     });
   };
 
@@ -501,7 +499,6 @@ export default function CharacterSheetPage() {
     setRollResult({
       label: "Charisma", naturalRoll: finalRoll, modifier: 0, total: finalRoll,
       type: "charisma", diceSize: character.charismaDie,
-      crit: finalRoll === character.charismaDie, critFail: finalRoll === 1,
       mode, roll1, roll2, kept,
     });
     setContextMenu(prev => ({ ...prev, show: false }));
