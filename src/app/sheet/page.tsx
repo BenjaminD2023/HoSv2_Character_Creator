@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { Edit2, Minus, Plus, Heart, Sword, Brain, Zap, Shield, Sparkles, Dices, Trash2, Package, Settings2 } from "lucide-react";
 import { DiceCanvas } from "@/components/DiceCanvas";
 import { RollResultPopup, RollType } from "@/components/RollResultPopup";
-import { SkillRenderer } from "@/components/play-mode";
+import { SkillRenderer, SpellCasting } from "@/components/play-mode";
 import { useDice } from "@/contexts";
 import {
   Dialog,
@@ -175,6 +175,7 @@ export default function CharacterSheetPage() {
   const [showDice, setShowDice] = useState(false);
   const [hpInput, setHpInput] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
+  const [resourceTab, setResourceTab] = useState<"skills" | "spells">("skills")
   const [rollResult, setRollResult] = useState<{
     label: string;
     naturalRoll: number;
@@ -1576,14 +1577,38 @@ export default function CharacterSheetPage() {
               </CardContent>
             </Card>
 
+
             {/* Resource Tracker */}
             <Card className="border-white/10 bg-white/5">
               <CardContent className="p-5">
-                <p className="text-xs text-white/40 uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <Shield className="w-3 h-3" />
-                  Resources
-                </p>
-                {(() => {
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs text-white/40 uppercase tracking-wider flex items-center gap-2">
+                    <Shield className="w-3 h-3" />
+                    Resources
+                  </p>
+                  <div className="flex gap-1">
+                    <Button
+                      variant={resourceTab === 'skills' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setResourceTab('skills')}
+                      className="h-7 px-2 text-xs"
+                    >
+                      Skills
+                    </Button>
+                    {(character.className.toLowerCase() === 'wizard' || character.className.toLowerCase() === 'bard') && (
+                      <Button
+                        variant={resourceTab === 'spells' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setResourceTab('spells')}
+                        className="h-7 px-2 text-xs"
+                      >
+                        Spell Casting
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                
+                {resourceTab === 'skills' && (() => {
                   const classPrefix = character.className.toLowerCase()
                   const mappedSkills = character.skills
                     .map((skillName) => {
@@ -1599,29 +1624,26 @@ export default function CharacterSheetPage() {
                     })
                     .filter(Boolean) as Array<{ id: string; level: number }>
                   
-                  // Add base spell slots for wizards (5 Lv1, 4 Lv2)
-                  if (classPrefix === 'wizard') {
-                    mappedSkills.push(
-                      { id: 'wizard-spell-slots-l1', level: 1 },
-                      { id: 'wizard-spell-slots-l2', level: 1 }
-                    )
-                  }
-                  
-                  // Add spell slots for bards (equal to highest skill level)
-                  if (classPrefix === 'bard') {
-                    const highestLevel = mappedSkills.length > 0 
-                      ? Math.max(...mappedSkills.map(s => s.level)) 
-                      : 1
-                    mappedSkills.push({ id: 'bard-spell-slots', level: highestLevel })
-                  }
-                  
-                  if (mappedSkills.length === 0) return null
+                  if (mappedSkills.length === 0) return <p className="text-sm text-muted-foreground">No skills available</p>
                   
                   return (
                     <SkillRenderer
                       characterId={`sheet-${character.name}`}
                       classId={character.className.toLowerCase() as 'fighter' | 'archer' | 'wizard' | 'priest' | 'bard'}
                       skills={mappedSkills}
+                    />
+                  )
+                })()}
+                
+                {resourceTab === 'spells' && (() => {
+                  const classId = character.className.toLowerCase() as 'wizard' | 'bard'
+                  if (classId !== 'wizard' && classId !== 'bard') return null
+                  
+                  return (
+                    <SpellCasting
+                      characterId={`sheet-${character.name}`}
+                      classId={classId}
+                      bardLevel={1}
                     />
                   )
                 })()}
