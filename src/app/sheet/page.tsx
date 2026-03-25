@@ -7,11 +7,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Edit2, Minus, Plus, Heart, Sword, Brain, Zap, Shield, Sparkles, Dices, Trash2, Package, Settings2 } from "lucide-react";
+import { Edit2, Minus, Plus, Heart, Sword, Brain, Zap, Shield, Sparkles, Dices, Trash2, Package, Settings2, Moon } from "lucide-react";
 import { DiceCanvas } from "@/components/DiceCanvas";
 import { RollResultPopup, RollType } from "@/components/RollResultPopup";
 import { SkillRenderer, SpellCasting } from "@/components/play-mode";
 import { useDice } from "@/contexts";
+import { useSkillStore } from "@/stores/skillStore";
 import {
   Dialog,
   DialogContent,
@@ -345,6 +346,18 @@ export default function CharacterSheetPage() {
       setHpInput("");
     }
   };
+  const handleLongRest = () => {
+    if (!character) return
+    
+    // Restore HP to max
+    setCurrentHp(character.maxHp)
+    setTempHp(0)
+    
+    // Restore skills and spell slots via store
+    const { longRest } = useSkillStore.getState()
+    longRest(`sheet-${character.name}`)
+  }
+
 
   // XP handlers
   const addXp = (amount: number) => {
@@ -1288,6 +1301,15 @@ export default function CharacterSheetPage() {
                 >
                   <Plus className="w-3 h-3 mr-1" />
                   Add Temp HP
+                </Button>
+                {/* Long Rest Button */}
+                <Button
+                  variant="outline"
+                  className="w-full h-9 mt-2 border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 hover:border-indigo-500/50 text-indigo-300"
+                  onClick={handleLongRest}
+                >
+                  <Moon className="w-3 h-3 mr-1" />
+                  Long Rest
                 </Button>
               </CardContent>
             </Card>

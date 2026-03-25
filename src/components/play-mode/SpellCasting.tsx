@@ -8,13 +8,17 @@ import { Moon } from 'lucide-react'
 interface SpellCastingProps {
   characterId: string
   classId: 'wizard' | 'bard' | 'fighter' | 'archer' | 'priest'
-  bardLevel?: number // For bards: highest skill level
+  bardLevel?: number
+}
+
+interface SpellSlot {
+  id: string
+  isUsed: boolean
 }
 
 interface SpellSlotRow {
   level: string
-  maxSlots: number
-  usedSlots: number
+  slots: SpellSlot[]
 }
 
 export function SpellCasting({ characterId, classId, bardLevel = 1 }: SpellCastingProps) {
@@ -23,15 +27,37 @@ export function SpellCasting({ characterId, classId, bardLevel = 1 }: SpellCasti
   useEffect(() => {
     if (classId === 'wizard') {
       setRows([
-        { level: 'Level 1', maxSlots: 5, usedSlots: 0 },
-        { level: 'Level 2', maxSlots: 4, usedSlots: 0 },
-        { level: 'Level 3', maxSlots: 1, usedSlots: 0 },
-        { level: 'Level 4', maxSlots: 0, usedSlots: 0 },
-        { level: 'Level 5', maxSlots: 0, usedSlots: 0 },
+        { 
+          level: 'Level 1', 
+          slots: Array.from({ length: 5 }, (_, i) => ({ 
+            id: `l1-${i}`, 
+            isUsed: false 
+          }))
+        },
+        { 
+          level: 'Level 2', 
+          slots: Array.from({ length: 4 }, (_, i) => ({ 
+            id: `l2-${i}`, 
+            isUsed: false 
+          }))
+        },
+        { 
+          level: 'Level 3', 
+          slots: Array.from({ length: 1 }, (_, i) => ({ 
+            id: `l3-${i}`, 
+            isUsed: false 
+          }))
+        },
       ])
     } else if (classId === 'bard') {
       setRows([
-        { level: 'Spell Slots', maxSlots: bardLevel, usedSlots: 0 },
+        { 
+          level: 'Spell Slots', 
+          slots: Array.from({ length: bardLevel }, (_, i) => ({ 
+            id: `bard-${i}`, 
+            isUsed: false 
+          }))
+        },
       ])
     }
   }, [classId, bardLevel])
@@ -39,22 +65,17 @@ export function SpellCasting({ characterId, classId, bardLevel = 1 }: SpellCasti
   const toggleSlot = (rowIndex: number, slotIndex: number) => {
     setRows(prev => {
       const newRows = [...prev]
-      const row = newRows[rowIndex]
-      // If slot is available (index >= usedSlots), use it
-      // If slot is used (index < usedSlots), restore it
-      if (slotIndex >= row.usedSlots) {
-        // Using a slot: mark all slots from usedSlots to slotIndex as used
-        row.usedSlots = slotIndex + 1
-      } else {
-        // Restoring a slot: mark slotIndex as available
-        row.usedSlots = slotIndex
-      }
+      const slot = newRows[rowIndex].slots[slotIndex]
+      slot.isUsed = !slot.isUsed
       return newRows
     })
   }
 
   const restoreAll = () => {
-    setRows(prev => prev.map(row => ({ ...row, usedSlots: 0 })))
+    setRows(prev => prev.map(row => ({
+      ...row,
+      slots: row.slots.map(slot => ({ ...slot, isUsed: false }))
+    })))
   }
 
   if (rows.length === 0) return null
@@ -67,28 +88,20 @@ export function SpellCasting({ characterId, classId, bardLevel = 1 }: SpellCasti
             {row.level}
           </span>
           <div className="flex gap-2 flex-wrap">
-            {Array.from({ length: row.maxSlots }).map((_, slotIndex) => {
-              const isUsed = slotIndex < row.usedSlots
-              return (
-                <button
-                  key={slotIndex}
-                  onClick={() => toggleSlot(rowIndex, slotIndex)}
-                  className={cn(
-                    'w-6 h-6 rounded-full border-2 transition-all duration-200',
-                    'hover:scale-110 focus:outline-none focus:ring-2 focus:ring-amber-500/50',
-                    isUsed
-                      ? 'bg-gray-800 border-gray-700 shadow-inner'
-                      : 'bg-amber-500 border-amber-400 shadow-lg shadow-amber-500/20'
-                  )}
-                  title={isUsed ? 'Click to restore' : 'Click to use'}
-                />
-              )
-            })}
-            {row.maxSlots === 0 && (
-              <span className="text-xs text-muted-foreground italic">
-                Unlock via XP
-              </span>
-            )}
+            {row.slots.map((slot, slotIndex) => (
+              <button
+                key={slot.id}
+                onClick={() => toggleSlot(rowIndex, slotIndex)}
+                className={cn(
+                  'w-6 h-6 rounded-full border-2 transition-all duration-200',
+                  'hover:scale-110 focus:outline-none focus:ring-2 focus:ring-amber-500/50',
+                  slot.isUsed
+                    ? 'bg-gray-800 border-gray-700 shadow-inner'
+                    : 'bg-amber-500 border-amber-400 shadow-lg shadow-amber-500/20'
+                )}
+                title={slot.isUsed ? 'Click to restore' : 'Click to use'}
+              />
+            ))}
           </div>
         </div>
       ))}

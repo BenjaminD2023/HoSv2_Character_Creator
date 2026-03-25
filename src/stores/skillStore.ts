@@ -714,6 +714,24 @@ export const useSkillStore = create<SkillStore>()(
             delete state.divineFormationConfig[characterId]
           })
         },
+
+        longRest: (characterId) => {
+          set((state) => {
+            const skills = state.characterSkills[characterId]
+            if (!skills) return
+
+            for (const skill of Object.values(skills)) {
+              // Restore all skill uses on long rest
+              skill.currentUses = skill.maxUses
+              
+              // Reset toggles except for passive abilities
+              const definition = SKILL_DEFINITIONS[skill.id]
+              if (definition.uiType !== 'Passive') {
+                skill.isToggled = false
+              }
+            }
+          })
+        },
       }),
       {
         name: 'hos-skill-store',
@@ -753,5 +771,6 @@ export function useSkillActions() {
     refreshAllForSleep: store.refreshAllForSleep,
     refreshAllForCombat: store.refreshAllForCombat,
     resetCharacterSkills: store.resetCharacterSkills,
+    longRest: store.longRest,
   }), [store])
 }

@@ -67,6 +67,7 @@ export interface SkillStoreActions {
   refreshAllForSleep: (characterId: string) => void
   refreshAllForCombat: (characterId: string) => void
   resetCharacterSkills: (characterId: string) => void
+  longRest: (characterId: string) => void
 }
 
 export type SkillStore = SkillStoreState & SkillStoreActions
