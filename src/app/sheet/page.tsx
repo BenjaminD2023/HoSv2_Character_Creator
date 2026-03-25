@@ -467,8 +467,6 @@ export default function CharacterSheetPage() {
       total,
       type: "initiative",
       diceSize: 20,
-      crit: naturalRoll === 20,
-      critFail: naturalRoll === 1,
     });
   };
 
@@ -499,7 +497,7 @@ export default function CharacterSheetPage() {
     const modifier = getModifier(character.stats.athletics);
     setRollResult({
       label: "Initiative", naturalRoll: finalRoll, modifier, total: finalRoll + modifier,
-      type: "initiative", diceSize: 20, crit: finalRoll === 20, critFail: finalRoll === 1,
+      type: "initiative", diceSize: 20,
       mode, roll1, roll2, kept,
     });
     setContextMenu(prev => ({ ...prev, show: false }));
