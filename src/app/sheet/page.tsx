@@ -1601,6 +1601,22 @@ export default function CharacterSheetPage() {
                     })
                     .filter(Boolean) as Array<{ id: string; level: number }>
                   
+                  // Add base spell slots for wizards (5 Lv1, 4 Lv2)
+                  if (classPrefix === 'wizard') {
+                    mappedSkills.push(
+                      { id: 'wizard-spell-slots-l1', level: 1 },
+                      { id: 'wizard-spell-slots-l2', level: 1 }
+                    )
+                  }
+                  
+                  // Add spell slots for bards (equal to highest skill level)
+                  if (classPrefix === 'bard') {
+                    const highestLevel = mappedSkills.length > 0 
+                      ? Math.max(...mappedSkills.map(s => s.level)) 
+                      : 1
+                    mappedSkills.push({ id: 'bard-spell-slots', level: highestLevel })
+                  }
+                  
                   if (mappedSkills.length === 0) return null
                   
                   return (
