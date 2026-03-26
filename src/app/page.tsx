@@ -6,13 +6,13 @@ import { Dices, User, BookOpen, Sparkles, Shield, Sword, Flame } from "lucide-re
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#0a0a0c] relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-hidden">
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-float" />
         <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
         <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-red-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(251,191,36,0.03),transparent_50%)]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0c]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
       </div>
 
       <main className="relative z-10 mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 md:py-20">

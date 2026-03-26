@@ -818,7 +818,7 @@ export default function CharacterSheetPage() {
 
   if (!character) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0c]">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <Card className="parchment-frame-aged w-full max-w-md">
           <div className="corner-flourish top-left" />
           <div className="corner-flourish top-right" />
@@ -843,7 +843,7 @@ export default function CharacterSheetPage() {
   const items = inventory.filter((i) => i.type === "item");
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-foreground overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground overflow-hidden">
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl animate-float" />
         <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }} />
@@ -856,7 +856,7 @@ export default function CharacterSheetPage() {
       {/* Context Menu */}
       {contextMenu.show && (
         <div
-          className="fixed z-[300] bg-gray-900 border border-white/20 rounded-lg shadow-xl py-1 min-w-[140px]"
+          className="fixed z-[300] bg-card border border-border rounded-lg shadow-xl py-1 min-w-[140px]"
           style={{
             left: Math.min(contextMenu.x, window.innerWidth - 160),
             top: Math.min(contextMenu.y, window.innerHeight - 120),
@@ -876,7 +876,7 @@ export default function CharacterSheetPage() {
                 className="w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
                 onClick={() => rollCheckWithMode(contextMenu.key as AttributeKey, "normal")}
               >
-                <span className="w-2 h-2 rounded-full bg-white/50" />
+                <span className="w-2 h-2 rounded-full bg-muted0" />
                 Flat Roll
               </button>
               <button
@@ -901,7 +901,7 @@ export default function CharacterSheetPage() {
                 className="w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
                 onClick={() => rollInitiativeWithMode("normal")}
               >
-                <span className="w-2 h-2 rounded-full bg-white/50" />
+                <span className="w-2 h-2 rounded-full bg-muted0" />
                 Flat Roll
               </button>
               <button
@@ -926,7 +926,7 @@ export default function CharacterSheetPage() {
                 className="w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
                 onClick={() => rollCharismaWithMode("normal")}
               >
-                <span className="w-2 h-2 rounded-full bg-white/50" />
+                <span className="w-2 h-2 rounded-full bg-muted0" />
                 Flat Roll
               </button>
               <button
@@ -943,7 +943,7 @@ export default function CharacterSheetPage() {
 
       {/* Custom Dice Roller Dialog */}
       <Dialog open={customDiceOpen} onOpenChange={setCustomDiceOpen}>
-        <DialogContent className="bg-gray-900 border-white/10 text-white max-w-sm">
+        <DialogContent className="bg-card border-border text-foreground max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Dices className="w-5 h-5 text-purple-400" />
@@ -953,19 +953,19 @@ export default function CharacterSheetPage() {
           <div className="space-y-4 pt-4">
             {/* Dice Count */}
             <div>
-              <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Number of Dice</label>
+              <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block">Number of Dice</label>
               <Input
                 type="number"
                 min={1}
                 value={diceCount}
                 onChange={(e) => setDiceCount(Math.max(1, parseInt(e.target.value) || 1))}
-                className="bg-black/20 border-white/10 text-white"
+                className="bg-background border-border text-foreground"
               />
             </div>
 
             {/* Dice Type */}
             <div>
-              <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Dice Type</label>
+              <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block">Dice Type</label>
               <div className="flex gap-1">
                 {[4, 6, 8, 10, 12, 20, 100].map((d) => (
                   <button
@@ -975,7 +975,7 @@ export default function CharacterSheetPage() {
                       "flex-1 py-2 rounded text-sm font-medium transition-colors",
                       diceType === d
                         ? "bg-amber-600 text-white"
-                        : "bg-white/5 text-white/60 hover:bg-white/10"
+                        : "bg-muted text-muted-foreground hover:bg-white/10"
                     )}
                   >
                     d{d}
@@ -986,7 +986,7 @@ export default function CharacterSheetPage() {
 
             {/* Roll Mode */}
             <div>
-              <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Roll Mode</label>
+              <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block">Roll Mode</label>
               <div className="flex gap-2">
                 <button
                   onClick={() => setRollMode("normal")}
@@ -994,7 +994,7 @@ export default function CharacterSheetPage() {
                     "flex-1 py-2 rounded text-sm font-medium transition-colors",
                     rollMode === "normal"
                       ? "bg-blue-600 text-white"
-                      : "bg-white/5 text-white/60 hover:bg-white/10"
+                      : "bg-muted text-muted-foreground hover:bg-white/10"
                   )}
                 >
                   Normal
@@ -1005,7 +1005,7 @@ export default function CharacterSheetPage() {
                     "flex-1 py-2 rounded text-sm font-medium transition-colors",
                     rollMode === "advantage"
                       ? "bg-emerald-600 text-white"
-                      : "bg-white/5 text-white/60 hover:bg-white/10"
+                      : "bg-muted text-muted-foreground hover:bg-white/10"
                   )}
                 >
                   Advantage
@@ -1016,7 +1016,7 @@ export default function CharacterSheetPage() {
                     "flex-1 py-2 rounded text-sm font-medium transition-colors",
                     rollMode === "disadvantage"
                       ? "bg-red-600 text-white"
-                      : "bg-white/5 text-white/60 hover:bg-white/10"
+                      : "bg-muted text-muted-foreground hover:bg-white/10"
                   )}
                 >
                   Disadvantage
@@ -1026,13 +1026,13 @@ export default function CharacterSheetPage() {
 
             {/* Modifier */}
             <div>
-              <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Modifier</label>
+              <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block">Modifier</label>
               <Input
                 type="number"
                 value={diceModifier}
                 onChange={(e) => setDiceModifier(parseInt(e.target.value) || 0)}
                 placeholder="0"
-                className="bg-black/20 border-white/10 text-white"
+                className="bg-background border-border text-foreground"
               />
             </div>
 
@@ -1127,7 +1127,7 @@ export default function CharacterSheetPage() {
                       ATTR_GRADIENTS[attr],
                       isPrimary
                         ? "border-amber-500/40 shadow-lg shadow-amber-500/10"
-                        : "border-white/10 hover:border-white/20"
+                        : "border-border hover:border-white/20"
                     )}
                     style={{ animationDelay: `${idx * 100}ms` }}
                   >
@@ -1146,7 +1146,7 @@ export default function CharacterSheetPage() {
                         {ATTR_ICONS[attr]}
                       </div>
 
-                      <p className="text-xs font-medium text-white/50 uppercase tracking-wider mb-1">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
                         {ATTR_LABELS[attr]}
                       </p>
 
@@ -1166,7 +1166,7 @@ export default function CharacterSheetPage() {
                       )}
 
                       <div className="absolute bottom-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Dices className="w-4 h-4 text-white/40" />
+                        <Dices className="w-4 h-4 text-muted-foreground" />
                       </div>
                     </div>
                   </button>
@@ -1187,18 +1187,18 @@ export default function CharacterSheetPage() {
                       <Shield className="w-6 h-6 text-slate-400" />
                     </div>
                     <div>
-                      <p className="text-xs text-white/40 uppercase tracking-wider">Armor</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Armor</p>
                       <p className="text-3xl font-bold text-white">{character.totalStartingArmor}</p>
                     </div>
                   </div>
                   {character.armorPieces.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-white/10">
+                    <div className="mt-3 pt-3 border-t border-border">
                       <div className="flex flex-wrap gap-1">
                         {character.armorPieces.map((a) => (
                           <Badge
                             key={a.name}
                             variant="outline"
-                            className="text-[10px] border-white/10 bg-white/5 text-white/60"
+                            className="text-[10px] border-border bg-muted text-muted-foreground"
                           >
                             {a.name} +{a.armor}
                           </Badge>
@@ -1267,10 +1267,10 @@ export default function CharacterSheetPage() {
                       <Heart className="w-6 h-6 text-red-400" />
                     </div>
                     <div>
-                      <p className="text-xs text-white/40 uppercase tracking-wider">Hit Points</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Hit Points</p>
                       <div className="flex items-baseline gap-2">
                         <span className="text-4xl font-bold text-white">{currentHp}</span>
-                        <span className="text-lg text-white/40">/ {character.maxHp}</span>
+                        <span className="text-lg text-muted-foreground">/ {character.maxHp}</span>
                       </div>
                     </div>
                   </div>
@@ -1380,7 +1380,7 @@ export default function CharacterSheetPage() {
                   <Input
                     type="number"
                     placeholder="Custom amount"
-                    className="h-10 flex-1 bg-black/20 border-white/10 text-white placeholder:text-white/30 focus:border-amber-500/50"
+                    className="h-10 flex-1 bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-amber-500/50"
                     value={hpInput}
                     onChange={(e) => setHpInput(e.target.value)}
                   />
@@ -1434,7 +1434,7 @@ export default function CharacterSheetPage() {
               <div className="corner-flourish bottom-right" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs text-white/40 uppercase tracking-wider flex items-center gap-2">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                     <Sword className="w-3 h-3" />
                     Weapons
                   </p>
@@ -1453,13 +1453,13 @@ export default function CharacterSheetPage() {
                         Add
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="bg-gray-900 border-white/10 text-white">
+                    <DialogContent className="bg-card border-border text-foreground">
                       <DialogHeader>
                         <DialogTitle>{editingItem ? "Edit" : "Add"} {newItemType === "weapon" ? "Weapon" : "Item"}</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 pt-4">
                         <div>
-                          <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Type</label>
+                          <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block">Type</label>
                           <div className="flex gap-2">
                             <Button
                               type="button"
@@ -1485,28 +1485,28 @@ export default function CharacterSheetPage() {
                         </div>
 
                         <div>
-                          <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Name</label>
+                          <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block">Name</label>
                           <Input
                             value={newItemName}
                             onChange={(e) => setNewItemName(e.target.value)}
                             placeholder={newItemType === "weapon" ? "Weapon name" : "Item name"}
-                            className="bg-black/20 border-white/10 text-white"
+                            className="bg-background border-border text-foreground"
                           />
                         </div>
 
                         {newItemType === "weapon" && (
                           <>
                             <div>
-                              <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Damage Dice</label>
+                              <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block">Damage Dice</label>
                               <Input
                                 value={newWeaponDamage}
                                 onChange={(e) => setNewWeaponDamage(e.target.value)}
                                 placeholder="e.g., 1d8, 2d6"
-                                className="bg-black/20 border-white/10 text-white"
+                                className="bg-background border-border text-foreground"
                               />
                             </div>
                             <div>
-                              <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Modifier Attribute</label>
+                              <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block">Modifier Attribute</label>
                               <div className="flex gap-2">
                                 <Button
                                   type="button"
@@ -1532,35 +1532,35 @@ export default function CharacterSheetPage() {
                               </div>
                             </div>
                             <div>
-                              <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Custom Modifier (optional)</label>
+                              <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block">Custom Modifier (optional)</label>
                               <Input
                                 type="number"
                                 value={newWeaponCustomMod || ""}
                                 onChange={(e) => setNewWeaponCustomMod(parseInt(e.target.value) || 0)}
                                 placeholder="e.g., +2 or -1"
-                                className="bg-black/20 border-white/10 text-white"
+                                className="bg-background border-border text-foreground"
                               />
                             </div>
                           </>
                         )}
 
                         <div>
-                          <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Quantity</label>
+                          <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block">Quantity</label>
                           <Input
                             type="number"
                             value={newItemQuantity}
                             onChange={(e) => setNewItemQuantity(parseInt(e.target.value) || 1)}
-                            className="bg-black/20 border-white/10 text-white"
+                            className="bg-background border-border text-foreground"
                           />
                         </div>
 
                         <div>
-                          <label className="text-xs text-white/60 uppercase tracking-wider mb-1.5 block">Description (optional)</label>
+                          <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block">Description (optional)</label>
                           <Input
                             value={newItemDesc}
                             onChange={(e) => setNewItemDesc(e.target.value)}
                             placeholder="Brief description"
-                            className="bg-black/20 border-white/10 text-white"
+                            className="bg-background border-border text-foreground"
                           />
                         </div>
 
@@ -1601,13 +1601,13 @@ export default function CharacterSheetPage() {
                       return (
                         <div
                           key={w.id}
-                          className="group flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-colors cursor-pointer"
+                          className="group flex items-center justify-between p-3 rounded-xl bg-background border border-border/50 hover:border-amber-500/30 hover:bg-amber-500/5 transition-colors cursor-pointer"
                           onClick={() => startEditItem(w)}
                         >
                           <div>
                             <p className="font-medium text-white">{w.name}</p>
                             {hasAnyMod && (
-                              <p className="text-xs text-white/40">
+                              <p className="text-xs text-muted-foreground">
                                 {w.mod && `${ATTR_LABELS[w.mod]} ${formatMod(statMod)}`}
                                 {w.mod && customMod !== 0 && " + "}
                                 {customMod !== 0 && `custom ${formatMod(customMod)}`}
@@ -1630,7 +1630,7 @@ export default function CharacterSheetPage() {
                               {w.damageDice}
                             </Button>
                           ) : (
-                            <Badge variant="outline" className="border-white/10 text-white/60">
+                            <Badge variant="outline" className="border-border text-muted-foreground">
                               {w.flatDamage} dmg
                             </Badge>
                           )}
@@ -1658,7 +1658,7 @@ export default function CharacterSheetPage() {
               <div className="corner-flourish bottom-right" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs text-white/40 uppercase tracking-wider">Quick Rolls</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Quick Rolls</p>
                   <Button
                     size="sm"
                     variant="ghost"
@@ -1713,7 +1713,7 @@ export default function CharacterSheetPage() {
                     <Badge
                       key={skill}
                       variant="secondary"
-                      className="px-3 py-1.5 text-xs bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:border-amber-500/30 hover:text-amber-200 transition-colors cursor-default"
+                      className="px-3 py-1.5 text-xs bg-muted border border-border text-muted-foreground hover:bg-white/10 hover:border-amber-500/30 hover:text-amber-200 transition-colors cursor-default"
                       style={{ animationDelay: `${idx * 20}ms` }}
                     >
                       {skill}
@@ -1732,7 +1732,7 @@ export default function CharacterSheetPage() {
               <div className="corner-flourish bottom-right" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs text-white/40 uppercase tracking-wider flex items-center gap-2">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                     <Shield className="w-3 h-3" />
                     Resources
                   </p>
@@ -1814,7 +1814,7 @@ export default function CharacterSheetPage() {
               <div className="corner-flourish bottom-right" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs text-white/40 uppercase tracking-wider flex items-center gap-2">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                     <Package className="w-3 h-3" />
                     Inventory
                   </p>
@@ -1843,7 +1843,7 @@ export default function CharacterSheetPage() {
                     items.map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between p-2.5 rounded-lg bg-black/20 border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-colors cursor-pointer"
+                        className="flex items-center justify-between p-2.5 rounded-lg bg-background border border-border/50 hover:border-blue-500/30 hover:bg-blue-500/5 transition-colors cursor-pointer"
                         onClick={() => startEditItem(item)}
                       >
                         <div className="flex items-center gap-2">
@@ -1851,7 +1851,7 @@ export default function CharacterSheetPage() {
                           <span className="text-sm text-white">{item.name}</span>
                         </div>
                         {item.quantity > 1 && (
-                          <Badge variant="outline" className="text-[10px] border-white/10 text-white/50">
+                          <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">
                             x{item.quantity}
                           </Badge>
                         )}
@@ -1865,7 +1865,7 @@ export default function CharacterSheetPage() {
             {/* Reset Button */}
             <Button
               variant="ghost"
-              className="h-10 text-white/40 hover:text-white/60 hover:bg-white/5"
+              className="h-10 text-muted-foreground hover:text-muted-foreground hover:bg-muted"
               onClick={() => {
                 localStorage.removeItem(SHEET_STATE_KEY);
                 setCurrentHp(character.maxHp);

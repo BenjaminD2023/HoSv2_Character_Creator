@@ -466,7 +466,7 @@ export default function CharactersPage() {
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-          <AlertDialogContent className="!fixed border-red-900/30 bg-slate-950 border-2 border-red-900/50 shadow-xl">
+          <AlertDialogContent className="!fixed border-red-900/30 bg-card border-2 border-red-900/50 shadow-xl">
             <AlertDialogHeader>
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-full bg-red-900/20">
