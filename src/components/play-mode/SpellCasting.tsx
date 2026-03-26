@@ -1,14 +1,37 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { Moon } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Sparkles, Zap, Wand2, Star } from 'lucide-react'
 
 interface SpellCastingProps {
   characterId: string
   classId: 'wizard' | 'bard' | 'fighter' | 'archer' | 'priest'
-  bardLevel?: number
+  wizardSlots?: { L1: number; L2: number; L3: number; L4: number; L5: number }
+  bardSlots?: number
+  initialSlotState?: {
+    wizard?: {
+      L1: boolean[]
+      L2: boolean[]
+      L3: boolean[]
+      L4?: boolean[]
+      L5?: boolean[]
+    }
+    bard?: boolean[]
+  }
+  onSlotStateChange?: (state: {
+    wizard?: {
+      L1: boolean[]
+      L2: boolean[]
+      L3: boolean[]
+      L4?: boolean[]
+      L5?: boolean[]
+    }
+    bard?: boolean[]
+  }) => void
 }
 
 interface SpellSlot {
@@ -21,100 +44,234 @@ interface SpellSlotRow {
   slots: SpellSlot[]
 }
 
-export function SpellCasting({ characterId, classId, bardLevel = 1 }: SpellCastingProps) {
+const LEVEL_CONFIG = {
+  'Level 1': {
+    color: 'purple',
+    icon: Sparkles,
+    gradient: 'from-purple-600 to-violet-700',
+    glowColor: 'shadow-purple-500/50',
+    badgeClass: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+  },
+  'Level 2': {
+    color: 'violet',
+    icon: Star,
+    gradient: 'from-violet-600 to-indigo-700',
+    glowColor: 'shadow-violet-500/50',
+    badgeClass: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
+  },
+  'Level 3': {
+    color: 'indigo',
+    icon: Zap,
+    gradient: 'from-indigo-600 to-blue-700',
+    glowColor: 'shadow-indigo-500/50',
+    badgeClass: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+  },
+  'Level 4': {
+    color: 'rose',
+    icon: Wand2,
+    gradient: 'from-rose-600 to-pink-700',
+    glowColor: 'shadow-rose-500/50',
+    badgeClass: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+  },
+  'Level 5': {
+    color: 'fuchsia',
+    icon: Star,
+    gradient: 'from-fuchsia-600 to-purple-700',
+    glowColor: 'shadow-fuchsia-500/50',
+    badgeClass: 'bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/30',
+  },
+  'Spell Slots': {
+    color: 'blue',
+    icon: Sparkles,
+    gradient: 'from-blue-600 to-cyan-700',
+    glowColor: 'shadow-blue-500/50',
+    badgeClass: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+  },
+}
+
+export function SpellCasting({
+  characterId,
+  classId,
+  wizardSlots,
+  bardSlots,
+  initialSlotState,
+  onSlotStateChange,
+}: SpellCastingProps) {
   const [rows, setRows] = useState<SpellSlotRow[]>([])
+  const initializedRef = useRef(false)
 
   useEffect(() => {
-    if (classId === 'wizard') {
-      setRows([
-        { 
-          level: 'Level 1', 
-          slots: Array.from({ length: 5 }, (_, i) => ({ 
-            id: `l1-${i}`, 
-            isUsed: false 
-          }))
+    if (initializedRef.current) return
+    
+    if (classId === 'wizard' && wizardSlots) {
+      const newRows: SpellSlotRow[] = [
+        {
+          level: 'Level 1',
+          slots: Array.from({ length: wizardSlots.L1 }, (_, i) => ({
+            id: `l1-${i}`,
+            isUsed: initialSlotState?.wizard?.L1?.[i] ?? false,
+          })),
         },
-        { 
-          level: 'Level 2', 
-          slots: Array.from({ length: 4 }, (_, i) => ({ 
-            id: `l2-${i}`, 
-            isUsed: false 
-          }))
+        {
+          level: 'Level 2',
+          slots: Array.from({ length: wizardSlots.L2 }, (_, i) => ({
+            id: `l2-${i}`,
+            isUsed: initialSlotState?.wizard?.L2?.[i] ?? false,
+          })),
         },
-        { 
-          level: 'Level 3', 
-          slots: Array.from({ length: 1 }, (_, i) => ({ 
-            id: `l3-${i}`, 
-            isUsed: false 
-          }))
+        {
+          level: 'Level 3',
+          slots: Array.from({ length: wizardSlots.L3 }, (_, i) => ({
+            id: `l3-${i}`,
+            isUsed: initialSlotState?.wizard?.L3?.[i] ?? false,
+          })),
         },
-      ])
-    } else if (classId === 'bard') {
-      setRows([
-        { 
-          level: 'Spell Slots', 
-          slots: Array.from({ length: bardLevel }, (_, i) => ({ 
-            id: `bard-${i}`, 
-            isUsed: false 
-          }))
-        },
-      ])
+      ]
+      if (wizardSlots.L4 > 0) {
+        newRows.push({
+          level: 'Level 4',
+          slots: Array.from({ length: wizardSlots.L4 }, (_, i) => ({
+            id: `l4-${i}`,
+            isUsed: initialSlotState?.wizard?.L4?.[i] ?? false,
+          })),
+        })
+      }
+      if (wizardSlots.L5 > 0) {
+        newRows.push({
+          level: 'Level 5',
+          slots: Array.from({ length: wizardSlots.L5 }, (_, i) => ({
+            id: `l5-${i}`,
+            isUsed: initialSlotState?.wizard?.L5?.[i] ?? false,
+          })),
+        })
+      }
+      setRows(newRows)
+    } else if (classId === 'bard' && bardSlots) {
+      setRows([{
+        level: 'Spell Slots',
+        slots: Array.from({ length: bardSlots }, (_, i) => ({
+          id: `bard-${i}`,
+          isUsed: initialSlotState?.bard?.[i] ?? false,
+        })),
+      }])
     }
-  }, [classId, bardLevel])
+    
+    initializedRef.current = true
+  }, [classId, wizardSlots, bardSlots])
+
+  const syncToParent = useCallback(() => {
+    if (!onSlotStateChange || rows.length === 0) return
+    
+    if (classId === 'wizard') {
+      const wizardState: any = {}
+      rows.forEach((row) => {
+        const level = row.level.toLowerCase().replace('level ', 'L')
+        wizardState[level] = row.slots.map((s) => s.isUsed)
+      })
+      onSlotStateChange({ wizard: wizardState })
+    } else if (classId === 'bard') {
+      const bardState = rows[0]?.slots.map((s) => s.isUsed) ?? []
+      onSlotStateChange({ bard: bardState })
+    }
+  }, [rows, onSlotStateChange, classId])
 
   const toggleSlot = (rowIndex: number, slotIndex: number) => {
     setRows(prev => {
-      const newRows = [...prev]
-      const slot = newRows[rowIndex].slots[slotIndex]
-      slot.isUsed = !slot.isUsed
+      const newRows = prev.map((row, ri) => {
+        if (ri !== rowIndex) return row
+        return {
+          ...row,
+          slots: row.slots.map((slot, si) => {
+            if (si !== slotIndex) return slot
+            return { ...slot, isUsed: !slot.isUsed }
+          }),
+        }
+      })
       return newRows
     })
-  }
-
-  const restoreAll = () => {
-    setRows(prev => prev.map(row => ({
-      ...row,
-      slots: row.slots.map(slot => ({ ...slot, isUsed: false }))
-    })))
+    setTimeout(syncToParent, 0)
   }
 
   if (rows.length === 0) return null
 
-  return (
-    <div className="space-y-4">
-      {rows.map((row, rowIndex) => (
-        <div key={row.level} className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground w-20 shrink-0">
-            {row.level}
-          </span>
-          <div className="flex gap-2 flex-wrap">
-            {row.slots.map((slot, slotIndex) => (
-              <button
-                key={slot.id}
-                onClick={() => toggleSlot(rowIndex, slotIndex)}
-                className={cn(
-                  'w-6 h-6 rounded-full border-2 transition-all duration-200',
-                  'hover:scale-110 focus:outline-none focus:ring-2 focus:ring-amber-500/50',
-                  slot.isUsed
-                    ? 'bg-gray-800 border-gray-700 shadow-inner'
-                    : 'bg-amber-500 border-amber-400 shadow-lg shadow-amber-500/20'
-                )}
-                title={slot.isUsed ? 'Click to restore' : 'Click to use'}
-              />
-            ))}
-          </div>
-        </div>
-      ))}
+  const totalSlots = rows.reduce((sum, row) => sum + row.slots.length, 0)
+  const usedSlots = rows.reduce((sum, row) => sum + row.slots.filter(s => s.isUsed).length, 0)
 
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={restoreAll}
-        className="w-full mt-4 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10"
-      >
-        <Moon className="w-4 h-4 mr-2" />
-        Long Rest - Restore All Slots
-      </Button>
-    </div>
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Card className="border-purple-500/20 bg-gradient-to-br from-slate-950 to-purple-950/20">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-purple-300">
+            <Wand2 className="w-5 h-5" />
+            Spell Slots
+            <Badge variant="outline" className="ml-auto border-purple-500/30 text-purple-300 bg-purple-500/10">
+              {totalSlots - usedSlots} / {totalSlots}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {rows.map((row, rowIndex) => {
+            const config = LEVEL_CONFIG[row.level as keyof typeof LEVEL_CONFIG] || LEVEL_CONFIG['Level 1']
+            const Icon = config.icon
+            const availableInRow = row.slots.filter(s => !s.isUsed).length
+
+            return (
+              <div key={row.level} className="flex items-center gap-3">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant="outline"
+                      className={cn("w-24 justify-center shrink-0", config.badgeClass)}
+                    >
+                      <Icon className="w-3 h-3 mr-1" />
+                      {row.level}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{availableInRow} of {row.slots.length} available</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <div className="flex gap-1.5 flex-wrap flex-1">
+                  {row.slots.map((slot, slotIndex) => (
+                    <Tooltip key={slot.id}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => toggleSlot(rowIndex, slotIndex)}
+                          className={cn(
+                            'w-8 h-8 rounded-full border-2 transition-all duration-200',
+                            'hover:scale-110 active:scale-95',
+                            slot.isUsed
+                              ? 'bg-slate-800 border-slate-600'
+                              : [
+                                  'bg-gradient-to-br',
+                                  config.gradient,
+                                  'border-white/20',
+                                  'shadow-lg',
+                                  config.glowColor,
+                                ]
+                          )}
+                        >
+                          {!slot.isUsed && (
+                            <span className="block w-2 h-2 mx-auto rounded-full bg-white/50" />
+                          )}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{slot.isUsed ? 'Used' : 'Available'}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+
+                <span className="text-xs text-muted-foreground w-10 text-right">
+                  {availableInRow}/{row.slots.length}
+                </span>
+              </div>
+            )
+          })}
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   )
 }

@@ -1,80 +1,165 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dices, User, BookOpen, Sparkles, Shield, Sword, Flame } from "lucide-react";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.2),_transparent_45%),linear-gradient(to_bottom,_hsl(var(--background)),_hsl(var(--secondary)/0.35))]">
-      <main className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 md:py-20">
-        <header className="animate-in fade-in slide-in-from-top-4 duration-500">
-          <Badge variant="outline" className="mb-4">House of Shadows v2.2.0-alpha</Badge>
-          <h1 className="text-4xl font-black tracking-tight md:text-6xl">Forge Heroes in the Dark</h1>
-          <p className="mt-4 max-w-2xl text-base text-muted-foreground md:text-lg">
-            Build complete House of Shadows characters with SRD-accurate stats, XP-tier skill progression,
-            armor-as-damage-reduction combat math, and cinematic 3D dice rolls.
+    <div className="min-h-screen bg-[#0a0a0c] relative overflow-hidden">
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-float" />
+        <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-red-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(251,191,36,0.03),transparent_50%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0c]" />
+      </div>
+
+      <main className="relative z-10 mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 md:py-20">
+        <header className="text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <div className="h-px w-16 bg-gradient-to-r from-transparent to-amber-500/50" />
+            <Sparkles className="w-5 h-5 text-amber-400" />
+            <div className="h-px w-16 bg-gradient-to-l from-transparent to-amber-500/50" />
+          </div>
+
+          <div className="fantasy-frame-premium inline-block px-12 py-6 mb-6">
+            <h1 className="text-5xl md:text-7xl font-black tracking-tight bg-gradient-to-r from-amber-200 via-amber-100 to-orange-200 bg-clip-text text-transparent">
+              House of Shadows
+            </h1>
+            <p className="mt-2 text-lg text-amber-400/60 font-serif italic">
+              Forge Your Legend
+            </p>
+          </div>
+
+          <p className="mt-6 max-w-2xl mx-auto text-lg text-slate-400 md:text-xl">
+            Build complete House of Shadows characters with SRD-accurate stats, 
+            XP-tier skill progression, armor-as-damage-reduction combat math, 
+            and cinematic 3D dice rolls.
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Button asChild size="lg" className="shadow-lg shadow-primary/30">
-              <Link href="/builder">Open Character Builder</Link>
+
+          <div className="mt-10 flex flex-wrap justify-center gap-4">
+            <Button 
+              asChild 
+              size="lg" 
+              className="fantasy-frame btn-fantasy text-lg px-8 py-6 hover:scale-105 transition-transform"
+            >
+              <Link href="/builder">
+                <Sword className="w-5 h-5 mr-2" />
+                Begin Creation
+              </Link>
             </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/builder#final-sheet">Jump to Final Sheet</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/characters">Character Management</Link>
+            <Button 
+              asChild 
+              variant="outline" 
+              size="lg"
+              className="fantasy-frame-secondary hover:border-amber-500/50 hover:text-amber-400 transition-colors text-lg px-8 py-6"
+            >
+              <Link href="/characters">
+                <User className="w-5 h-5 mr-2" />
+                Your Characters
+              </Link>
             </Button>
           </div>
+
+          <div className="mt-16 fantasy-divider" />
         </header>
 
-        <section className="grid gap-4 md:grid-cols-3 animate-in fade-in slide-in-from-bottom-6 duration-700">
-          <Card className="bg-card/60 border-border/60">
-            <CardHeader>
-              <CardTitle>Step-Driven Flow</CardTitle>
-              <CardDescription>Guided 7-step creator from stats to final sheet.</CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              Sequential progression with unlock rules keeps data valid and avoids broken state.
-            </CardContent>
-          </Card>
+        <section className="grid gap-6 md:grid-cols-3 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200">
+          <div className="fantasy-frame p-6 group hover:scale-[1.02] transition-transform duration-300">
+            <div className="corner-flourish top-left" />
+            <div className="corner-flourish top-right" />
+            <div className="corner-flourish bottom-left" />
+            <div className="corner-flourish bottom-right" />
+            
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-500/30 flex items-center justify-center mb-4 group-hover:shadow-lg group-hover:shadow-amber-500/20 transition-shadow">
+              <BookOpen className="w-7 h-7 text-amber-400" />
+            </div>
+            <h3 className="text-xl font-bold text-amber-100 mb-2">Step-Driven Flow</h3>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              Guided 7-step creator from stats to final sheet. Sequential progression with unlock rules keeps data valid.
+            </p>
+          </div>
 
-          <Card className="bg-card/60 border-border/60">
-            <CardHeader>
-              <CardTitle>3D Dice + Roll Feed</CardTitle>
-              <CardDescription>Every major roll uses 3D dice with result popups.</CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              Includes critical success/failure styling and auto-dismiss behavior.
-            </CardContent>
-          </Card>
+          <div className="fantasy-frame p-6 group hover:scale-[1.02] transition-transform duration-300">
+            <div className="corner-flourish top-left" />
+            <div className="corner-flourish top-right" />
+            <div className="corner-flourish bottom-left" />
+            <div className="corner-flourish bottom-right" />
+            
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-600/20 border border-purple-500/30 flex items-center justify-center mb-4 group-hover:shadow-lg group-hover:shadow-purple-500/20 transition-shadow">
+              <Dices className="w-7 h-7 text-purple-400" />
+            </div>
+            <h3 className="text-xl font-bold text-amber-100 mb-2">3D Dice + Roll Feed</h3>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              Every major roll uses physics-based 3D dice with result popups. Critical success/failure styling included.
+            </p>
+          </div>
 
-          <Card className="bg-card/60 border-border/60">
-            <CardHeader>
-              <CardTitle>HoS Rules Accurate</CardTitle>
-              <CardDescription>Built for your custom d20 system, not D&D defaults.</CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              3-attribute model, XP skill tiers, and armor as damage reduction are fully represented.
-            </CardContent>
-          </Card>
+          <div className="fantasy-frame p-6 group hover:scale-[1.02] transition-transform duration-300">
+            <div className="corner-flourish top-left" />
+            <div className="corner-flourish top-right" />
+            <div className="corner-flourish bottom-left" />
+            <div className="corner-flourish bottom-right" />
+            
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border border-emerald-500/30 flex items-center justify-center mb-4 group-hover:shadow-lg group-hover:shadow-emerald-500/20 transition-shadow">
+              <Shield className="w-7 h-7 text-emerald-400" />
+            </div>
+            <h3 className="text-xl font-bold text-amber-100 mb-2">HoS Rules Accurate</h3>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              Built for your custom d20 system. 3-attribute model, XP skill tiers, and armor as damage reduction.
+            </p>
+          </div>
         </section>
 
-        <section className="animate-in fade-in slide-in-from-bottom-6 duration-1000">
-          <Card className="bg-card/60 border-border/60">
-            <CardHeader>
-              <CardTitle>Character Management</CardTitle>
-              <CardDescription>Use dedicated save management with multiple slots and exports.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-3">
-              <Button asChild>
-                <Link href="/characters">Open Character Management</Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link href="/builder">Create New Character</Link>
-              </Button>
-            </CardContent>
-          </Card>
+        <section className="animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300">
+          <div className="fantasy-frame-premium p-8">
+            <div className="corner-flourish top-left" />
+            <div className="corner-flourish top-right" />
+            <div className="corner-flourish bottom-left" />
+            <div className="corner-flourish bottom-right" />
+            
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <Flame className="w-6 h-6 text-amber-400" />
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-200 to-orange-200 bg-clip-text text-transparent">
+                    Character Management
+                  </h2>
+                </div>
+                <p className="text-slate-400">
+                  Use dedicated save management with multiple slots and exports. Track your heroes across adventures.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <Button 
+                  asChild
+                  className="btn-fantasy"
+                >
+                  <Link href="/characters">
+                    <User className="w-4 h-4 mr-2" />
+                    View Characters
+                  </Link>
+                </Button>
+                <Button 
+                  asChild 
+                  variant="outline"
+                  className="fantasy-frame-secondary hover:border-amber-500/50 hover:text-amber-400 transition-colors"
+                >
+                  <Link href="/builder">
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Create New
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
         </section>
+
+        <div className="text-center">
+          <Badge variant="outline" className="fantasy-frame-secondary text-xs text-slate-500 border-slate-700">
+            House of Shadows v2.2.0-alpha
+          </Badge>
+        </div>
       </main>
     </div>
   );

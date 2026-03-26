@@ -215,26 +215,34 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
       setIsRolling(true);
 
       try {
-        // STRICT: Do NOT sync canvas size or call show() here - just roll on existing instance
+        // CRITICAL: All promises must be created SYNCHRONOUSLY in the SAME tick
+        // This ensures all dice are part of the SAME physics simulation
+        // Any await or async gap between calls would create separate simulations
+
         const [first, ...rest] = items;
-        const promises: Promise<DiceRollValue[]>[] = [
-          diceBoxRef.current.roll(first.notation, first.options),
-        ];
 
-        for (const item of rest) {
-          if (typeof diceBoxRef.current.add === "function") {
-            promises.push(
-              diceBoxRef.current.add(item.notation, {
-                ...item.options,
-                newStartPoint: false,
-              })
-            );
-          } else {
-            promises.push(diceBoxRef.current.roll(item.notation, item.options));
+        // Create ALL promises in one synchronous block - NO await yet
+        const firstRollPromise = diceBoxRef.current.roll(first.notation, first.options);
+
+        // IMMEDIATELY add all other dice - must be synchronous with first roll
+        const additionalPromises = rest.map((item) => {
+          if (typeof diceBoxRef.current!.add === "function") {
+            // Use add() with newStartPoint: false to join the same physics simulation
+            return diceBoxRef.current!.add(item.notation, {
+              ...item.options,
+              newStartPoint: false,
+            });
           }
-        }
+          // Fallback to roll() if add() not available
+          return diceBoxRef.current!.roll(item.notation, item.options);
+        });
 
-        const parsedGroups: DiceResult[][] = (await Promise.all(promises)).map((group) =>
+        // Combine all promises and wait for them together
+        const allPromises = [firstRollPromise, ...additionalPromises];
+        const rollResults = await Promise.all(allPromises);
+
+        // Parse results
+        const parsedGroups: DiceResult[][] = rollResults.map((group) =>
           group.map((die) => ({
             value: die.value,
             rolls: die.rolls,
@@ -242,6 +250,7 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
           }))
         );
 
+        // Update results map
         const newResults = new Map(results);
         const firstDie = parsedGroups[0]?.[0] ?? { value: 0 };
         newResults.set(Date.now().toString(), firstDie);

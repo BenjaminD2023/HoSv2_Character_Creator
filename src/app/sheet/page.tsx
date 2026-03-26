@@ -60,6 +60,16 @@ type SavedSheetState = {
   inventory: InventoryItem[];
   notes: string;
   lastModified: string;
+  spellSlots?: {
+    wizard?: {
+      L1: boolean[];
+      L2: boolean[];
+      L3: boolean[];
+      L4?: boolean[];
+      L5?: boolean[];
+    };
+    bard?: boolean[];
+  };
 };
 
 const CHARACTER_STORAGE_KEY = "hos.character-builder.v1";
@@ -157,6 +167,88 @@ function getModifier(value: number): number {
   return 10;
 }
 
+const calculateWizardSlots = (skills: string[]) => {
+  const baseSlots = { L1: 5, L2: 4, L3: 1, L4: 0, L5: 0 };
+  const purchasedSlots = { L1: 0, L2: 0, L3: 0, L4: 0, L5: 0 };
+  
+  skills.forEach(skill => {
+    const lowerSkill = skill.toLowerCase();
+    
+    // Check if this is a spell slot skill
+    if (!lowerSkill.includes('spell slot') && !lowerSkill.includes('spellslot') && !lowerSkill.includes('wizard-spell-slots')) {
+      return;
+    }
+    
+    // Match level patterns more specifically
+    // Check for "-l1" (skill ID format), "level 1", "lv1", "l1)" 
+    if (
+      lowerSkill.includes('-l1') ||
+      lowerSkill.includes('level 1') ||
+      lowerSkill.includes('lv1') ||
+      lowerSkill.includes('l1)') ||
+      /\bl1\b/.test(lowerSkill)
+    ) {
+      purchasedSlots.L1++;
+    }
+    else if (
+      lowerSkill.includes('-l2') ||
+      lowerSkill.includes('level 2') ||
+      lowerSkill.includes('lv2') ||
+      lowerSkill.includes('l2)') ||
+      /\bl2\b/.test(lowerSkill)
+    ) {
+      purchasedSlots.L2++;
+    }
+    else if (
+      lowerSkill.includes('-l3') ||
+      lowerSkill.includes('level 3') ||
+      lowerSkill.includes('lv3') ||
+      lowerSkill.includes('l3)') ||
+      /\bl3\b/.test(lowerSkill)
+    ) {
+      purchasedSlots.L3++;
+    }
+    else if (
+      lowerSkill.includes('-l4') ||
+      lowerSkill.includes('level 4') ||
+      lowerSkill.includes('lv4') ||
+      lowerSkill.includes('l4)') ||
+      /\bl4\b/.test(lowerSkill)
+    ) {
+      purchasedSlots.L4++;
+    }
+    else if (
+      lowerSkill.includes('-l5') ||
+      lowerSkill.includes('level 5') ||
+      lowerSkill.includes('lv5') ||
+      lowerSkill.includes('l5)') ||
+      /\bl5\b/.test(lowerSkill)
+    ) {
+      purchasedSlots.L5++;
+    }
+  });
+  
+  return {
+    L1: baseSlots.L1 + purchasedSlots.L1,
+    L2: baseSlots.L2 + purchasedSlots.L2,
+    L3: baseSlots.L3 + purchasedSlots.L3,
+    L4: purchasedSlots.L4,
+    L5: purchasedSlots.L5,
+  };
+};
+
+const calculateBardSlots = (skills: string[]) => {
+  let highestTier = 1;
+  skills.forEach(skill => {
+    const lowerSkill = skill.toLowerCase();
+    if (lowerSkill.includes('tier 3') || lowerSkill.includes('tier3')) highestTier = Math.max(highestTier, 3);
+    else if (lowerSkill.includes('tier 4') || lowerSkill.includes('tier4')) highestTier = Math.max(highestTier, 4);
+    else if (lowerSkill.includes('tier 5') || lowerSkill.includes('tier5')) highestTier = Math.max(highestTier, 5);
+    else if (lowerSkill.includes('tier 2') || lowerSkill.includes('tier2')) highestTier = Math.max(highestTier, 2);
+  });
+  return highestTier;
+};
+
 function formatMod(mod: number): string {
   return mod >= 0 ? `+${mod}` : `${mod}`;
 }
@@ -177,6 +269,7 @@ export default function CharacterSheetPage() {
   const [hpInput, setHpInput] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
   const [resourceTab, setResourceTab] = useState<"skills" | "spells">("skills")
+  const [spellSlotState, setSpellSlotState] = useState<SavedSheetState['spellSlots']>(undefined);
   const [rollResult, setRollResult] = useState<{
     label: string;
     naturalRoll: number;
@@ -282,6 +375,10 @@ export default function CharacterSheetPage() {
             !startingWeapons.some((sw) => sw.name === i.name)
           )];
           setInventory(combinedInventory);
+          // Load spell slots if present
+          if (state.spellSlots) {
+            setSpellSlotState(state.spellSlots);
+          }
         } else {
           setCurrentHp(charData.maxHp);
           setXp(charData.xp);
@@ -304,10 +401,11 @@ export default function CharacterSheetPage() {
         inventory,
         notes: "",
         lastModified: new Date().toISOString(),
+        spellSlots: spellSlotState,
       };
       localStorage.setItem(SHEET_STATE_KEY, JSON.stringify(state));
     }
-  }, [currentHp, tempHp, xp, inventory, character]);
+  }, [currentHp, tempHp, xp, inventory, character, spellSlotState]);
 
   const handleHeal = () => {
     const amount = parseInt(hpInput) || 0;
@@ -346,16 +444,37 @@ export default function CharacterSheetPage() {
       setHpInput("");
     }
   };
+  const saveSheetState = () => {
+    if (character) {
+      const state: SavedSheetState = {
+        currentHp,
+        tempHp,
+        xp,
+        inventory,
+        notes: "",
+        lastModified: new Date().toISOString(),
+        spellSlots: spellSlotState,
+      };
+      localStorage.setItem(SHEET_STATE_KEY, JSON.stringify(state));
+    }
+  };
+
   const handleLongRest = () => {
-    if (!character) return
+    if (!character) return;
     
     // Restore HP to max
-    setCurrentHp(character.maxHp)
-    setTempHp(0)
+    setCurrentHp(character.maxHp);
+    setTempHp(0);
     
     // Restore skills and spell slots via store
-    const { longRest } = useSkillStore.getState()
-    longRest(`sheet-${character.name}`)
+    const { longRest } = useSkillStore.getState();
+    longRest(`sheet-${character.name}`);
+    
+    // Clear spell slots
+    setSpellSlotState(undefined);
+    
+    // Save the updated state
+    saveSheetState();
   }
 
 
@@ -726,13 +845,17 @@ export default function CharacterSheetPage() {
   if (!character) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0c]">
-        <Card className="w-full max-w-md border-white/10 bg-white/5">
+        <Card className="fantasy-frame-premium w-full max-w-md">
+          <div className="corner-flourish top-left" />
+          <div className="corner-flourish top-right" />
+          <div className="corner-flourish bottom-left" />
+          <div className="corner-flourish bottom-right" />
           <CardContent className="p-8 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-600/20 flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-600/20 flex items-center justify-center border border-amber-500/30">
               <Sparkles className="w-8 h-8 text-amber-400" />
             </div>
-            <p className="text-muted-foreground mb-6">No character found. Create one in the builder first.</p>
-            <Button onClick={() => router.push("/builder")} className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500">
+            <p className="text-slate-400 mb-6">No character found. Create one in the builder first.</p>
+            <Button onClick={() => router.push("/builder")} className="btn-fantasy">
               Go to Builder
             </Button>
           </CardContent>
@@ -747,10 +870,9 @@ export default function CharacterSheetPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-foreground overflow-hidden">
-      {/* Ambient background effects */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }} />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(251,191,36,0.03),transparent_50%)]" />
       </div>
 
@@ -960,39 +1082,46 @@ export default function CharacterSheetPage() {
         {/* Header - Character Identity */}
         <header
           className={cn(
-            "flex items-center justify-between mb-6 transition-opacity duration-700",
+            "fantasy-frame p-4 mb-6 transition-opacity duration-700",
             isLoaded ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
           )}
         >
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 via-orange-500/20 to-red-500/20 border border-amber-500/30 flex items-center justify-center shadow-lg shadow-amber-500/10">
-                <span className="text-2xl font-bold text-amber-400">{character.name.charAt(0)}</span>
+          <div className="corner-flourish top-left" />
+          <div className="corner-flourish top-right" />
+          <div className="corner-flourish bottom-left" />
+          <div className="corner-flourish bottom-right" />
+          
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 via-orange-500/20 to-red-500/20 border border-amber-500/30 flex items-center justify-center shadow-lg shadow-amber-500/10">
+                  <span className="text-2xl font-bold text-amber-400">{character.name.charAt(0)}</span>
+                </div>
+                {/* XP Badge - Shows Total XP */}
+                <div className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-[10px] font-bold text-white shadow-lg">
+                  {character.xp} XP
+                </div>
               </div>
-              {/* XP Badge - Shows Total XP */}
-              <div className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-[10px] font-bold text-white shadow-lg">
-                {character.xp} XP
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-amber-100 via-amber-200 to-orange-200 bg-clip-text text-transparent">
+                  {character.name}
+                </h1>
+                <p className="text-sm text-amber-400/60">
+                  {character.className}
+                </p>
               </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-amber-100 via-amber-200 to-orange-200 bg-clip-text text-transparent">
-                {character.name}
-              </h1>
-              <p className="text-sm text-amber-400/60">
-                {character.className}
-              </p>
-            </div>
-          </div>
 
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => router.push("/builder")}
-            className="border-white/10 bg-white/5 hover:bg-white/10 hover:border-amber-500/30 transition-colors"
-          >
-            <Edit2 className="w-4 h-4 mr-2" />
-            Edit Character
-          </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => router.push("/builder")}
+              className="fantasy-frame-secondary hover:border-amber-500/50 hover:text-amber-400 transition-colors"
+            >
+              <Edit2 className="w-4 h-4 mr-2" />
+              Edit Character
+            </Button>
+          </div>
         </header>
 
         {/* Main Grid Layout */}
@@ -1073,7 +1202,11 @@ export default function CharacterSheetPage() {
 
             {/* Armor & Initiative Row */}
             <div className="grid grid-cols-2 gap-3">
-              <Card className="border-white/10 bg-white/5 overflow-hidden">
+              <Card className="fantasy-frame overflow-hidden">
+                <div className="corner-flourish top-left" />
+                <div className="corner-flourish top-right" />
+                <div className="corner-flourish bottom-left" />
+                <div className="corner-flourish bottom-right" />
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-500/20 to-slate-600/20 border border-slate-500/30 flex items-center justify-center">
@@ -1125,15 +1258,19 @@ export default function CharacterSheetPage() {
 
             {/* Hit Die & Proficiency */}
             <div className="grid grid-cols-2 gap-3">
-              <Card className="border-white/10 bg-white/5">
+              <Card className="fantasy-frame-secondary">
+                <div className="corner-flourish top-left" />
+                <div className="corner-flourish top-right" />
                 <CardContent className="p-4 text-center">
-                  <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Hit Die</p>
+                  <p className="text-xs text-amber-400/60 uppercase tracking-wider mb-1">Hit Die</p>
                   <p className="text-2xl font-bold text-amber-400">d{character.hitDie}</p>
                 </CardContent>
               </Card>
-              <Card className="border-white/10 bg-white/5">
+              <Card className="fantasy-frame-secondary">
+                <div className="corner-flourish top-left" />
+                <div className="corner-flourish top-right" />
                 <CardContent className="p-4 text-center">
-                  <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Proficiency</p>
+                  <p className="text-xs text-emerald-400/60 uppercase tracking-wider mb-1">Proficiency</p>
                   <p className="text-2xl font-bold text-emerald-400">+{character.proficiencyBonus}</p>
                 </CardContent>
               </Card>
@@ -1148,7 +1285,7 @@ export default function CharacterSheetPage() {
             )}
           >
             {/* HP Card */}
-            <Card className="border-white/10 bg-gradient-to-b from-white/10 to-white/5 overflow-hidden">
+            <Card className="fantasy-frame overflow-hidden">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -1305,17 +1442,22 @@ export default function CharacterSheetPage() {
                 {/* Long Rest Button */}
                 <Button
                   variant="outline"
-                  className="w-full h-9 mt-2 border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 hover:border-indigo-500/50 text-indigo-300"
                   onClick={handleLongRest}
+                  className="btn-long-rest w-full mt-3"
                 >
-                  <Moon className="w-3 h-3 mr-1" />
-                  Long Rest
+                  <Moon className="w-4 h-4 mr-2" />
+                  <span>Long Rest</span>
+                  <span className="ml-2 text-xs opacity-70">Restores HP, Skills & Spells</span>
                 </Button>
               </CardContent>
             </Card>
 
             {/* Weapons */}
-            <Card className="border-white/10 bg-white/5 flex-1 overflow-hidden">
+            <Card className="fantasy-frame flex-1 overflow-hidden">
+              <div className="corner-flourish top-left" />
+              <div className="corner-flourish top-right" />
+              <div className="corner-flourish bottom-left" />
+              <div className="corner-flourish bottom-right" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-xs text-white/40 uppercase tracking-wider flex items-center gap-2">
@@ -1535,7 +1677,11 @@ export default function CharacterSheetPage() {
             )}
           >
             {/* Quick Actions */}
-            <Card className="border-white/10 bg-white/5">
+            <Card className="fantasy-frame">
+              <div className="corner-flourish top-left" />
+              <div className="corner-flourish top-right" />
+              <div className="corner-flourish bottom-left" />
+              <div className="corner-flourish bottom-right" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-xs text-white/40 uppercase tracking-wider">Quick Rolls</p>
@@ -1578,9 +1724,13 @@ export default function CharacterSheetPage() {
             </Card>
 
             {/* Skills */}
-            <Card className="border-white/10 bg-white/5">
+            <Card className="fantasy-frame">
+              <div className="corner-flourish top-left" />
+              <div className="corner-flourish top-right" />
+              <div className="corner-flourish bottom-left" />
+              <div className="corner-flourish bottom-right" />
               <CardContent className="p-5">
-                <p className="text-xs text-white/40 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <p className="text-xs text-amber-400/60 uppercase tracking-wider mb-4 flex items-center gap-2">
                   <Sparkles className="w-3 h-3" />
                   Skills
                 </p>
@@ -1601,7 +1751,11 @@ export default function CharacterSheetPage() {
 
 
             {/* Resource Tracker */}
-            <Card className="border-white/10 bg-white/5">
+            <Card className="fantasy-frame">
+              <div className="corner-flourish top-left" />
+              <div className="corner-flourish top-right" />
+              <div className="corner-flourish bottom-left" />
+              <div className="corner-flourish bottom-right" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-xs text-white/40 uppercase tracking-wider flex items-center gap-2">
@@ -1661,11 +1815,17 @@ export default function CharacterSheetPage() {
                   const classId = character.className.toLowerCase() as 'wizard' | 'bard'
                   if (classId !== 'wizard' && classId !== 'bard') return null
                   
+                  const wizardSlots = classId === 'wizard' ? calculateWizardSlots(character.skills) : undefined
+                  const bardSlots = classId === 'bard' ? calculateBardSlots(character.skills) : undefined
+                  
                   return (
                     <SpellCasting
                       characterId={`sheet-${character.name}`}
                       classId={classId}
-                      bardLevel={1}
+                      wizardSlots={wizardSlots}
+                      bardSlots={bardSlots}
+                      initialSlotState={spellSlotState}
+                      onSlotStateChange={setSpellSlotState}
                     />
                   )
                 })()}
@@ -1673,7 +1833,11 @@ export default function CharacterSheetPage() {
             </Card>
 
             {/* Inventory */}
-            <Card className="border-white/10 bg-white/5 flex-1 overflow-hidden">
+            <Card className="fantasy-frame flex-1 overflow-hidden">
+              <div className="corner-flourish top-left" />
+              <div className="corner-flourish top-right" />
+              <div className="corner-flourish bottom-left" />
+              <div className="corner-flourish bottom-right" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-xs text-white/40 uppercase tracking-wider flex items-center gap-2">

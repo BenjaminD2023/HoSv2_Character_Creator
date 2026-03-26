@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import { DiceCanvas } from "@/components/DiceCanvas";
 import { useDice } from "@/contexts";
 import { Sword, Brain, Zap, RotateCcw, Check, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { saveCharacter, getCharacter, createCharacter, Character } from "@/lib/character-storage";
 
 type AttributeKey = "strength" | "intelligence" | "athletics";
 type Tier = "basic" | "intermediate" | "advanced" | "capstone";
@@ -308,10 +310,14 @@ function formatMod(mod: number) {
   return mod >= 0 ? `+${mod}` : `${mod}`;
 }
 
-export default function Home() {
-  const { rollDice, rollDiceBatch, isReady, clearDice } = useDice();
+function BuilderContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { isReady, isRolling: isRollingDice, rollDice, rollDiceBatch, clearDice } = useDice();
   const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1);
   const [characterName, setCharacterName] = useState("");
+  const [editMode, setEditMode] = useState(false);
+  const [editCharacterId, setEditCharacterId] = useState<string | null>(null);
 
   const [rolls, setRolls] = useState<number[]>([]);
   const [rollBreakdown, setRollBreakdown] = useState<number[][]>([]);
@@ -594,6 +600,21 @@ export default function Home() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
+      const editId = searchParams.get("id");
+      if (editId) {
+        const character = getCharacter(editId);
+        if (character) {
+          setEditMode(true);
+          setEditCharacterId(editId);
+          const data = character.data as SavedCharacterState;
+          if (data && data.version === 1) {
+            applySavedState(data);
+          }
+          setHasLoadedLocalData(true);
+          return;
+        }
+      }
+
       const slotsRaw = window.localStorage.getItem(CHARACTER_SLOTS_KEY);
       const slotsParsed = slotsRaw ? (JSON.parse(slotsRaw) as CharacterSlotItem[]) : [];
       const normalizedSlots = Array.isArray(slotsParsed)
@@ -625,7 +646,7 @@ export default function Home() {
     } finally {
       setHasLoadedLocalData(true);
     }
-  }, [applySavedState]);
+  }, [applySavedState, searchParams]);
 
   useEffect(() => {
     if (!hasLoadedLocalData || typeof window === "undefined") return;
@@ -802,31 +823,20 @@ export default function Home() {
     }
   };
 
-  const rollBatchWith3d = async (
-    items: Array<{ notation: string; options?: { theme?: string; themeColor?: string } }>
-  ): Promise<Array<Array<{ value: number; modifier?: number; rolls?: number[] }>>> => {
+  type DiceBatchItem = {
+    notation: string;
+    options?: { theme?: string; themeColor?: string };
+  };
+
+  const rollBatchWith3d = async (items: DiceBatchItem[]) => {
     if (!isReady) {
       throw new Error("3D dice are not ready yet.");
     }
     setIsRolling3d(true);
     setShowDice(true);
     try {
-      // Stagger rolls by 150ms to reduce physics load and improve visual clarity
-      const staggeredItems = items.map((item, index) => ({
-        ...item,
-        delay: index * 150,
-      }));
-
-      const results: Array<Array<{ value: number; modifier?: number; rolls?: number[] }>> = [];
-
-      for (const item of staggeredItems) {
-        if (item.delay > 0) {
-          await new Promise((resolve) => setTimeout(resolve, item.delay));
-        }
-        const result = await rollDice(item.notation, item.options);
-        results.push(result);
-      }
-
+      // ALL dice roll simultaneously - use rollDiceBatch!
+      const results = await rollDiceBatch(items);
       return results;
     } finally {
       setIsRolling3d(false);
@@ -1066,10 +1076,38 @@ small{color:#bfb7a6}
     window.URL.revokeObjectURL(url);
   };
 
+  const saveToCharacterStorage = () => {
+    if (!canShowFinal || !selectedClass) return;
+    
+    const state = buildSavedState();
+    
+    if (editMode && editCharacterId) {
+      const existing = getCharacter(editCharacterId);
+      if (existing) {
+        existing.data = state as unknown as Record<string, unknown>;
+        existing.name = characterName || "Unnamed";
+        existing.className = selectedClass.name;
+        saveCharacter(existing);
+        router.push(`/character/${editCharacterId}`);
+        return;
+      }
+    }
+    
+    const newCharacter = createCharacter(state as unknown as Record<string, unknown>);
+    setSaveFlash(true);
+    setTimeout(() => setSaveFlash(false), 900);
+    router.push(`/character/${newCharacter.id}`);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/30">
+    <div className="min-h-screen bg-[#0a0a0c] relative overflow-hidden">
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }} />
+      </div>
+
       <div className="relative">
-        <DiceCanvas visible={showDice || isRolling3d} onClose={dismissRollToast} />
+        <DiceCanvas visible={showDice || isRolling3d || isRollingDice} onClose={dismissRollToast} />
         {(showVanishFx) && (
           <div
             key={dicePulse}
@@ -1077,23 +1115,40 @@ small{color:#bfb7a6}
           />
         )}
       </div>
-      <main className="mx-auto max-w-7xl p-4 md:p-8">
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">House of Shadows Character Builder</h1>
-            <p className="text-sm text-muted-foreground">SRD-driven flow: Stats → Class → HP → XP → Skills → Sheet</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline">v2.2.0-alpha</Badge>
-            <Button size="sm" variant="outline" onClick={() => saveCharacterToLocal(true)}>Save Character</Button>
-            <Button size="sm" variant="ghost" onClick={() => clearSavedCharacter()}>Clear Save</Button>
-            <Button size="sm" variant="ghost" asChild><Link href="/characters">Manage</Link></Button>
-            <Button size="sm" variant="secondary" asChild><Link href="/sheet">View Sheet</Link></Button>
-            {saveFlash && <span className="text-xs text-emerald-400">Saved</span>}
+
+      <main className="relative z-10 mx-auto max-w-7xl p-4 md:p-8">
+        <div className="mb-8 fantasy-frame p-6">
+          <div className="corner-flourish top-left" />
+          <div className="corner-flourish top-right" />
+          <div className="corner-flourish bottom-left" />
+          <div className="corner-flourish bottom-right" />
+          
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-200 via-amber-100 to-orange-200 bg-clip-text text-transparent">
+                House of Shadows Character Builder
+              </h1>
+              <p className="text-sm text-slate-400 mt-1">SRD-driven flow: Stats → Class → HP → XP → Skills → Sheet</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="fantasy-frame-secondary text-amber-400/60 border-amber-500/30">v2.2.0-alpha</Badge>
+              <Button size="sm" variant="outline" onClick={() => saveCharacterToLocal(true)} className="fantasy-frame-secondary hover:border-amber-500/50 hover:text-amber-400">Save to Slot</Button>
+              <Button size="sm" className="btn-fantasy" onClick={saveToCharacterStorage} disabled={!canShowFinal}>
+                {editMode ? "Update Character" : "Save Character"}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => clearSavedCharacter()} className="hover:text-red-400">Clear Save</Button>
+              <Button size="sm" variant="ghost" asChild className="hover:text-amber-400"><Link href="/characters">Characters</Link></Button>
+              {saveFlash && <span className="text-xs text-emerald-400">Saved</span>}
+            </div>
           </div>
         </div>
 
-        <div className="mb-6 rounded-2xl border border-border/60 bg-card/40 p-4">
+        <div className="mb-8 fantasy-frame p-4">
+          <div className="corner-flourish top-left" />
+          <div className="corner-flourish top-right" />
+          <div className="corner-flourish bottom-left" />
+          <div className="corner-flourish bottom-right" />
+          
           <div className="mb-3 flex flex-wrap gap-2">
             {[
               "1. Stats",
@@ -1111,12 +1166,12 @@ small{color:#bfb7a6}
                   type="button"
                   onClick={() => step <= maxUnlockedStep && setActiveStep(step)}
                   className={[
-                    "rounded-full px-3 py-1 text-xs transition-colors",
+                    "rounded-full px-4 py-2 text-sm transition-all duration-300",
                     activeStep === step
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      ? "bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg shadow-amber-500/30 font-semibold"
                       : step <= maxUnlockedStep
-                        ? "bg-secondary/70 text-foreground hover:bg-secondary"
-                        : "bg-secondary/30 text-muted-foreground",
+                        ? "bg-slate-800/70 text-amber-100 hover:bg-slate-700/70 border border-amber-500/20"
+                        : "bg-slate-900/50 text-slate-500 border border-slate-700/50",
                   ].join(" ")}
                 >
                   {label}
@@ -1124,19 +1179,23 @@ small{color:#bfb7a6}
               );
             })}
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-secondary/60">
+          <div className="h-3 overflow-hidden rounded-full bg-slate-800/60 border border-slate-700/50">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-primary to-cyan-400 transition-transform duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 transition-transform duration-500 shadow-lg shadow-amber-500/30"
               style={{ width: `${(activeStep / 7) * 100}%` }}
             />
           </div>
         </div>
 
         {activeStep === 1 && (
-          <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <CardHeader>
-              <CardTitle>Step 1: Core Stats</CardTitle>
-              <CardDescription>Roll 4d6 drop lowest, one stat at a time; assign manually or enter direct scores.</CardDescription>
+          <Card className="fantasy-frame-premium animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="corner-flourish top-left" />
+            <div className="corner-flourish top-right" />
+            <div className="corner-flourish bottom-left" />
+            <div className="corner-flourish bottom-right" />
+            <CardHeader className="fantasy-header">
+              <CardTitle className="text-2xl font-bold text-amber-100">Step 1: Core Stats</CardTitle>
+              <CardDescription className="text-slate-400">Roll 4d6 drop lowest, one stat at a time; assign manually or enter direct scores.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-3 md:grid-cols-2">
@@ -1387,10 +1446,14 @@ small{color:#bfb7a6}
         )}
 
         {activeStep === 2 && (
-          <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <CardHeader>
-              <CardTitle>Step 2: Class Selection</CardTitle>
-              <CardDescription>Select your HoS class data profile.</CardDescription>
+          <Card className="fantasy-frame-premium animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="corner-flourish top-left" />
+            <div className="corner-flourish top-right" />
+            <div className="corner-flourish bottom-left" />
+            <div className="corner-flourish bottom-right" />
+            <CardHeader className="fantasy-header">
+              <CardTitle className="text-2xl font-bold text-amber-100">Step 2: Class Selection</CardTitle>
+              <CardDescription className="text-slate-400">Select your HoS class data profile.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-2 md:grid-cols-2">
@@ -1438,10 +1501,14 @@ small{color:#bfb7a6}
         )}
 
         {activeStep === 3 && (
-          <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <CardHeader>
-              <CardTitle>Step 3: Base HP Generation</CardTitle>
-              <CardDescription>Roll 1 class hit die and add class-specific attribute modifier.</CardDescription>
+          <Card className="fantasy-frame-premium animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="corner-flourish top-left" />
+            <div className="corner-flourish top-right" />
+            <div className="corner-flourish bottom-left" />
+            <div className="corner-flourish bottom-right" />
+            <CardHeader className="fantasy-header">
+              <CardTitle className="text-2xl font-bold text-amber-100">Step 3: Base HP Generation</CardTitle>
+              <CardDescription className="text-slate-400">Roll 1 class hit die and add class-specific attribute modifier.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-2">
@@ -1492,10 +1559,14 @@ small{color:#bfb7a6}
         )}
 
         {activeStep === 4 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Step 4: XP Input</CardTitle>
-              <CardDescription>Set starting XP and determine extra hit dice thresholds.</CardDescription>
+          <Card className="fantasy-frame-premium animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="corner-flourish top-left" />
+            <div className="corner-flourish top-right" />
+            <div className="corner-flourish bottom-left" />
+            <div className="corner-flourish bottom-right" />
+            <CardHeader className="fantasy-header">
+              <CardTitle className="text-2xl font-bold text-amber-100">Step 4: XP Input</CardTitle>
+              <CardDescription className="text-slate-400">Set starting XP and determine extra hit dice thresholds.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-3 md:grid-cols-2">
@@ -1527,10 +1598,14 @@ small{color:#bfb7a6}
         )}
 
         {activeStep === 5 && (
-          <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <CardHeader>
-              <CardTitle>Step 5: Extra HP Generation</CardTitle>
-              <CardDescription>Roll one extra hit die per full 3 XP, no modifiers added.</CardDescription>
+          <Card className="fantasy-frame-premium animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="corner-flourish top-left" />
+            <div className="corner-flourish top-right" />
+            <div className="corner-flourish bottom-left" />
+            <div className="corner-flourish bottom-right" />
+            <CardHeader className="fantasy-header">
+              <CardTitle className="text-2xl font-bold text-amber-100">Step 5: Extra HP Generation</CardTitle>
+              <CardDescription className="text-slate-400">Roll one extra hit die per full 3 XP, no modifiers added.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {selectedClass && baseHp !== null && (
@@ -1598,10 +1673,14 @@ small{color:#bfb7a6}
         )}
 
         {activeStep === 6 && (
-          <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <CardHeader>
-              <CardTitle>Step 6: Skill Purchasing</CardTitle>
-              <CardDescription>Spend XP on class skills with active Tier UP/Tier MAX constraints.</CardDescription>
+          <Card className="fantasy-frame-premium animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="corner-flourish top-left" />
+            <div className="corner-flourish top-right" />
+            <div className="corner-flourish bottom-left" />
+            <div className="corner-flourish bottom-right" />
+            <CardHeader className="fantasy-header">
+              <CardTitle className="text-2xl font-bold text-amber-100">Step 6: Skill Purchasing</CardTitle>
+              <CardDescription className="text-slate-400">Spend XP on class skills with active Tier UP/Tier MAX constraints.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
 
@@ -1655,11 +1734,15 @@ small{color:#bfb7a6}
         )}
 
         {activeStep === 7 && (
-          <Card id="final-sheet" className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-300 border-amber-200/20 bg-[linear-gradient(160deg,rgba(191,137,53,0.08),rgba(44,19,9,0.26)_30%,rgba(13,13,18,0.9)_85%)] shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
-          <CardHeader>
-            <CardTitle>Step 7: Final Interactive Character Sheet</CardTitle>
-            <CardDescription>D20 checks/saves, damage reduction armor, spell DC, and purchased skills.</CardDescription>
-          </CardHeader>
+          <Card id="final-sheet" className="fantasy-frame-premium mt-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="corner-flourish top-left" />
+            <div className="corner-flourish top-right" />
+            <div className="corner-flourish bottom-left" />
+            <div className="corner-flourish bottom-right" />
+            <CardHeader className="fantasy-header">
+              <CardTitle className="text-2xl font-bold text-amber-100">Step 7: Final Interactive Character Sheet</CardTitle>
+              <CardDescription className="text-slate-400">D20 checks/saves, damage reduction armor, spell DC, and purchased skills.</CardDescription>
+            </CardHeader>
           <CardContent className="space-y-4">
             {!canShowFinal && <p className="text-sm text-muted-foreground">Complete stats, class, HP, and XP rolls to unlock final sheet.</p>}
 
@@ -1903,5 +1986,13 @@ small{color:#bfb7a6}
         </div>
       )}
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/30" />}>
+      <BuilderContent />
+    </Suspense>
   );
 }
