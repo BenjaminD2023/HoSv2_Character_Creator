@@ -215,48 +215,31 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
       setIsRolling(true);
 
       try {
-        // CRITICAL: All promises must be created SYNCHRONOUSLY in the SAME tick
-        // This ensures all dice are part of the SAME physics simulation
-        // Any await or async gap between calls would create separate simulations
-
-        const [first, ...rest] = items;
-
-        // Create ALL promises in one synchronous block - NO await yet
-        const firstRollPromise = diceBoxRef.current.roll(first.notation, first.options);
-
-        // IMMEDIATELY add all other dice - must be synchronous with first roll
-        const additionalPromises = rest.map((item) => {
-          if (typeof diceBoxRef.current!.add === "function") {
-            // Use add() with newStartPoint: false to join the same physics simulation
-            return diceBoxRef.current!.add(item.notation, {
-              ...item.options,
-              newStartPoint: false,
-            });
-          }
-          // Fallback to roll() if add() not available
-          return diceBoxRef.current!.roll(item.notation, item.options);
-        });
-
-        // Combine all promises and wait for them together
-        const allPromises = [firstRollPromise, ...additionalPromises];
-        const rollResults = await Promise.all(allPromises);
-
-        // Parse results
-        const parsedGroups: DiceResult[][] = rollResults.map((group) =>
-          group.map((die) => ({
+        const results: DiceResult[][] = [];
+        
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          const rollResult = await diceBoxRef.current.roll(item.notation, item.options);
+          
+          const parsedResults: DiceResult[] = rollResult.map((die) => ({
             value: die.value,
             rolls: die.rolls,
             modifier: die.modifier,
-          }))
-        );
+          }));
+          
+          results.push(parsedResults);
+          
+          if (i < items.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
+        }
 
-        // Update results map
-        const newResults = new Map(results);
-        const firstDie = parsedGroups[0]?.[0] ?? { value: 0 };
+        const firstDie = results[0]?.[0] ?? { value: 0 };
+        const newResults = new Map<string, DiceResult>();
         newResults.set(Date.now().toString(), firstDie);
         setResults(newResults);
 
-        return parsedGroups;
+        return results;
       } catch (error) {
         console.error("Batch roll failed:", error);
         return [];

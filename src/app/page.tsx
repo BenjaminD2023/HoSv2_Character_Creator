@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Dices, User, BookOpen, Sparkles, Shield, Sword, Flame } from "lucide-react";
 
 export default function HomePage() {
@@ -22,7 +23,10 @@ export default function HomePage() {
             <div className="h-px w-16 bg-gradient-to-l from-transparent to-amber-500/50" />
           </div>
 
-          <div className="fantasy-frame-premium inline-block px-12 py-6 mb-6">
+          <div className="parchment-frame-aged inline-block px-12 py-6 mb-6 relative">
+            <div className="absolute top-2 right-2">
+              <ThemeToggle />
+            </div>
             <h1 className="text-5xl md:text-7xl font-black tracking-tight bg-gradient-to-r from-amber-200 via-amber-100 to-orange-200 bg-clip-text text-transparent">
               House of Shadows
             </h1>
@@ -41,7 +45,7 @@ export default function HomePage() {
             <Button 
               asChild 
               size="lg" 
-              className="fantasy-frame btn-fantasy text-lg px-8 py-6 hover:scale-105 transition-transform"
+              className="glass-button text-lg px-8 py-6 hover:scale-105 transition-transform"
             >
               <Link href="/builder">
                 <Sword className="w-5 h-5 mr-2" />
@@ -52,7 +56,7 @@ export default function HomePage() {
               asChild 
               variant="outline" 
               size="lg"
-              className="fantasy-frame-secondary hover:border-amber-500/50 hover:text-amber-400 transition-colors text-lg px-8 py-6"
+              className="parchment-frame hover:border-amber-500/50 hover:text-amber-400 transition-colors text-lg px-8 py-6"
             >
               <Link href="/characters">
                 <User className="w-5 h-5 mr-2" />
@@ -61,16 +65,11 @@ export default function HomePage() {
             </Button>
           </div>
 
-          <div className="mt-16 fantasy-divider" />
+          <div className="h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent my-8" />
         </header>
 
         <section className="grid gap-6 md:grid-cols-3 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200">
-          <div className="fantasy-frame p-6 group hover:scale-[1.02] transition-transform duration-300">
-            <div className="corner-flourish top-left" />
-            <div className="corner-flourish top-right" />
-            <div className="corner-flourish bottom-left" />
-            <div className="corner-flourish bottom-right" />
-            
+          <div className="parchment-frame p-6 group hover:scale-[1.02] transition-transform duration-300">
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-500/30 flex items-center justify-center mb-4 group-hover:shadow-lg group-hover:shadow-amber-500/20 transition-shadow">
               <BookOpen className="w-7 h-7 text-amber-400" />
             </div>
@@ -80,12 +79,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="fantasy-frame p-6 group hover:scale-[1.02] transition-transform duration-300">
-            <div className="corner-flourish top-left" />
-            <div className="corner-flourish top-right" />
-            <div className="corner-flourish bottom-left" />
-            <div className="corner-flourish bottom-right" />
-            
+          <div className="parchment-frame p-6 group hover:scale-[1.02] transition-transform duration-300">
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-600/20 border border-purple-500/30 flex items-center justify-center mb-4 group-hover:shadow-lg group-hover:shadow-purple-500/20 transition-shadow">
               <Dices className="w-7 h-7 text-purple-400" />
             </div>
@@ -95,12 +89,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="fantasy-frame p-6 group hover:scale-[1.02] transition-transform duration-300">
-            <div className="corner-flourish top-left" />
-            <div className="corner-flourish top-right" />
-            <div className="corner-flourish bottom-left" />
-            <div className="corner-flourish bottom-right" />
-            
+          <div className="parchment-frame p-6 group hover:scale-[1.02] transition-transform duration-300">
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border border-emerald-500/30 flex items-center justify-center mb-4 group-hover:shadow-lg group-hover:shadow-emerald-500/20 transition-shadow">
               <Shield className="w-7 h-7 text-emerald-400" />
             </div>
@@ -112,12 +101,7 @@ export default function HomePage() {
         </section>
 
         <section className="animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300">
-          <div className="fantasy-frame-premium p-8">
-            <div className="corner-flourish top-left" />
-            <div className="corner-flourish top-right" />
-            <div className="corner-flourish bottom-left" />
-            <div className="corner-flourish bottom-right" />
-            
+          <div className="parchment-frame-aged p-8">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-3">
@@ -133,7 +117,7 @@ export default function HomePage() {
               <div className="flex gap-3">
                 <Button 
                   asChild
-                  className="btn-fantasy"
+                  className="glass-button"
                 >
                   <Link href="/characters">
                     <User className="w-4 h-4 mr-2" />
@@ -143,7 +127,7 @@ export default function HomePage() {
                 <Button 
                   asChild 
                   variant="outline"
-                  className="fantasy-frame-secondary hover:border-amber-500/50 hover:text-amber-400 transition-colors"
+                  className="parchment-frame hover:border-amber-500/50 hover:text-amber-400 transition-colors"
                 >
                   <Link href="/builder">
                     <Sparkles className="w-4 h-4 mr-2" />
@@ -156,7 +140,7 @@ export default function HomePage() {
         </section>
 
         <div className="text-center">
-          <Badge variant="outline" className="fantasy-frame-secondary text-xs text-slate-500 border-slate-700">
+          <Badge variant="outline" className="parchment-frame text-xs text-slate-500 border-slate-700">
             House of Shadows v2.2.0-alpha
           </Badge>
         </div>

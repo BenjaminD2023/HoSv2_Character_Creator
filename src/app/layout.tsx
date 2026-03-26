@@ -4,6 +4,7 @@ import { Alegreya_Sans } from "next/font/google";
 import "./globals.css";
 import { DiceProvider } from "@/contexts";
 import { DiceEngineControls } from "@/components/DiceEngineControls";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
@@ -37,10 +38,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${alegreyaSans.variable} antialiased bg-background text-foreground min-h-screen`}
       >
-        <DiceProvider>
-          {children}
-          <DiceEngineControls />
-        </DiceProvider>
+        <ThemeProvider>
+          <DiceProvider>
+            {children}
+            <DiceEngineControls />
+          </DiceProvider>
+        </ThemeProvider>
         <SpeedInsights />
       </body>
     </html>

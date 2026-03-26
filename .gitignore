@@ -44,10 +44,17 @@ next-env.d.ts
 /plans
 
 # sisyphus
-/.sisyphus
+/.sisyphus   
 # mcp
 .mcp.json
 /.mcp/
 
 # resource docs
 AI_Resource_Tracker*.md
+
+# test results
+/test-results/
+
+# screenshots
+*.png
+!public/**/*.png

@@ -222,7 +222,7 @@ export function StatsRoller({ onStatsRolled, primaryStat }: StatsRollerProps) {
 
   return (
     <TooltipProvider>
-      <Card className="relative overflow-hidden fantasy-frame-premium">
+      <Card className="relative overflow-hidden parchment-frame-aged">
         <div className="corner-flourish top-left" />
         <div className="corner-flourish top-right" />
         <div className="corner-flourish bottom-left" />

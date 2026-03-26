@@ -1117,12 +1117,7 @@ small{color:#bfb7a6}
       </div>
 
       <main className="relative z-10 mx-auto max-w-7xl p-4 md:p-8">
-        <div className="mb-8 fantasy-frame p-6">
-          <div className="corner-flourish top-left" />
-          <div className="corner-flourish top-right" />
-          <div className="corner-flourish bottom-left" />
-          <div className="corner-flourish bottom-right" />
-          
+        <div className="mb-8 parchment-frame p-6">
           <div className="flex items-end justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-200 via-amber-100 to-orange-200 bg-clip-text text-transparent">
@@ -1131,9 +1126,9 @@ small{color:#bfb7a6}
               <p className="text-sm text-slate-400 mt-1">SRD-driven flow: Stats → Class → HP → XP → Skills → Sheet</p>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="fantasy-frame-secondary text-amber-400/60 border-amber-500/30">v2.2.0-alpha</Badge>
-              <Button size="sm" variant="outline" onClick={() => saveCharacterToLocal(true)} className="fantasy-frame-secondary hover:border-amber-500/50 hover:text-amber-400">Save to Slot</Button>
-              <Button size="sm" className="btn-fantasy" onClick={saveToCharacterStorage} disabled={!canShowFinal}>
+              <Badge variant="outline" className="parchment-frame text-amber-400/60 border-amber-500/30">v2.2.0-alpha</Badge>
+              <Button size="sm" variant="outline" onClick={() => saveCharacterToLocal(true)} className="parchment-frame hover:border-amber-500/50 hover:text-amber-400">Save to Slot</Button>
+              <Button size="sm" className="glass-button" onClick={saveToCharacterStorage} disabled={!canShowFinal}>
                 {editMode ? "Update Character" : "Save Character"}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => clearSavedCharacter()} className="hover:text-red-400">Clear Save</Button>
@@ -1143,12 +1138,7 @@ small{color:#bfb7a6}
           </div>
         </div>
 
-        <div className="mb-8 fantasy-frame p-4">
-          <div className="corner-flourish top-left" />
-          <div className="corner-flourish top-right" />
-          <div className="corner-flourish bottom-left" />
-          <div className="corner-flourish bottom-right" />
-          
+        <div className="mb-8 parchment-frame p-4">
           <div className="mb-3 flex flex-wrap gap-2">
             {[
               "1. Stats",
@@ -1188,12 +1178,8 @@ small{color:#bfb7a6}
         </div>
 
         {activeStep === 1 && (
-          <Card className="fantasy-frame-premium animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="corner-flourish top-left" />
-            <div className="corner-flourish top-right" />
-            <div className="corner-flourish bottom-left" />
-            <div className="corner-flourish bottom-right" />
-            <CardHeader className="fantasy-header">
+          <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <CardHeader className="glass-header">
               <CardTitle className="text-2xl font-bold text-amber-100">Step 1: Core Stats</CardTitle>
               <CardDescription className="text-slate-400">Roll 4d6 drop lowest, one stat at a time; assign manually or enter direct scores.</CardDescription>
             </CardHeader>
@@ -1446,12 +1432,8 @@ small{color:#bfb7a6}
         )}
 
         {activeStep === 2 && (
-          <Card className="fantasy-frame-premium animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="corner-flourish top-left" />
-            <div className="corner-flourish top-right" />
-            <div className="corner-flourish bottom-left" />
-            <div className="corner-flourish bottom-right" />
-            <CardHeader className="fantasy-header">
+          <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <CardHeader className="glass-header">
               <CardTitle className="text-2xl font-bold text-amber-100">Step 2: Class Selection</CardTitle>
               <CardDescription className="text-slate-400">Select your HoS class data profile.</CardDescription>
             </CardHeader>
@@ -1501,12 +1483,8 @@ small{color:#bfb7a6}
         )}
 
         {activeStep === 3 && (
-          <Card className="fantasy-frame-premium animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="corner-flourish top-left" />
-            <div className="corner-flourish top-right" />
-            <div className="corner-flourish bottom-left" />
-            <div className="corner-flourish bottom-right" />
-            <CardHeader className="fantasy-header">
+          <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <CardHeader className="glass-header">
               <CardTitle className="text-2xl font-bold text-amber-100">Step 3: Base HP Generation</CardTitle>
               <CardDescription className="text-slate-400">Roll 1 class hit die and add class-specific attribute modifier.</CardDescription>
             </CardHeader>
@@ -1559,12 +1537,8 @@ small{color:#bfb7a6}
         )}
 
         {activeStep === 4 && (
-          <Card className="fantasy-frame-premium animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="corner-flourish top-left" />
-            <div className="corner-flourish top-right" />
-            <div className="corner-flourish bottom-left" />
-            <div className="corner-flourish bottom-right" />
-            <CardHeader className="fantasy-header">
+          <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <CardHeader className="glass-header">
               <CardTitle className="text-2xl font-bold text-amber-100">Step 4: XP Input</CardTitle>
               <CardDescription className="text-slate-400">Set starting XP and determine extra hit dice thresholds.</CardDescription>
             </CardHeader>
@@ -1598,12 +1572,8 @@ small{color:#bfb7a6}
         )}
 
         {activeStep === 5 && (
-          <Card className="fantasy-frame-premium animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="corner-flourish top-left" />
-            <div className="corner-flourish top-right" />
-            <div className="corner-flourish bottom-left" />
-            <div className="corner-flourish bottom-right" />
-            <CardHeader className="fantasy-header">
+          <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <CardHeader className="glass-header">
               <CardTitle className="text-2xl font-bold text-amber-100">Step 5: Extra HP Generation</CardTitle>
               <CardDescription className="text-slate-400">Roll one extra hit die per full 3 XP, no modifiers added.</CardDescription>
             </CardHeader>
@@ -1673,12 +1643,8 @@ small{color:#bfb7a6}
         )}
 
         {activeStep === 6 && (
-          <Card className="fantasy-frame-premium animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="corner-flourish top-left" />
-            <div className="corner-flourish top-right" />
-            <div className="corner-flourish bottom-left" />
-            <div className="corner-flourish bottom-right" />
-            <CardHeader className="fantasy-header">
+          <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <CardHeader className="glass-header">
               <CardTitle className="text-2xl font-bold text-amber-100">Step 6: Skill Purchasing</CardTitle>
               <CardDescription className="text-slate-400">Spend XP on class skills with active Tier UP/Tier MAX constraints.</CardDescription>
             </CardHeader>
@@ -1734,7 +1700,7 @@ small{color:#bfb7a6}
         )}
 
         {activeStep === 7 && (
-          <Card id="final-sheet" className="fantasy-frame-premium mt-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <Card id="final-sheet" className="parchment-frame-aged mt-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div className="corner-flourish top-left" />
             <div className="corner-flourish top-right" />
             <div className="corner-flourish bottom-left" />

@@ -1,0 +1,12 @@
+# Bun configuration for the House of Shadows Character Creator
+
+[install]
+# Use a lockfile to ensure consistent installations
+lockfile = true
+
+# Bun test configuration
+[test]
+# Set timeout for individual tests
+timeout = 10000
+# Enable verbose logging for test runs
+verbose = true

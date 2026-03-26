@@ -146,7 +146,7 @@ function EmptyState() {
       transition={{ duration: 0.5 }}
       className="relative"
     >
-      <div className="fantasy-frame p-12">
+      <div className="parchment-frame p-12">
         {/* Decorative corners */}
         <div className="corner-flourish top-left" />
         <div className="corner-flourish top-right" />
@@ -247,7 +247,7 @@ function CharacterCard({ character, onDelete, onExport }: CharacterCardProps) {
       transition={{ duration: 0.3 }}
     >
       <Link href={`/character/${character.id}`}>
-        <div className={`fantasy-frame group cursor-pointer transition-all duration-300 ${theme.glow}`}>
+        <div className={`parchment-frame group cursor-pointer transition-all duration-300 ${theme.glow}`}>
           {/* Decorative corners */}
           <div className="corner-flourish top-left" />
           <div className="corner-flourish top-right" />
@@ -466,7 +466,7 @@ export default function CharactersPage() {
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-          <AlertDialogContent className="fantasy-frame border-red-900/30 bg-slate-950">
+          <AlertDialogContent className="!fixed border-red-900/30 bg-slate-950 border-2 border-red-900/50 shadow-xl">
             <AlertDialogHeader>
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-full bg-red-900/20">

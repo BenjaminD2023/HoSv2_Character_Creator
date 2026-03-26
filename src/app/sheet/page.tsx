@@ -47,6 +47,7 @@ type CharacterData = {
   xp: number;
   proficiencyBonus: number;
   skills: string[];
+  skillLevels: Record<string, number>;
   weapons: InventoryItem[];
   armorPieces: { name: string; armor: number }[];
   totalStartingArmor: number;
@@ -167,64 +168,36 @@ function getModifier(value: number): number {
   return 10;
 }
 
-const calculateWizardSlots = (skills: string[]) => {
-  const baseSlots = { L1: 5, L2: 4, L3: 1, L4: 0, L5: 0 };
+const calculateWizardSlots = (skills: string[], skillLevels: Record<string, number>) => {
+  const baseSlots = { L1: 5, L2: 4, L3: 0, L4: 0, L5: 0 };
   const purchasedSlots = { L1: 0, L2: 0, L3: 0, L4: 0, L5: 0 };
   
-  skills.forEach(skill => {
-    const lowerSkill = skill.toLowerCase();
+  if (!skills || !Array.isArray(skills)) {
+    return baseSlots;
+  }
+  
+  skills.forEach(skillName => {
+    if (typeof skillName !== 'string') return;
     
-    // Check if this is a spell slot skill
-    if (!lowerSkill.includes('spell slot') && !lowerSkill.includes('spellslot') && !lowerSkill.includes('wizard-spell-slots')) {
+    const skillLower = skillName.toLowerCase();
+    const level = skillLevels[skillName] ?? 1;
+    
+    if (!skillLower.includes('spell slot')) {
       return;
     }
     
-    // Match level patterns more specifically
-    // Check for "-l1" (skill ID format), "level 1", "lv1", "l1)" 
-    if (
-      lowerSkill.includes('-l1') ||
-      lowerSkill.includes('level 1') ||
-      lowerSkill.includes('lv1') ||
-      lowerSkill.includes('l1)') ||
-      /\bl1\b/.test(lowerSkill)
-    ) {
-      purchasedSlots.L1++;
-    }
-    else if (
-      lowerSkill.includes('-l2') ||
-      lowerSkill.includes('level 2') ||
-      lowerSkill.includes('lv2') ||
-      lowerSkill.includes('l2)') ||
-      /\bl2\b/.test(lowerSkill)
-    ) {
-      purchasedSlots.L2++;
-    }
-    else if (
-      lowerSkill.includes('-l3') ||
-      lowerSkill.includes('level 3') ||
-      lowerSkill.includes('lv3') ||
-      lowerSkill.includes('l3)') ||
-      /\bl3\b/.test(lowerSkill)
-    ) {
-      purchasedSlots.L3++;
-    }
-    else if (
-      lowerSkill.includes('-l4') ||
-      lowerSkill.includes('level 4') ||
-      lowerSkill.includes('lv4') ||
-      lowerSkill.includes('l4)') ||
-      /\bl4\b/.test(lowerSkill)
-    ) {
-      purchasedSlots.L4++;
-    }
-    else if (
-      lowerSkill.includes('-l5') ||
-      lowerSkill.includes('level 5') ||
-      lowerSkill.includes('lv5') ||
-      lowerSkill.includes('l5)') ||
-      /\bl5\b/.test(lowerSkill)
-    ) {
-      purchasedSlots.L5++;
+    if (skillLower.includes('level 5') || skillLower.includes('lv 5') || skillLower.includes('l5')) {
+      purchasedSlots.L5 += level;
+    } else if (skillLower.includes('level 4') || skillLower.includes('lv 4') || skillLower.includes('l4')) {
+      purchasedSlots.L4 += level;
+    } else if (skillLower.includes('level 3') || skillLower.includes('lv 3') || skillLower.includes('l3')) {
+      purchasedSlots.L3 += level;
+    } else if (skillLower.includes('level 2') || skillLower.includes('lv 2') || skillLower.includes('l2')) {
+      purchasedSlots.L2 += Math.max(0, level - 1);
+    } else if (skillLower.includes('level 1') || skillLower.includes('lv 1') || skillLower.includes('l1')) {
+      purchasedSlots.L1 += Math.max(0, level - 1);
+    } else if (skillLower.includes('capstone')) {
+      purchasedSlots.L5 += level;
     }
   });
   
@@ -232,8 +205,8 @@ const calculateWizardSlots = (skills: string[]) => {
     L1: baseSlots.L1 + purchasedSlots.L1,
     L2: baseSlots.L2 + purchasedSlots.L2,
     L3: baseSlots.L3 + purchasedSlots.L3,
-    L4: purchasedSlots.L4,
-    L5: purchasedSlots.L5,
+    L4: baseSlots.L4 + purchasedSlots.L4,
+    L5: baseSlots.L5 + purchasedSlots.L5,
   };
 };
 
@@ -354,6 +327,7 @@ export default function CharacterSheetPage() {
           xp: parsed.startingXp ?? parsed.xp ?? 0,
           proficiencyBonus: parsed.proficiencyBonus || 2,
           skills: parsed.skills || [],
+          skillLevels: parsed.skillLevels || {},
           weapons: startingWeapons,
           armorPieces: parsed.armorPieces || [],
           totalStartingArmor: parsed.totalStartingArmor || 0,
@@ -845,7 +819,7 @@ export default function CharacterSheetPage() {
   if (!character) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0c]">
-        <Card className="fantasy-frame-premium w-full max-w-md">
+        <Card className="parchment-frame-aged w-full max-w-md">
           <div className="corner-flourish top-left" />
           <div className="corner-flourish top-right" />
           <div className="corner-flourish bottom-left" />
@@ -1082,7 +1056,7 @@ export default function CharacterSheetPage() {
         {/* Header - Character Identity */}
         <header
           className={cn(
-            "fantasy-frame p-4 mb-6 transition-opacity duration-700",
+            "parchment-frame p-4 mb-6 transition-opacity duration-700",
             isLoaded ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
           )}
         >
@@ -1116,7 +1090,7 @@ export default function CharacterSheetPage() {
               size="sm"
               variant="outline"
               onClick={() => router.push("/builder")}
-              className="fantasy-frame-secondary hover:border-amber-500/50 hover:text-amber-400 transition-colors"
+              className="parchment-frame hover:border-amber-500/50 hover:text-amber-400 transition-colors"
             >
               <Edit2 className="w-4 h-4 mr-2" />
               Edit Character
@@ -1202,7 +1176,7 @@ export default function CharacterSheetPage() {
 
             {/* Armor & Initiative Row */}
             <div className="grid grid-cols-2 gap-3">
-              <Card className="fantasy-frame overflow-hidden">
+              <Card className="parchment-frame overflow-hidden">
                 <div className="corner-flourish top-left" />
                 <div className="corner-flourish top-right" />
                 <div className="corner-flourish bottom-left" />
@@ -1258,7 +1232,7 @@ export default function CharacterSheetPage() {
 
             {/* Hit Die & Proficiency */}
             <div className="grid grid-cols-2 gap-3">
-              <Card className="fantasy-frame-secondary">
+              <Card className="parchment-frame">
                 <div className="corner-flourish top-left" />
                 <div className="corner-flourish top-right" />
                 <CardContent className="p-4 text-center">
@@ -1266,7 +1240,7 @@ export default function CharacterSheetPage() {
                   <p className="text-2xl font-bold text-amber-400">d{character.hitDie}</p>
                 </CardContent>
               </Card>
-              <Card className="fantasy-frame-secondary">
+              <Card className="parchment-frame">
                 <div className="corner-flourish top-left" />
                 <div className="corner-flourish top-right" />
                 <CardContent className="p-4 text-center">
@@ -1285,7 +1259,7 @@ export default function CharacterSheetPage() {
             )}
           >
             {/* HP Card */}
-            <Card className="fantasy-frame overflow-hidden">
+            <Card className="parchment-frame overflow-hidden">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -1453,7 +1427,7 @@ export default function CharacterSheetPage() {
             </Card>
 
             {/* Weapons */}
-            <Card className="fantasy-frame flex-1 overflow-hidden">
+            <Card className="parchment-frame flex-1 overflow-hidden">
               <div className="corner-flourish top-left" />
               <div className="corner-flourish top-right" />
               <div className="corner-flourish bottom-left" />
@@ -1677,7 +1651,7 @@ export default function CharacterSheetPage() {
             )}
           >
             {/* Quick Actions */}
-            <Card className="fantasy-frame">
+            <Card className="parchment-frame">
               <div className="corner-flourish top-left" />
               <div className="corner-flourish top-right" />
               <div className="corner-flourish bottom-left" />
@@ -1724,7 +1698,7 @@ export default function CharacterSheetPage() {
             </Card>
 
             {/* Skills */}
-            <Card className="fantasy-frame">
+            <Card className="parchment-frame">
               <div className="corner-flourish top-left" />
               <div className="corner-flourish top-right" />
               <div className="corner-flourish bottom-left" />
@@ -1751,7 +1725,7 @@ export default function CharacterSheetPage() {
 
 
             {/* Resource Tracker */}
-            <Card className="fantasy-frame">
+            <Card className="parchment-frame">
               <div className="corner-flourish top-left" />
               <div className="corner-flourish top-right" />
               <div className="corner-flourish bottom-left" />
@@ -1815,7 +1789,7 @@ export default function CharacterSheetPage() {
                   const classId = character.className.toLowerCase() as 'wizard' | 'bard'
                   if (classId !== 'wizard' && classId !== 'bard') return null
                   
-                  const wizardSlots = classId === 'wizard' ? calculateWizardSlots(character.skills) : undefined
+                  const wizardSlots = classId === 'wizard' ? calculateWizardSlots(character.skills, character.skillLevels) : undefined
                   const bardSlots = classId === 'bard' ? calculateBardSlots(character.skills) : undefined
                   
                   return (
@@ -1833,7 +1807,7 @@ export default function CharacterSheetPage() {
             </Card>
 
             {/* Inventory */}
-            <Card className="fantasy-frame flex-1 overflow-hidden">
+            <Card className="parchment-frame flex-1 overflow-hidden">
               <div className="corner-flourish top-left" />
               <div className="corner-flourish top-right" />
               <div className="corner-flourish bottom-left" />

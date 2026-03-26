@@ -22,6 +22,22 @@
   --radius: 0.5rem;
 }
 
+[data-theme="light"] {
+  --background: 35 40% 94%;     /* #f5e6d3 - parchment cream */
+  --foreground: 30 50% 15%;      /* #3d2914 - dark brown */
+  --card: 35 35% 90%;            /* #efe0cc - lighter parchment */
+  --card-foreground: 30 50% 20%;
+  --primary: 30 70% 35%;         /* #8b4513 - saddle brown */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 35 25% 80%;
+  --secondary-foreground: 30 50% 20%;
+  --muted: 35 20% 85%;
+  --muted-foreground: 30 30% 40%;
+  --accent: 35 60% 50%;
+  --accent-foreground: 30 50% 15%;
+  --border: 30 30% 70%;          /* #c9a882 - tan */
+}
+
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -51,19 +67,16 @@
 }
 
 html {
-  /* Optimize scrolling performance */
   scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-/* GPU acceleration hints for animated elements */
 .gpu-layer {
   transform: translateZ(0);
   will-change: transform;
   backface-visibility: hidden;
 }
 
-/* Optimize paint operations */
 .contain-paint {
   contain: paint;
 }
@@ -72,7 +85,6 @@ html {
   contain: layout;
 }
 
-/* Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -90,7 +102,6 @@ body {
   font-family: "Alegreya Sans", var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -109,7 +120,6 @@ body {
   background: hsl(var(--primary));
 }
 
-/* Glow effect for primary elements */
 .glow {
   box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
 }
@@ -118,7 +128,6 @@ body {
   text-shadow: 0 0 20px hsl(var(--primary) / 0.5);
 }
 
-/* Dice animation */
 @keyframes dice-roll {
   0% { transform: rotate(0deg) scale(1); }
   25% { transform: rotate(90deg) scale(1.1); }
@@ -131,7 +140,6 @@ body {
   animation: dice-roll 0.5s ease-in-out;
 }
 
-/* Pulse glow animation */
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 5px hsl(var(--primary) / 0.4); }
   50% { box-shadow: 0 0 20px hsl(var(--primary) / 0.8); }
@@ -163,7 +171,6 @@ body {
   animation: dice-vanish 900ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* Decompose animation - simplified, no blur for performance */
 @keyframes decompose {
   0% {
     opacity: 1;
@@ -191,324 +198,6 @@ body {
   display: block;
 }
 
-/* ========================================
-   FANTASY THEME - PROFESSIONAL DARK FANTASY
-   ======================================== */
-
-:root {
-  /* Base Fantasy Colors */
-  --gold: #D4AF37;
-  --bronze: #8B7355;
-  --silver: #C0C0C0;
-  --iron: #71797E;
-  --parchment: #F4E4BC;
-  --blood-red: #8B0000;
-  --mana-blue: #4169E1;
-  --arcane-purple: #6B3FA0;
-  --nature-green: #228B22;
-  --holy-gold: #FFD700;
-  --shadow-purple: #2D1B4E;
-  --flame-orange: #D2691E;
-  
-  /* Rich UI Colors */
-  --primary: 270 50% 45%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 260 30% 15%;
-  --accent: 45 70% 45%;
-}
-
-/* ========================================
-   ORNATE FRAMES & CONTAINERS
-   ======================================== */
-
-/* Primary Fantasy Frame - Gold border with glow */
-.fantasy-frame {
-  position: relative;
-  border: 3px solid transparent;
-  background: 
-    linear-gradient(rgba(26, 26, 46, 0.95), rgba(26, 26, 46, 0.95)) padding-box,
-    linear-gradient(135deg, #8B7355, #D4AF37, #FFD700, #D4AF37, #8B7355) border-box;
-  border-radius: 12px;
-  box-shadow: 
-    0 0 25px rgba(212, 175, 55, 0.15),
-    0 4px 20px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-
-/* Outer decorative border */
-.fantasy-frame::before {
-  content: '';
-  position: absolute;
-  inset: -6px;
-  border: 1px solid rgba(212, 175, 55, 0.25);
-  border-radius: 16px;
-  pointer-events: none;
-}
-
-/* Inner highlight */
-.fantasy-frame::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 10px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  pointer-events: none;
-}
-
-/* Secondary Frame - Silver/Iron */
-.fantasy-frame-secondary {
-  position: relative;
-  border: 2px solid transparent;
-  background: 
-    linear-gradient(rgba(30, 30, 50, 0.9), rgba(30, 30, 50, 0.9)) padding-box,
-    linear-gradient(135deg, #71797E, #C0C0C0, #71797E) border-box;
-  border-radius: 8px;
-  box-shadow: 
-    0 0 15px rgba(192, 192, 192, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-/* Premium Frame - For special elements */
-.fantasy-frame-premium {
-  position: relative;
-  border: 3px solid transparent;
-  background: 
-    linear-gradient(rgba(20, 20, 35, 0.98), rgba(20, 20, 35, 0.98)) padding-box,
-    linear-gradient(135deg, #6B3FA0, #D4AF37, #FFD700, #D4AF37, #6B3FA0) border-box;
-  border-radius: 16px;
-  box-shadow: 
-    0 0 40px rgba(212, 175, 55, 0.2),
-    0 0 60px rgba(107, 63, 160, 0.15),
-    inset 0 2px 0 rgba(255, 255, 255, 0.1);
-  animation: premium-glow 3s ease-in-out infinite;
-}
-
-@keyframes premium-glow {
-  0%, 100% { box-shadow: 0 0 40px rgba(212, 175, 55, 0.2), 0 0 60px rgba(107, 63, 160, 0.15); }
-  50% { box-shadow: 0 0 50px rgba(212, 175, 55, 0.3), 0 0 80px rgba(107, 63, 160, 0.25); }
-}
-
-/* ========================================
-   SECTION HEADERS
-   ======================================== */
-
-.fantasy-header {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: linear-gradient(90deg, 
-    rgba(212, 175, 55, 0.1) 0%,
-    rgba(212, 175, 55, 0.05) 50%,
-    transparent 100%
-  );
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-  margin-bottom: 16px;
-}
-
-.fantasy-header::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 60%;
-  background: linear-gradient(180deg, #D4AF37, #8B7355);
-  border-radius: 2px;
-}
-
-.fantasy-header h2,
-.fantasy-header h3 {
-  font-family: 'Cinzel', serif;
-  background: linear-gradient(135deg, #D4AF37, #FFD700);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
-}
-
-/* ========================================
-   FANTASY BUTTONS
-   ======================================== */
-
-.btn-fantasy {
-  position: relative;
-  padding: 12px 24px;
-  font-family: 'Cinzel', serif;
-  font-weight: 600;
-  color: #D4AF37;
-  background: linear-gradient(180deg, 
-    rgba(45, 27, 78, 0.9) 0%,
-    rgba(30, 20, 50, 0.95) 100%
-  );
-  border: 2px solid transparent;
-  background-clip: padding-box;
-  border-radius: 8px;
-  cursor: pointer;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.btn-fantasy::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  background: linear-gradient(135deg, #8B7355, #D4AF37, #FFD700, #D4AF37, #8B7355);
-  border-radius: 10px;
-  z-index: -1;
-}
-
-.btn-fantasy:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.25);
-}
-
-.btn-fantasy:active {
-  transform: translateY(0);
-}
-
-/* Long Rest Button */
-.btn-long-rest {
-  position: relative;
-  padding: 14px 28px;
-  font-family: 'Cinzel', serif;
-  font-weight: 600;
-  font-size: 1rem;
-  color: #E8E8E8;
-  background: linear-gradient(180deg, 
-    rgba(75, 0, 130, 0.8) 0%,
-    rgba(45, 0, 80, 0.9) 100%
-  );
-  border: 2px solid rgba(138, 43, 226, 0.5);
-  border-radius: 10px;
-  cursor: pointer;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.btn-long-rest::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(138, 43, 226, 0.3), transparent 70%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.btn-long-rest:hover {
-  border-color: rgba(138, 43, 226, 0.8);
-  box-shadow: 
-    0 0 20px rgba(138, 43, 226, 0.3),
-    0 0 40px rgba(75, 0, 130, 0.2);
-}
-
-.btn-long-rest:hover::before {
-  opacity: 1;
-}
-
-/* ========================================
-   PARCHMENT TEXTURE
-   ======================================== */
-
-.parchment-bg {
-  background: 
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E"),
-    linear-gradient(180deg, 
-      rgba(244, 228, 188, 0.03) 0%,
-      rgba(26, 26, 46, 1) 100%
-    );
-}
-
-/* ========================================
-   DECORATIVE ELEMENTS
-   ======================================== */
-
-/* Corner Flourish */
-.corner-flourish {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  border: 2px solid rgba(212, 175, 55, 0.3);
-  pointer-events: none;
-}
-
-.corner-flourish.top-left {
-  top: -8px;
-  left: -8px;
-  border-right: none;
-  border-bottom: none;
-  border-radius: 8px 0 0 0;
-}
-
-.corner-flourish.top-right {
-  top: -8px;
-  right: -8px;
-  border-left: none;
-  border-bottom: none;
-  border-radius: 0 8px 0 0;
-}
-
-.corner-flourish.bottom-left {
-  bottom: -8px;
-  left: -8px;
-  border-right: none;
-  border-top: none;
-  border-radius: 0 0 0 8px;
-}
-
-.corner-flourish.bottom-right {
-  bottom: -8px;
-  right: -8px;
-  border-left: none;
-  border-top: none;
-  border-radius: 0 0 8px 0;
-}
-
-/* Divider */
-.fantasy-divider {
-  position: relative;
-  height: 2px;
-  background: linear-gradient(90deg, 
-    transparent,
-    rgba(212, 175, 55, 0.5),
-    transparent
-  );
-  margin: 24px 0;
-}
-
-.fantasy-divider::before {
-  content: '◆';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  color: #D4AF37;
-  background: #1a1a2e;
-  padding: 0 8px;
-  font-size: 10px;
-}
-
-/* ========================================
-   ANIMATIONS
-   ======================================== */
-
-@keyframes fantasy-shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-.shimmer {
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(212, 175, 55, 0.1) 50%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: fantasy-shimmer 3s infinite;
-}
-
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
@@ -517,10 +206,6 @@ body {
 .animate-float {
   animation: float 4s ease-in-out infinite;
 }
-
-/* ========================================
-   CLASS-SPECIFIC THEMES
-   ======================================== */
 
 .theme-fighter {
   --theme-primary: #8B0000;
@@ -550,4 +235,140 @@ body {
   --theme-primary: #DB7093;
   --theme-secondary: #FF69B4;
   --theme-accent: #DDA0DD;
+}
+
+.glass-panel {
+  background: rgba(12, 12, 20, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.glass-panel-highlight {
+  background: linear-gradient(
+    135deg,
+    rgba(20, 20, 35, 0.85) 0%,
+    rgba(15, 15, 28, 0.9) 100%
+  );
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  box-shadow: 
+    0 4px 24px rgba(0, 0, 0, 0.4),
+    0 12px 48px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.glass-card {
+  background: rgba(18, 18, 30, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  box-shadow: 
+    0 2px 12px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.glass-button {
+  background: linear-gradient(
+    180deg,
+    rgba(60, 50, 90, 0.6) 0%,
+    rgba(40, 35, 70, 0.7) 100%
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.glass-button:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(70, 60, 100, 0.7) 0%,
+    rgba(50, 45, 80, 0.75) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.glass-header {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.02) 0%,
+    rgba(255, 255, 255, 0.01) 50%,
+    transparent 100%
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Fantasy Frame Styles - Uses Theme Variables for Unified Colors */
+.parchment-frame {
+  background: linear-gradient(135deg, 
+    hsl(var(--card) / 0.98) 0%, 
+    hsl(var(--card) / 0.95) 100%
+  );
+  border: 2px solid hsl(var(--border) / 0.6);
+  border-radius: 12px;
+  box-shadow: 
+    inset 0 0 30px hsl(var(--primary) / 0.08),
+    0 4px 12px hsl(var(--foreground) / 0.1),
+    0 1px 3px hsl(var(--foreground) / 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.parchment-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+}
+
+.parchment-frame::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid hsl(var(--border) / 0.3);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+/* Aged variant with more pronounced effects */
+.parchment-frame-aged {
+  background: linear-gradient(135deg, 
+    hsl(var(--card) / 0.98) 0%, 
+    hsl(var(--card) / 0.95) 50%,
+    hsl(var(--card) / 0.97) 100%
+  );
+  border: 3px solid hsl(var(--border) / 0.5);
+  border-radius: 8px;
+  box-shadow: 
+    inset 0 0 50px hsl(var(--primary) / 0.12),
+    inset 2px 2px 8px hsl(var(--foreground) / 0.03),
+    0 6px 20px hsl(var(--foreground) / 0.12),
+    0 2px 6px hsl(var(--foreground) / 0.08);
+  position: relative;
+}
+
+.parchment-frame-aged::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.06;
+  pointer-events: none;
 }
