@@ -601,6 +601,8 @@ function BuilderContent() {
     if (typeof window === "undefined") return;
     try {
       const editId = searchParams.get("id");
+      const isNew = searchParams.get("new");
+      
       if (editId) {
         const character = getCharacter(editId);
         if (character) {
@@ -613,6 +615,12 @@ function BuilderContent() {
           setHasLoadedLocalData(true);
           return;
         }
+      }
+
+      if (isNew) {
+        resetBuilderState();
+        setHasLoadedLocalData(true);
+        return;
       }
 
       const slotsRaw = window.localStorage.getItem(CHARACTER_SLOTS_KEY);
@@ -646,7 +654,7 @@ function BuilderContent() {
     } finally {
       setHasLoadedLocalData(true);
     }
-  }, [applySavedState, searchParams]);
+  }, [applySavedState, searchParams, resetBuilderState]);
 
   useEffect(() => {
     if (!hasLoadedLocalData || typeof window === "undefined") return;
@@ -1127,9 +1135,9 @@ small{color:#bfb7a6}
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="parchment-frame text-amber-400/60 border-amber-500/30">v2.2.0-alpha</Badge>
-              <Button size="sm" variant="outline" onClick={() => saveCharacterToLocal(true)} className="parchment-frame hover:border-amber-500/50 hover:text-amber-400">Save to Slot</Button>
+              <Button size="sm" variant="outline" onClick={() => router.push("/builder?new=1")} className="parchment-frame hover:border-amber-500/50 hover:text-amber-400">New Character</Button>
               <Button size="sm" className="glass-button" onClick={saveToCharacterStorage} disabled={!canShowFinal}>
-                {editMode ? "Update Character" : "Save Character"}
+                {editMode ? "Update Character" : "Show Character Sheet"}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => clearSavedCharacter()} className="hover:text-red-400">Clear Save</Button>
               <Button size="sm" variant="ghost" asChild className="hover:text-amber-400"><Link href="/characters">Characters</Link></Button>
@@ -1147,7 +1155,7 @@ small{color:#bfb7a6}
               "4. XP",
               "5. Extra HP",
               "6. Skills",
-              "7. Sheet",
+              "7. Summary",
             ].map((label, idx) => {
               const step = (idx + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
               return (
@@ -1706,7 +1714,7 @@ small{color:#bfb7a6}
             <div className="corner-flourish bottom-left" />
             <div className="corner-flourish bottom-right" />
             <CardHeader className="fantasy-header">
-              <CardTitle className="text-2xl font-bold text-amber-100">Step 7: Final Interactive Character Sheet</CardTitle>
+              <CardTitle className="text-2xl font-bold text-amber-100">Character Summary</CardTitle>
               <CardDescription className="text-slate-400">D20 checks/saves, damage reduction armor, spell DC, and purchased skills.</CardDescription>
             </CardHeader>
           <CardContent className="space-y-4">

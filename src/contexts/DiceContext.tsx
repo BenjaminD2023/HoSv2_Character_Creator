@@ -215,31 +215,37 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
       setIsRolling(true);
 
       try {
-        const results: DiceResult[][] = [];
-        
-        for (let i = 0; i < items.length; i++) {
-          const item = items[i];
-          const rollResult = await diceBoxRef.current.roll(item.notation, item.options);
-          
-          const parsedResults: DiceResult[] = rollResult.map((die) => ({
+        const [first, ...rest] = items;
+
+        const firstRollPromise = diceBoxRef.current.roll(first.notation, first.options);
+
+        const additionalPromises = rest.map((item) => {
+          if (typeof diceBoxRef.current!.add === "function") {
+            return diceBoxRef.current!.add(item.notation, {
+              ...item.options,
+              newStartPoint: false,
+            });
+          }
+          return diceBoxRef.current!.roll(item.notation, item.options);
+        });
+
+        const allPromises = [firstRollPromise, ...additionalPromises];
+        const rollResults = await Promise.all(allPromises);
+
+        const parsedGroups: DiceResult[][] = rollResults.map((group) =>
+          group.map((die) => ({
             value: die.value,
             rolls: die.rolls,
             modifier: die.modifier,
-          }));
-          
-          results.push(parsedResults);
-          
-          if (i < items.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 50));
-          }
-        }
+          }))
+        );
 
-        const firstDie = results[0]?.[0] ?? { value: 0 };
+        const firstDie = parsedGroups[0]?.[0] ?? { value: 0 };
         const newResults = new Map<string, DiceResult>();
         newResults.set(Date.now().toString(), firstDie);
         setResults(newResults);
 
-        return results;
+        return parsedGroups;
       } catch (error) {
         console.error("Batch roll failed:", error);
         return [];
