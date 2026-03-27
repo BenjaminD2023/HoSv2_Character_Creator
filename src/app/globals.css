@@ -23,53 +23,53 @@
 }
 
 [data-theme="light"] {
-  --background: 35 40% 94%;
-  --foreground: 30 50% 15%;
-  --card: 35 35% 90%;
-  --card-foreground: 30 50% 15%;
-  --primary: 30 70% 35%;
+  --background: 35 50% 90%;
+  --foreground: 25 60% 10%;
+  --card: 35 45% 85%;
+  --card-foreground: 25 60% 10%;
+  --primary: 25 80% 35%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 35 25% 80%;
-  --secondary-foreground: 30 50% 20%;
-  --muted: 35 20% 85%;
-  --muted-foreground: 30 40% 30%;
-  --accent: 35 60% 50%;
+  --secondary: 25 50% 60%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 30 30% 80%;
+  --muted-foreground: 25 50% 25%;
+  --accent: 25 70% 45%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 0 70% 40%;
+  --destructive: 0 75% 45%;
   --destructive-foreground: 0 0% 100%;
-  --border: 30 30% 70%;
+  --border: 25 40% 65%;
 }
 
 [data-theme="light"] .text-amber-400 {
-  color: #b45309 !important;
+  color: #d97706 !important;
 }
 
 [data-theme="light"] .text-amber-400\/60 {
-  color: rgba(180, 83, 9, 0.7) !important;
+  color: rgba(217, 119, 6, 0.8) !important;
 }
 
 [data-theme="light"] .text-slate-200 {
-  color: #475569 !important;
+  color: #1e293b !important;
 }
 
 [data-theme="light"] .text-slate-300 {
-  color: #475569 !important;
+  color: #334155 !important;
 }
 
 [data-theme="light"] .bg-slate-800\/80 {
-  background-color: rgba(226, 218, 205, 0.9) !important;
+  background-color: rgba(254, 243, 199, 0.9) !important;
 }
 
 [data-theme="light"] .bg-amber-900\/50 {
-  background-color: rgba(254, 243, 199, 0.8) !important;
+  background-color: rgba(254, 243, 199, 0.95) !important;
 }
 
 [data-theme="light"] .border-slate-700\/50 {
-  border-color: rgba(180, 160, 140, 0.5) !important;
+  border-color: rgba(180, 140, 100, 0.5) !important;
 }
 
 [data-theme="light"] .border-amber-700\/30 {
-  border-color: rgba(180, 83, 9, 0.3) !important;
+  border-color: rgba(217, 119, 6, 0.4) !important;
 }
 
 @theme inline {
