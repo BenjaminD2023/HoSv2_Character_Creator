@@ -828,7 +828,7 @@ export default function CharacterSheetPage() {
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-600/20 flex items-center justify-center border border-amber-500/30">
               <Sparkles className="w-8 h-8 text-amber-400" />
             </div>
-            <p className="text-slate-400 mb-6">No character found. Create one in the builder first.</p>
+            <p className="text-muted-foreground mb-6">No character found. Create one in the builder first.</p>
             <Button onClick={() => router.push("/builder")} className="btn-fantasy">
               Go to Builder
             </Button>
@@ -866,21 +866,21 @@ export default function CharacterSheetPage() {
           {contextMenu.type === "stat" && contextMenu.key && (
             <>
               <button
-                className="w-full px-3 py-2 text-left text-sm text-emerald-400 hover:bg-white/10 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-sm text-emerald-400 hover:bg-muted/50 transition-colors flex items-center gap-2"
                 onClick={() => rollCheckWithMode(contextMenu.key as AttributeKey, "advantage")}
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 Advantage
               </button>
               <button
-                className="w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted/50 transition-colors flex items-center gap-2"
                 onClick={() => rollCheckWithMode(contextMenu.key as AttributeKey, "normal")}
               >
                 <span className="w-2 h-2 rounded-full bg-muted0" />
                 Flat Roll
               </button>
               <button
-                className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-white/10 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-muted/50 transition-colors flex items-center gap-2"
                 onClick={() => rollCheckWithMode(contextMenu.key as AttributeKey, "disadvantage")}
               >
                 <span className="w-2 h-2 rounded-full bg-red-400" />
@@ -891,21 +891,21 @@ export default function CharacterSheetPage() {
           {contextMenu.type === "initiative" && (
             <>
               <button
-                className="w-full px-3 py-2 text-left text-sm text-emerald-400 hover:bg-white/10 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-sm text-emerald-400 hover:bg-muted/50 transition-colors flex items-center gap-2"
                 onClick={() => rollInitiativeWithMode("advantage")}
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 Advantage
               </button>
               <button
-                className="w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted/50 transition-colors flex items-center gap-2"
                 onClick={() => rollInitiativeWithMode("normal")}
               >
                 <span className="w-2 h-2 rounded-full bg-muted0" />
                 Flat Roll
               </button>
               <button
-                className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-white/10 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-muted/50 transition-colors flex items-center gap-2"
                 onClick={() => rollInitiativeWithMode("disadvantage")}
               >
                 <span className="w-2 h-2 rounded-full bg-red-400" />
@@ -916,21 +916,21 @@ export default function CharacterSheetPage() {
           {contextMenu.type === "charisma" && (
             <>
               <button
-                className="w-full px-3 py-2 text-left text-sm text-emerald-400 hover:bg-white/10 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-sm text-emerald-400 hover:bg-muted/50 transition-colors flex items-center gap-2"
                 onClick={() => rollCharismaWithMode("advantage")}
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 Advantage
               </button>
               <button
-                className="w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted/50 transition-colors flex items-center gap-2"
                 onClick={() => rollCharismaWithMode("normal")}
               >
                 <span className="w-2 h-2 rounded-full bg-muted0" />
                 Flat Roll
               </button>
               <button
-                className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-white/10 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-muted/50 transition-colors flex items-center gap-2"
                 onClick={() => rollCharismaWithMode("disadvantage")}
               >
                 <span className="w-2 h-2 rounded-full bg-red-400" />
@@ -974,8 +974,8 @@ export default function CharacterSheetPage() {
                     className={cn(
                       "flex-1 py-2 rounded text-sm font-medium transition-colors",
                       diceType === d
-                        ? "bg-amber-600 text-white"
-                        : "bg-muted text-muted-foreground hover:bg-white/10"
+                        ? "bg-amber-600 text-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-muted/50"
                     )}
                   >
                     d{d}
@@ -993,8 +993,8 @@ export default function CharacterSheetPage() {
                   className={cn(
                     "flex-1 py-2 rounded text-sm font-medium transition-colors",
                     rollMode === "normal"
-                      ? "bg-blue-600 text-white"
-                      : "bg-muted text-muted-foreground hover:bg-white/10"
+                      ? "bg-blue-600 text-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-muted/50"
                   )}
                 >
                   Normal
@@ -1004,8 +1004,8 @@ export default function CharacterSheetPage() {
                   className={cn(
                     "flex-1 py-2 rounded text-sm font-medium transition-colors",
                     rollMode === "advantage"
-                      ? "bg-emerald-600 text-white"
-                      : "bg-muted text-muted-foreground hover:bg-white/10"
+                      ? "bg-emerald-600 text-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-muted/50"
                   )}
                 >
                   Advantage
@@ -1015,8 +1015,8 @@ export default function CharacterSheetPage() {
                   className={cn(
                     "flex-1 py-2 rounded text-sm font-medium transition-colors",
                     rollMode === "disadvantage"
-                      ? "bg-red-600 text-white"
-                      : "bg-muted text-muted-foreground hover:bg-white/10"
+                      ? "bg-red-600 text-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-muted/50"
                   )}
                 >
                   Disadvantage
@@ -1072,7 +1072,7 @@ export default function CharacterSheetPage() {
                   <span className="text-2xl font-bold text-amber-400">{character.name.charAt(0)}</span>
                 </div>
                 {/* XP Badge - Shows Total XP */}
-                <div className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-[10px] font-bold text-white shadow-lg">
+                <div className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-[10px] font-bold text-foreground shadow-lg">
                   {character.xp} XP
                 </div>
               </div>
@@ -1150,7 +1150,7 @@ export default function CharacterSheetPage() {
                         {ATTR_LABELS[attr]}
                       </p>
 
-                      <p className="text-4xl font-bold text-white mb-1">{value}</p>
+                      <p className="text-4xl font-bold text-foreground mb-1">{value}</p>
 
                       <p
                         className={cn(
@@ -1184,11 +1184,11 @@ export default function CharacterSheetPage() {
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-500/20 to-slate-600/20 border border-slate-500/30 flex items-center justify-center">
-                      <Shield className="w-6 h-6 text-slate-400" />
+                      <Shield className="w-6 h-6 text-muted-foreground" />
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">Armor</p>
-                      <p className="text-3xl font-bold text-white">{character.totalStartingArmor}</p>
+                      <p className="text-3xl font-bold text-foreground">{character.totalStartingArmor}</p>
                     </div>
                   </div>
                   {character.armorPieces.length > 0 && (
@@ -1269,7 +1269,7 @@ export default function CharacterSheetPage() {
                     <div>
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">Hit Points</p>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-bold text-white">{currentHp}</span>
+                        <span className="text-4xl font-bold text-foreground">{currentHp}</span>
                         <span className="text-lg text-muted-foreground">/ {character.maxHp}</span>
                       </div>
                     </div>
@@ -1591,7 +1591,7 @@ export default function CharacterSheetPage() {
                 </div>
                 <div className="space-y-2 max-h-[200px] overflow-y-auto">
                   {weapons.length === 0 ? (
-                    <p className="text-sm text-white/30 text-center py-4">No weapons</p>
+                    <p className="text-sm text-foreground/30 text-center py-4">No weapons</p>
                   ) : (
                     weapons.map((w) => {
                       const statMod = w.mod ? getModifier(character.stats[w.mod]) : 0;
@@ -1605,7 +1605,7 @@ export default function CharacterSheetPage() {
                           onClick={() => startEditItem(w)}
                         >
                           <div>
-                            <p className="font-medium text-white">{w.name}</p>
+                            <p className="font-medium text-foreground">{w.name}</p>
                             {hasAnyMod && (
                               <p className="text-xs text-muted-foreground">
                                 {w.mod && `${ATTR_LABELS[w.mod]} ${formatMod(statMod)}`}
@@ -1713,7 +1713,7 @@ export default function CharacterSheetPage() {
                     <Badge
                       key={skill}
                       variant="secondary"
-                      className="px-3 py-1.5 text-xs bg-muted border border-border text-muted-foreground hover:bg-white/10 hover:border-amber-500/30 hover:text-amber-200 transition-colors cursor-default"
+                      className="px-3 py-1.5 text-xs bg-muted border border-border text-muted-foreground hover:bg-muted/50 hover:border-amber-500/30 hover:text-amber-200 transition-colors cursor-default"
                       style={{ animationDelay: `${idx * 20}ms` }}
                     >
                       {skill}
@@ -1838,7 +1838,7 @@ export default function CharacterSheetPage() {
 
                 <div className="space-y-3 max-h-[200px] overflow-y-auto">
                   {items.length === 0 ? (
-                    <p className="text-sm text-white/30 text-center py-4">No items</p>
+                    <p className="text-sm text-foreground/30 text-center py-4">No items</p>
                   ) : (
                     items.map((item) => (
                       <div
@@ -1848,7 +1848,7 @@ export default function CharacterSheetPage() {
                       >
                         <div className="flex items-center gap-2">
                           <Package className="w-4 h-4 text-blue-400" />
-                          <span className="text-sm text-white">{item.name}</span>
+                          <span className="text-sm text-foreground">{item.name}</span>
                         </div>
                         {item.quantity > 1 && (
                           <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">

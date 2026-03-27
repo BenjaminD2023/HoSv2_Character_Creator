@@ -272,13 +272,13 @@ function CharacterCard({ character, onDelete, onExport }: CharacterCardProps) {
                   </Avatar>
                   {/* Level indicator */}
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 border-2 border-slate-900 flex items-center justify-center">
-                    <Crown className="w-3 h-3 text-slate-900" />
+                    <Crown className="w-3 h-3 text-foreground" />
                   </div>
                 </div>
                 
                 {/* Name and class */}
                 <div>
-                  <h3 className="text-xl font-bold text-white group-hover:text-amber-200 transition-colors">
+                  <h3 className="text-xl font-bold text-foreground group-hover:text-amber-200 transition-colors">
                     {character.name}
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
@@ -486,12 +486,12 @@ export default function CharactersPage() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="border-slate-700 bg-slate-800 hover:bg-slate-700">
+              <AlertDialogCancel className="border-border bg-muted hover:bg-muted/80">
                 Keep Hero
               </AlertDialogCancel>
               <AlertDialogAction 
                 onClick={() => deleteId && handleDelete(deleteId)}
-                className="bg-red-900 hover:bg-red-800 text-white border-red-700"
+                className="bg-destructive hover:bg-destructive/80 text-destructive-foreground border-destructive"
               >
                 <Skull className="w-4 h-4 mr-2" />
                 Banish Forever

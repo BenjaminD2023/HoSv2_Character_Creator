@@ -35,7 +35,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <p className="mt-6 max-w-2xl mx-auto text-lg text-slate-400 md:text-xl">
+          <p className="mt-6 max-w-2xl mx-auto text-lg text-muted-foreground md:text-xl">
             Build complete House of Shadows characters with SRD-accurate stats, 
             XP-tier skill progression, armor-as-damage-reduction combat math, 
             and cinematic 3D dice rolls.
@@ -74,7 +74,7 @@ export default function HomePage() {
               <BookOpen className="w-7 h-7 text-amber-400" />
             </div>
             <h3 className="text-xl font-bold text-amber-100 mb-2">Step-Driven Flow</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
+            <p className="text-muted-foreground text-sm leading-relaxed">
               Guided 7-step creator from stats to final sheet. Sequential progression with unlock rules keeps data valid.
             </p>
           </div>
@@ -84,7 +84,7 @@ export default function HomePage() {
               <Dices className="w-7 h-7 text-purple-400" />
             </div>
             <h3 className="text-xl font-bold text-amber-100 mb-2">3D Dice + Roll Feed</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
+            <p className="text-muted-foreground text-sm leading-relaxed">
               Every major roll uses physics-based 3D dice with result popups. Critical success/failure styling included.
             </p>
           </div>
@@ -94,7 +94,7 @@ export default function HomePage() {
               <Shield className="w-7 h-7 text-emerald-400" />
             </div>
             <h3 className="text-xl font-bold text-amber-100 mb-2">HoS Rules Accurate</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
+            <p className="text-muted-foreground text-sm leading-relaxed">
               Built for your custom d20 system. 3-attribute model, XP skill tiers, and armor as damage reduction.
             </p>
           </div>
@@ -110,7 +110,7 @@ export default function HomePage() {
                     Character Management
                   </h2>
                 </div>
-                <p className="text-slate-400">
+                <p className="text-muted-foreground">
                   Use dedicated save management with multiple slots and exports. Track your heroes across adventures.
                 </p>
               </div>

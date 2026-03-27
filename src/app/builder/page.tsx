@@ -1131,7 +1131,7 @@ small{color:#bfb7a6}
               <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-200 via-amber-100 to-orange-200 bg-clip-text text-transparent">
                 House of Shadows Character Builder
               </h1>
-              <p className="text-sm text-slate-400 mt-1">SRD-driven flow: Stats → Class → HP → XP → Skills → Sheet</p>
+              <p className="text-sm text-muted-foreground mt-1">SRD-driven flow: Stats → Class → HP → XP → Skills → Sheet</p>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="parchment-frame text-amber-400/60 border-amber-500/30">v2.2.0-alpha</Badge>
@@ -1168,8 +1168,8 @@ small{color:#bfb7a6}
                     activeStep === step
                       ? "bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg shadow-amber-500/30 font-semibold"
                       : step <= maxUnlockedStep
-                        ? "bg-slate-800/70 text-amber-100 hover:bg-slate-700/70 border border-amber-500/20"
-                        : "bg-slate-900/50 text-slate-500 border border-slate-700/50",
+                        ? "bg-muted text-foreground hover:bg-muted/80 border border-border"
+                        : "bg-muted/50 text-muted-foreground border border-border/50",
                   ].join(" ")}
                 >
                   {label}
@@ -1177,7 +1177,7 @@ small{color:#bfb7a6}
               );
             })}
           </div>
-          <div className="h-3 overflow-hidden rounded-full bg-slate-800/60 border border-slate-700/50">
+          <div className="h-3 overflow-hidden rounded-full bg-muted border border-border">
             <div
               className="h-full rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 transition-transform duration-500 shadow-lg shadow-amber-500/30"
               style={{ width: `${(activeStep / 7) * 100}%` }}
@@ -1189,7 +1189,7 @@ small{color:#bfb7a6}
           <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
             <CardHeader className="glass-header">
               <CardTitle className="text-2xl font-bold text-amber-100">Step 1: Core Stats</CardTitle>
-              <CardDescription className="text-slate-400">Roll 4d6 drop lowest, one stat at a time; assign manually or enter direct scores.</CardDescription>
+              <CardDescription className="text-muted-foreground">Roll 4d6 drop lowest, one stat at a time; assign manually or enter direct scores.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-3 md:grid-cols-2">
@@ -1443,7 +1443,7 @@ small{color:#bfb7a6}
           <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
             <CardHeader className="glass-header">
               <CardTitle className="text-2xl font-bold text-amber-100">Step 2: Class Selection</CardTitle>
-              <CardDescription className="text-slate-400">Select your HoS class data profile.</CardDescription>
+              <CardDescription className="text-muted-foreground">Select your HoS class data profile.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-2 md:grid-cols-2">
@@ -1494,7 +1494,7 @@ small{color:#bfb7a6}
           <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
             <CardHeader className="glass-header">
               <CardTitle className="text-2xl font-bold text-amber-100">Step 3: Base HP Generation</CardTitle>
-              <CardDescription className="text-slate-400">Roll 1 class hit die and add class-specific attribute modifier.</CardDescription>
+              <CardDescription className="text-muted-foreground">Roll 1 class hit die and add class-specific attribute modifier.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-2">
@@ -1548,7 +1548,7 @@ small{color:#bfb7a6}
           <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
             <CardHeader className="glass-header">
               <CardTitle className="text-2xl font-bold text-amber-100">Step 4: XP Input</CardTitle>
-              <CardDescription className="text-slate-400">Set starting XP and determine extra hit dice thresholds.</CardDescription>
+              <CardDescription className="text-muted-foreground">Set starting XP and determine extra hit dice thresholds.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-3 md:grid-cols-2">
@@ -1583,7 +1583,7 @@ small{color:#bfb7a6}
           <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
             <CardHeader className="glass-header">
               <CardTitle className="text-2xl font-bold text-amber-100">Step 5: Extra HP Generation</CardTitle>
-              <CardDescription className="text-slate-400">Roll one extra hit die per full 3 XP, no modifiers added.</CardDescription>
+              <CardDescription className="text-muted-foreground">Roll one extra hit die per full 3 XP, no modifiers added.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {selectedClass && baseHp !== null && (
@@ -1654,7 +1654,7 @@ small{color:#bfb7a6}
           <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
             <CardHeader className="glass-header">
               <CardTitle className="text-2xl font-bold text-amber-100">Step 6: Skill Purchasing</CardTitle>
-              <CardDescription className="text-slate-400">Spend XP on class skills with active Tier UP/Tier MAX constraints.</CardDescription>
+              <CardDescription className="text-muted-foreground">Spend XP on class skills with active Tier UP/Tier MAX constraints.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
 
@@ -1715,7 +1715,7 @@ small{color:#bfb7a6}
             <div className="corner-flourish bottom-right" />
             <CardHeader className="fantasy-header">
               <CardTitle className="text-2xl font-bold text-amber-100">Character Summary</CardTitle>
-              <CardDescription className="text-slate-400">D20 checks/saves, damage reduction armor, spell DC, and purchased skills.</CardDescription>
+              <CardDescription className="text-muted-foreground">D20 checks/saves, damage reduction armor, spell DC, and purchased skills.</CardDescription>
             </CardHeader>
           <CardContent className="space-y-4">
             {!canShowFinal && <p className="text-sm text-muted-foreground">Complete stats, class, HP, and XP rolls to unlock final sheet.</p>}
