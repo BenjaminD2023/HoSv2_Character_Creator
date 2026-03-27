@@ -23,19 +23,53 @@
 }
 
 [data-theme="light"] {
-  --background: 35 40% 94%;     /* #f5e6d3 - parchment cream */
-  --foreground: 30 50% 15%;      /* #3d2914 - dark brown */
-  --card: 35 35% 90%;            /* #efe0cc - lighter parchment */
-  --card-foreground: 30 50% 20%;
-  --primary: 30 70% 35%;         /* #8b4513 - saddle brown */
+  --background: 35 40% 94%;
+  --foreground: 30 50% 15%;
+  --card: 35 35% 90%;
+  --card-foreground: 30 50% 15%;
+  --primary: 30 70% 35%;
   --primary-foreground: 0 0% 100%;
   --secondary: 35 25% 80%;
   --secondary-foreground: 30 50% 20%;
   --muted: 35 20% 85%;
-  --muted-foreground: 30 30% 40%;
+  --muted-foreground: 30 40% 30%;
   --accent: 35 60% 50%;
-  --accent-foreground: 30 50% 15%;
-  --border: 30 30% 70%;          /* #c9a882 - tan */
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 70% 40%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 30 30% 70%;
+}
+
+[data-theme="light"] .text-amber-400 {
+  color: #b45309 !important;
+}
+
+[data-theme="light"] .text-amber-400\/60 {
+  color: rgba(180, 83, 9, 0.7) !important;
+}
+
+[data-theme="light"] .text-slate-200 {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .text-slate-300 {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .bg-slate-800\/80 {
+  background-color: rgba(226, 218, 205, 0.9) !important;
+}
+
+[data-theme="light"] .bg-amber-900\/50 {
+  background-color: rgba(254, 243, 199, 0.8) !important;
+}
+
+[data-theme="light"] .border-slate-700\/50 {
+  border-color: rgba(180, 160, 140, 0.5) !important;
+}
+
+[data-theme="light"] .border-amber-700\/30 {
+  border-color: rgba(180, 83, 9, 0.3) !important;
 }
 
 @theme inline {
