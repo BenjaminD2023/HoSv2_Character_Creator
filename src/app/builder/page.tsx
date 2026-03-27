@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { DiceCanvas } from "@/components/DiceCanvas";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useDice } from "@/contexts";
 import { Sword, Brain, Zap, RotateCcw, Check, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -1134,6 +1135,7 @@ small{color:#bfb7a6}
               <p className="text-sm text-muted-foreground mt-1">SRD-driven flow: Stats → Class → HP → XP → Skills → Sheet</p>
             </div>
             <div className="flex items-center gap-2">
+              <ThemeToggle />
               <Badge variant="outline" className="parchment-frame text-amber-400/60 border-amber-500/30">v2.2.0-alpha</Badge>
               <Button size="sm" variant="outline" onClick={() => router.push("/builder?new=1")} className="parchment-frame hover:border-amber-500/50 hover:text-amber-400">New Character</Button>
               <Button size="sm" className="glass-button" onClick={saveToCharacterStorage} disabled={!canShowFinal}>

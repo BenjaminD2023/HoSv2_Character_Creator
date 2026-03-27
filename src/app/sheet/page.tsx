@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Edit2, Minus, Plus, Heart, Sword, Brain, Zap, Shield, Sparkles, Dices, Trash2, Package, Settings2, Moon } from "lucide-react";
 import { DiceCanvas } from "@/components/DiceCanvas";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { RollResultPopup, RollType } from "@/components/RollResultPopup";
 import { SkillRenderer, SpellCasting } from "@/components/play-mode";
 import { useDice } from "@/contexts";
@@ -1086,15 +1087,18 @@ export default function CharacterSheetPage() {
               </div>
             </div>
 
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => router.push("/builder")}
-              className="parchment-frame hover:border-amber-500/50 hover:text-amber-400 transition-colors"
-            >
-              <Edit2 className="w-4 h-4 mr-2" />
-              Edit Character
-            </Button>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => router.push("/builder")}
+                className="parchment-frame hover:border-amber-500/50 hover:text-amber-400 transition-colors"
+              >
+                <Edit2 className="w-4 h-4 mr-2" />
+                Edit Character
+              </Button>
+            </div>
           </div>
         </header>
 

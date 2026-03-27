@@ -73,7 +73,7 @@ export default function HomePage() {
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-500/30 flex items-center justify-center mb-4 group-hover:shadow-lg group-hover:shadow-amber-500/20 transition-shadow">
               <BookOpen className="w-7 h-7 text-amber-400" />
             </div>
-            <h3 className="text-xl font-bold text-amber-100 mb-2">Step-Driven Flow</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">Step-Driven Flow</h3>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Guided 7-step creator from stats to final sheet. Sequential progression with unlock rules keeps data valid.
             </p>
@@ -83,7 +83,7 @@ export default function HomePage() {
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-600/20 border border-purple-500/30 flex items-center justify-center mb-4 group-hover:shadow-lg group-hover:shadow-purple-500/20 transition-shadow">
               <Dices className="w-7 h-7 text-purple-400" />
             </div>
-            <h3 className="text-xl font-bold text-amber-100 mb-2">3D Dice + Roll Feed</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">3D Dice + Roll Feed</h3>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Every major roll uses physics-based 3D dice with result popups. Critical success/failure styling included.
             </p>
@@ -93,7 +93,7 @@ export default function HomePage() {
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border border-emerald-500/30 flex items-center justify-center mb-4 group-hover:shadow-lg group-hover:shadow-emerald-500/20 transition-shadow">
               <Shield className="w-7 h-7 text-emerald-400" />
             </div>
-            <h3 className="text-xl font-bold text-amber-100 mb-2">HoS Rules Accurate</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">HoS Rules Accurate</h3>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Built for your custom d20 system. 3-attribute model, XP skill tiers, and armor as damage reduction.
             </p>
@@ -140,7 +140,7 @@ export default function HomePage() {
         </section>
 
         <div className="text-center">
-          <Badge variant="outline" className="parchment-frame text-xs text-slate-500 border-slate-700">
+          <Badge variant="outline" className="parchment-frame text-xs text-muted-foreground border-border">
             House of Shadows v2.2.0-alpha
           </Badge>
         </div>

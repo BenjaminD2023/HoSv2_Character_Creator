@@ -46,6 +46,7 @@ import {
   Skull,
   Star,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   getAllCharacters,
   deleteCharacter,
@@ -422,16 +423,19 @@ export default function CharactersPage() {
             </p>
           </div>
           
-          <Button
-            asChild
-            size="lg"
-            className="btn-fantasy text-lg px-8"
-          >
-            <Link href="/builder">
-              <Plus className="w-5 h-5 mr-2" />
-              New Hero
-            </Link>
-          </Button>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Button
+              asChild
+              size="lg"
+              className="btn-fantasy text-lg px-8"
+            >
+              <Link href="/builder">
+                <Plus className="w-5 h-5 mr-2" />
+                New Hero
+              </Link>
+            </Button>
+          </div>
         </motion.div>
 
         {/* Character Grid or Empty State */}
