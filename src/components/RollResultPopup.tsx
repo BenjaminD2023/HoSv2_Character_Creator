@@ -180,14 +180,14 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
             "relative rounded-xl border overflow-hidden shadow-2xl",
             isCrit && "border-yellow-500/50 shadow-yellow-500/30",
             isCritFail && "border-red-500/50 shadow-red-500/30",
-            !isCrit && !isCritFail && "border-white/10 shadow-black/50"
+            !isCrit && !isCritFail && "border-border/50 shadow-foreground/10"
           )}
           style={{
             background: isCrit
-              ? "linear-gradient(135deg, rgba(234, 179, 8, 0.3), rgba(0, 0, 0, 0.95))"
+              ? "linear-gradient(135deg, rgba(234, 179, 8, 0.3), hsl(var(--background) / 0.95))"
               : isCritFail
-              ? "linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(0, 0, 0, 0.95))"
-              : "linear-gradient(135deg, rgba(30, 30, 35, 0.98), rgba(10, 10, 12, 0.99))",
+              ? "linear-gradient(135deg, rgba(239, 68, 68, 0.3), hsl(var(--background) / 0.95))"
+              : "linear-gradient(135deg, hsl(var(--card) / 0.98), hsl(var(--background) / 0.99))",
           }}
         >
           {/* Glow border */}
@@ -219,16 +219,16 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
                   {isCritFail && <Skull className="w-4 h-4" />}
                   {!isCrit && !isCritFail && <span className="text-sm font-bold">d{result.diceSize || 20}</span>}
                 </div>
-                <p className="text-sm font-semibold text-white">{result.label}</p>
+                <p className="text-sm font-semibold text-foreground">{result.label}</p>
               </div>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleClose();
                 }}
-                className="p-1 rounded hover:bg-white/10 transition-colors"
+                className="p-1 rounded hover:bg-muted/50 transition-colors"
               >
-                <X className="w-4 h-4 text-white/60" />
+                <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
 
@@ -250,7 +250,7 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
                       {result.roll1}
                     </div>
                   </div>
-                  <div className="text-white/30 text-xs">vs</div>
+                  <div className="text-foreground/30 text-xs">vs</div>
                   <div className="text-center">
                     <p className="text-[9px] text-purple-400/70 uppercase tracking-wider mb-1">Roll 2</p>
                     <div
@@ -270,7 +270,7 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
               <div className="flex items-center justify-center gap-3">
                 {/* Natural Roll / Kept Roll */}
                 <div className="text-center">
-                  <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
                     {result.mode === "advantage" || result.mode === "disadvantage" ? "Kept" : "Natural"}
                   </p>
                   <div
@@ -278,7 +278,7 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
                       "w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-bold border transition-transform duration-200",
                       isCrit && "bg-yellow-500 border-yellow-400 text-black scale-105",
                       isCritFail && "bg-red-600 border-red-500 text-white scale-105",
-                      !isCrit && !isCritFail && "bg-gray-800 border-white/20 text-white"
+                      !isCrit && !isCritFail && "bg-card border-border text-foreground"
                     )}
                   >
                     {result.naturalRoll}
@@ -288,9 +288,9 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
                 {/* Modifier */}
                 {result.modifier !== 0 && (
                   <>
-                    <div className="text-lg text-white/40 font-light">+</div>
+                    <div className="text-lg text-muted-foreground font-light">+</div>
                     <div className="text-center">
-                      <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Mod</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Mod</p>
                       <div
                         className={cn(
                           "w-12 h-12 rounded-lg flex items-center justify-center text-xl font-bold border",
@@ -307,13 +307,13 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
 
                 {/* Total */}
                 <div className="text-center">
-                  <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Total</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Total</p>
                   <div
                     className={cn(
                       "w-16 h-16 rounded-xl flex items-center justify-center text-3xl font-bold border-2",
                       isCrit && "bg-gradient-to-br from-yellow-400 to-amber-500 border-yellow-300 text-black",
                       isCritFail && "bg-gradient-to-br from-red-600 to-red-800 border-red-500 text-white",
-                      !isCrit && !isCritFail && "bg-gradient-to-br from-gray-700 to-gray-800 border-white/30 text-white"
+                      !isCrit && !isCritFail && "bg-gradient-to-br from-card to-background border-border text-foreground"
                     )}
                     style={!isCrit && !isCritFail ? { boxShadow: `0 0 20px ${color}30` } : {}}
                   >

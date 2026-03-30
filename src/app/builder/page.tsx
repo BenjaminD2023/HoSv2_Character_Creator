@@ -74,9 +74,9 @@ const DICE_GROUP_STYLE: Record<DiceVisualGroup, { theme: string; themeColor: str
 };
 
 const STAT_ROLL_GROUPS: Array<{ attr: AttributeKey; label: string; themeColor: string; cardClass: string }> = [
-  { attr: "strength", label: "STR", themeColor: "#D62828", cardClass: "border-red-500/50 bg-red-500/10" },
-  { attr: "athletics", label: "ATH", themeColor: "#2A9D2A", cardClass: "border-green-500/50 bg-green-500/10" },
-  { attr: "intelligence", label: "INT", themeColor: "#2563EB", cardClass: "border-blue-500/50 bg-blue-500/10" },
+  { attr: "strength", label: "STR", themeColor: "#D62828", cardClass: "border-border bg-card" },
+  { attr: "athletics", label: "ATH", themeColor: "#2A9D2A", cardClass: "border-border bg-card" },
+  { attr: "intelligence", label: "INT", themeColor: "#2563EB", cardClass: "border-border bg-card" },
 ];
 
 type WeaponRollResult = {
