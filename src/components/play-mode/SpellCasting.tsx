@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Sparkles, Zap, Wand2, Star } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Sparkles, Zap, Wand2, Star, RefreshCw } from 'lucide-react'
 
 interface SpellCastingProps {
   characterId: string
@@ -31,6 +32,9 @@ interface SpellCastingProps {
     }
     bard?: boolean[]
   }) => void
+  hasChaoticMetamagic?: boolean
+  chaosPoints?: { current: number; max: number }
+  onRefillWithChaos?: (level: string) => void
 }
 
 interface SpellSlot {
@@ -83,6 +87,9 @@ export function SpellCasting({
   bardSlots,
   initialSlotState,
   onSlotStateChange,
+  hasChaoticMetamagic = false,
+  chaosPoints = { current: 0, max: 0 },
+  onRefillWithChaos,
 }: SpellCastingProps) {
   const [rows, setRows] = useState<SpellSlotRow[]>([])
   const initializedRef = useRef(false)
@@ -91,29 +98,36 @@ export function SpellCasting({
     if (initializedRef.current) return
     
     if (classId === 'wizard' && wizardSlots) {
-      const newRows: SpellSlotRow[] = [
-        {
+      const newRows: SpellSlotRow[] = []
+      
+      // Only add rows where max slots > 0 (SL = COUNT rule: show unlocked levels only)
+      if (wizardSlots.L1 > 0) {
+        newRows.push({
           level: 'Level 1',
           slots: Array.from({ length: wizardSlots.L1 }, (_, i) => ({
             id: `l1-${i}`,
             isUsed: initialSlotState?.wizard?.L1?.[i] ?? false,
           })),
-        },
-        {
+        })
+      }
+      if (wizardSlots.L2 > 0) {
+        newRows.push({
           level: 'Level 2',
           slots: Array.from({ length: wizardSlots.L2 }, (_, i) => ({
             id: `l2-${i}`,
             isUsed: initialSlotState?.wizard?.L2?.[i] ?? false,
           })),
-        },
-        {
+        })
+      }
+      if (wizardSlots.L3 > 0) {
+        newRows.push({
           level: 'Level 3',
           slots: Array.from({ length: wizardSlots.L3 }, (_, i) => ({
             id: `l3-${i}`,
             isUsed: initialSlotState?.wizard?.L3?.[i] ?? false,
           })),
-        },
-      ]
+        })
+      }
       if (wizardSlots.L4 > 0) {
         newRows.push({
           level: 'Level 4',
@@ -133,7 +147,7 @@ export function SpellCasting({
         })
       }
       setRows(newRows)
-    } else if (classId === 'bard' && bardSlots) {
+    } else if (classId === 'bard' && bardSlots && bardSlots > 0) {
       setRows([{
         level: 'Spell Slots',
         slots: Array.from({ length: bardSlots }, (_, i) => ({
@@ -179,6 +193,37 @@ export function SpellCasting({
     setTimeout(syncToParent, 0)
   }
 
+  const handleRefillWithChaos = (rowIndex: number) => {
+    const row = rows[rowIndex]
+    if (!row) return
+    
+    const usedSlots = row.slots.filter(s => s.isUsed)
+    if (usedSlots.length === 0) return
+    if (chaosPoints.current <= 0) return
+    
+    const levelKey = row.level.toLowerCase().replace('level ', 'L')
+    onRefillWithChaos?.(levelKey)
+    
+    setRows(prev => {
+      const newRows = prev.map((row, ri) => {
+        if (ri !== rowIndex) return row
+        const firstUsedIndex = row.slots.findIndex(s => s.isUsed)
+        if (firstUsedIndex === -1) return row
+        return {
+          ...row,
+          slots: row.slots.map((slot, si) => {
+            if (si !== firstUsedIndex) return slot
+            return { ...slot, isUsed: false }
+          }),
+        }
+      })
+      return newRows
+    })
+    setTimeout(syncToParent, 0)
+  }
+
+  const showChaosRefill = hasChaoticMetamagic && classId === 'wizard' && chaosPoints.current > 0
+
   if (rows.length === 0) return null
 
   const totalSlots = rows.reduce((sum, row) => sum + row.slots.length, 0)
@@ -200,6 +245,8 @@ export function SpellCasting({
           const config = LEVEL_CONFIG[row.level as keyof typeof LEVEL_CONFIG] || LEVEL_CONFIG['Level 1']
           const Icon = config.icon
           const availableInRow = row.slots.filter(s => !s.isUsed).length
+          const usedInRow = row.slots.filter(s => s.isUsed).length
+          const canRefill = showChaosRefill && usedInRow > 0
 
           return (
             <div key={row.level} className="flex items-center gap-3">
@@ -231,12 +278,38 @@ export function SpellCasting({
                 ))}
               </div>
 
-              <span className="text-xs text-muted-foreground w-10 text-right">
-                {availableInRow}/{row.slots.length}
-              </span>
+              <div className="flex items-center gap-1">
+                {canRefill && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleRefillWithChaos(rowIndex)}
+                    className="h-7 px-2 text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
+                    title="Use 1 Chaos Point to restore 1 slot"
+                  >
+                    <RefreshCw className="w-3 h-3 mr-1" />
+                    Refill
+                  </Button>
+                )}
+                <span className="text-xs text-muted-foreground w-10 text-right">
+                  {availableInRow}/{row.slots.length}
+                </span>
+              </div>
             </div>
           )
         })}
+        
+        {showChaosRefill && (
+          <div className="pt-2 border-t border-purple-500/20">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-amber-400/80 flex items-center gap-1">
+                <RefreshCw className="w-3 h-3" />
+                Chaos Points: {chaosPoints.current}/{chaosPoints.max}
+              </span>
+              <span className="text-muted-foreground">1 CP = 1 Slot</span>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

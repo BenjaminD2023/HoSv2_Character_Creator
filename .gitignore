@@ -58,3 +58,6 @@ AI_Resource_Tracker*.md
 # screenshots
 *.png
 !public/**/*.png
+
+# playwright mcp
+/.playwright-mcp/

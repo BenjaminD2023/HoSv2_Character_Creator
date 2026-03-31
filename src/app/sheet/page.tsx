@@ -170,11 +170,13 @@ function getModifier(value: number): number {
 }
 
 const calculateWizardSlots = (skills: string[], skillLevels: Record<string, number>) => {
-  const baseSlots = { L1: 5, L2: 4, L3: 0, L4: 0, L5: 0 };
-  const purchasedSlots = { L1: 0, L2: 0, L3: 0, L4: 0, L5: 0 };
+  // SL = COUNT rule: Max_Slots = Starting_Base + SL for Wizard
+  // Wizard starts with: L1=5, L2=4, L3-5=0 base slots
+  // Each purchased spell slot skill adds SL to the total
+  const slots = { L1: 5, L2: 4, L3: 0, L4: 0, L5: 0 };
   
   if (!skills || !Array.isArray(skills)) {
-    return baseSlots;
+    return slots;
   }
   
   skills.forEach(skillName => {
@@ -183,32 +185,25 @@ const calculateWizardSlots = (skills: string[], skillLevels: Record<string, numb
     const skillLower = skillName.toLowerCase();
     const level = skillLevels[skillName] ?? 1;
     
-    if (!skillLower.includes('spell slot')) {
-      return;
-    }
+    if (!skillLower.includes('spell slot')) return;
     
+    // SL = COUNT: directly add the skill level to slot count
     if (skillLower.includes('level 5') || skillLower.includes('lv 5') || skillLower.includes('l5')) {
-      purchasedSlots.L5 += level;
+      slots.L5 += level;
     } else if (skillLower.includes('level 4') || skillLower.includes('lv 4') || skillLower.includes('l4')) {
-      purchasedSlots.L4 += level;
+      slots.L4 += level;
     } else if (skillLower.includes('level 3') || skillLower.includes('lv 3') || skillLower.includes('l3')) {
-      purchasedSlots.L3 += level;
+      slots.L3 += level;
     } else if (skillLower.includes('level 2') || skillLower.includes('lv 2') || skillLower.includes('l2')) {
-      purchasedSlots.L2 += Math.max(0, level - 1);
+      slots.L2 += level;
     } else if (skillLower.includes('level 1') || skillLower.includes('lv 1') || skillLower.includes('l1')) {
-      purchasedSlots.L1 += Math.max(0, level - 1);
+      slots.L1 += level;
     } else if (skillLower.includes('capstone')) {
-      purchasedSlots.L5 += level;
+      slots.L5 += level;
     }
   });
   
-  return {
-    L1: baseSlots.L1 + purchasedSlots.L1,
-    L2: baseSlots.L2 + purchasedSlots.L2,
-    L3: baseSlots.L3 + purchasedSlots.L3,
-    L4: baseSlots.L4 + purchasedSlots.L4,
-    L5: baseSlots.L5 + purchasedSlots.L5,
-  };
+  return slots;
 };
 
 const calculateBardSlots = (skills: string[]) => {
@@ -1081,7 +1076,7 @@ export default function CharacterSheetPage() {
                 <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-amber-100 via-amber-200 to-orange-200 bg-clip-text text-transparent">
                   {character.name}
                 </h1>
-                <p className="text-sm text-amber-400/60">
+                <p className="text-sm text-muted-foreground">
                   {character.className}
                 </p>
               </div>
@@ -1117,7 +1112,6 @@ export default function CharacterSheetPage() {
                 const value = character.stats[attr];
                 const mod = getModifier(value);
                 const isPrimary = character.primaryStat === attr;
-                const color = ATTR_COLORS[attr];
 
                 return (
                   <button
@@ -1126,27 +1120,15 @@ export default function CharacterSheetPage() {
                     onContextMenu={(e) => handleContextMenu(e, "stat", attr)}
                     disabled={!isReady}
                     className={cn(
-                      "group relative overflow-hidden rounded-2xl border transition-transform duration-300 hover:scale-105",
-                      "bg-gradient-to-b",
-                      ATTR_GRADIENTS[attr],
+                      "group relative overflow-hidden rounded-2xl border bg-card transition-transform duration-300 hover:scale-105",
                       isPrimary
                         ? "border-amber-500/40 shadow-lg shadow-amber-500/10"
-                        : "border-border hover:border-white/20"
+                        : "border-border hover:border-amber-500/30"
                     )}
                     style={{ animationDelay: `${idx * 100}ms` }}
                   >
-                    <div
-                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                      style={{
-                        background: `radial-gradient(circle at center, ${color}15, transparent 70%)`,
-                      }}
-                    />
-
                     <div className="relative p-5 flex flex-col items-center">
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-110"
-                        style={{ backgroundColor: `${color}20`, color }}
-                      >
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-110 bg-muted text-foreground">
                         {ATTR_ICONS[attr]}
                       </div>
 
@@ -1159,7 +1141,7 @@ export default function CharacterSheetPage() {
                       <p
                         className={cn(
                           "text-lg font-semibold",
-                          mod >= 0 ? "text-emerald-400" : "text-red-400"
+                          mod >= 0 ? "text-emerald-500" : "text-red-500"
                         )}
                       >
                         {formatMod(mod)}
@@ -1217,16 +1199,15 @@ export default function CharacterSheetPage() {
                 onClick={rollInitiative}
                 onContextMenu={(e) => handleContextMenu(e, "initiative")}
                 disabled={!isReady}
-                className="group relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-green-600/5 transition-transform hover:scale-105 hover:border-emerald-500/50"
+                className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-transform hover:scale-105 hover:border-primary/30"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="relative p-4 flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-600/20 border border-emerald-500/30 flex items-center justify-center transition-transform group-hover:scale-110">
-                    <Zap className="w-6 h-6 text-emerald-400" />
+                  <div className="w-12 h-12 rounded-xl bg-muted border border-border flex items-center justify-center transition-transform group-hover:scale-110">
+                    <Zap className="w-6 h-6 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-xs text-emerald-400/60 uppercase tracking-wider">Initiative</p>
-                    <p className="text-3xl font-bold text-emerald-100">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Initiative</p>
+                    <p className="text-3xl font-bold text-foreground">
                       {formatMod(getModifier(character.stats.athletics))}
                     </p>
                   </div>
@@ -1240,16 +1221,16 @@ export default function CharacterSheetPage() {
                 <div className="corner-flourish top-left" />
                 <div className="corner-flourish top-right" />
                 <CardContent className="p-4 text-center">
-                  <p className="text-xs text-amber-400/60 uppercase tracking-wider mb-1">Hit Die</p>
-                  <p className="text-2xl font-bold text-amber-400">d{character.hitDie}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Hit Die</p>
+                  <p className="text-2xl font-bold text-foreground">d{character.hitDie}</p>
                 </CardContent>
               </Card>
               <Card className="parchment-frame">
                 <div className="corner-flourish top-left" />
                 <div className="corner-flourish top-right" />
                 <CardContent className="p-4 text-center">
-                  <p className="text-xs text-emerald-400/60 uppercase tracking-wider mb-1">Proficiency</p>
-                  <p className="text-2xl font-bold text-emerald-400">+{character.proficiencyBonus}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Proficiency</p>
+                  <p className="text-2xl font-bold text-foreground">+{character.proficiencyBonus}</p>
                 </CardContent>
               </Card>
             </div>
@@ -1267,8 +1248,8 @@ export default function CharacterSheetPage() {
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500/20 to-rose-600/20 border border-red-500/30 flex items-center justify-center">
-                      <Heart className="w-6 h-6 text-red-400" />
+                    <div className="w-12 h-12 rounded-xl bg-muted border border-border flex items-center justify-center">
+                      <Heart className="w-6 h-6 text-red-500" />
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">Hit Points</p>
@@ -1280,14 +1261,14 @@ export default function CharacterSheetPage() {
                   </div>
                   {tempHp > 0 && (
                     <div className="text-right">
-                      <p className="text-xs text-cyan-400/60 uppercase tracking-wider">Temp</p>
-                      <p className="text-2xl font-bold text-cyan-400">+{tempHp}</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Temp</p>
+                      <p className="text-2xl font-bold text-cyan-600">+{tempHp}</p>
                     </div>
                   )}
                 </div>
 
                 {/* HP Bar */}
-                <div className="relative h-4 bg-black/40 rounded-full overflow-hidden mb-4">
+                <div className="relative h-4 bg-muted rounded-full overflow-hidden mb-4">
                   <div
                     className="absolute inset-0 rounded-full"
                     style={{
@@ -1307,7 +1288,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs font-medium border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 px-1"
+                    className="h-8 text-xs font-medium border-red-600 bg-red-600 hover:bg-red-700 text-white px-1"
                     onClick={() => applyDamage(10)}
                   >
                     <Minus className="w-3 h-3 mr-0.5" />
@@ -1316,7 +1297,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs font-medium border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 px-1"
+                    className="h-8 text-xs font-medium border-red-600 bg-red-600 hover:bg-red-700 text-white px-1"
                     onClick={() => applyDamage(5)}
                   >
                     <Minus className="w-3 h-3 mr-0.5" />
@@ -1325,7 +1306,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs font-medium border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 px-1"
+                    className="h-8 text-xs font-medium border-red-600 bg-red-600 hover:bg-red-700 text-white px-1"
                     onClick={() => applyDamage(2)}
                   >
                     <Minus className="w-3 h-3 mr-0.5" />
@@ -1334,7 +1315,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs font-medium border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 px-1"
+                    className="h-8 text-xs font-medium border-red-600 bg-red-600 hover:bg-red-700 text-white px-1"
                     onClick={() => applyDamage(1)}
                   >
                     <Minus className="w-3 h-3 mr-0.5" />
@@ -1344,7 +1325,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs font-medium border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 px-1"
+                    className="h-8 text-xs font-medium border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white px-1"
                     onClick={() => setCurrentHp((prev) => Math.min(prev + 1, character.maxHp))}
                   >
                     <Plus className="w-3 h-3 mr-0.5" />
@@ -1353,7 +1334,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs font-medium border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 px-1"
+                    className="h-8 text-xs font-medium border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white px-1"
                     onClick={() => setCurrentHp((prev) => Math.min(prev + 2, character.maxHp))}
                   >
                     <Plus className="w-3 h-3 mr-0.5" />
@@ -1362,7 +1343,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs font-medium border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 px-1"
+                    className="h-8 text-xs font-medium border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white px-1"
                     onClick={() => setCurrentHp((prev) => Math.min(prev + 5, character.maxHp))}
                   >
                     <Plus className="w-3 h-3 mr-0.5" />
@@ -1371,7 +1352,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs font-medium border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 px-1"
+                    className="h-8 text-xs font-medium border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white px-1"
                     onClick={() => setCurrentHp((prev) => Math.min(prev + 10, character.maxHp))}
                   >
                     <Plus className="w-3 h-3 mr-0.5" />
@@ -1391,7 +1372,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-10 px-3 border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300"
+                    className="h-10 px-3 border-red-600 bg-red-600 hover:bg-red-700 text-white"
                     onClick={handleDamage}
                     disabled={!hpInput}
                   >
@@ -1400,7 +1381,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-10 px-3 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300"
+                    className="h-10 px-3 border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white"
                     onClick={handleHeal}
                     disabled={!hpInput}
                   >
@@ -1411,7 +1392,7 @@ export default function CharacterSheetPage() {
                 {/* Temp HP Button */}
                 <Button
                   variant="outline"
-                  className="w-full h-9 mt-2 border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 hover:border-cyan-500/50 text-cyan-300"
+                  className="w-full h-9 mt-2 border-cyan-600 bg-cyan-600 hover:bg-cyan-700 text-white"
                   onClick={handleAddTemp}
                 >
                   <Plus className="w-3 h-3 mr-1" />
@@ -1447,7 +1428,7 @@ export default function CharacterSheetPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-7 px-2 text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
+                        className="h-7 px-2 text-xs text-primary hover:text-primary/80 hover:bg-primary/10"
                         onClick={() => {
                           resetItemForm();
                           setNewItemType("weapon");
@@ -1666,7 +1647,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-6 px-2 text-xs text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
+                    className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
                     onClick={() => setCustomDiceOpen(true)}
                   >
                     <Settings2 className="w-3 h-3 mr-1" />
@@ -1678,24 +1659,22 @@ export default function CharacterSheetPage() {
                     onClick={rollInitiative}
                     onContextMenu={(e) => handleContextMenu(e, "initiative")}
                     disabled={!isReady}
-                    className="group relative overflow-hidden rounded-xl p-4 border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-green-600/5 transition-transform hover:scale-105 hover:border-emerald-500/50"
+                    className="group relative overflow-hidden rounded-xl p-4 border border-border bg-card transition-transform hover:scale-105 hover:border-amber-500/30"
                   >
-                    <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <Zap className="w-6 h-6 text-emerald-400 mb-2 mx-auto group-hover:scale-110 transition-transform" />
-                    <p className="text-sm font-medium text-emerald-100">Initiative</p>
-                    <p className="text-xs text-emerald-400/60">d20 + ATH</p>
+                    <Zap className="w-6 h-6 text-muted-foreground mb-2 mx-auto group-hover:scale-110 transition-transform" />
+                    <p className="text-sm font-medium text-foreground">Initiative</p>
+                    <p className="text-xs text-muted-foreground">d20 + ATH</p>
                   </button>
 
                   <button
                     onClick={rollCharisma}
                     onContextMenu={(e) => handleContextMenu(e, "charisma")}
                     disabled={!isReady}
-                    className="group relative overflow-hidden rounded-xl p-4 border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-yellow-600/5 transition-transform hover:scale-105 hover:border-amber-500/50"
+                    className="group relative overflow-hidden rounded-xl p-4 border border-border bg-card transition-transform hover:scale-105 hover:border-amber-500/30"
                   >
-                    <div className="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <Sparkles className="w-6 h-6 text-amber-400 mb-2 mx-auto group-hover:scale-110 transition-transform" />
-                    <p className="text-sm font-medium text-amber-100">Charisma</p>
-                    <p className="text-xs text-amber-400/60">d{character.charismaDie}</p>
+                    <Sparkles className="w-6 h-6 text-muted-foreground mb-2 mx-auto group-hover:scale-110 transition-transform" />
+                    <p className="text-sm font-medium text-foreground">Charisma</p>
+                    <p className="text-xs text-muted-foreground">d{character.charismaDie}</p>
                   </button>
                 </div>
               </CardContent>
@@ -1708,7 +1687,7 @@ export default function CharacterSheetPage() {
               <div className="corner-flourish bottom-left" />
               <div className="corner-flourish bottom-right" />
               <CardContent className="p-5">
-                <p className="text-xs text-amber-400/60 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
                   <Sparkles className="w-3 h-3" />
                   Skills
                 </p>
@@ -1717,7 +1696,7 @@ export default function CharacterSheetPage() {
                     <Badge
                       key={skill}
                       variant="secondary"
-                      className="px-3 py-1.5 text-xs bg-muted border border-border text-muted-foreground hover:bg-muted/50 hover:border-amber-500/30 hover:text-amber-200 transition-colors cursor-default"
+                      className="px-3 py-1.5 text-xs bg-muted border border-border text-muted-foreground hover:bg-muted/80 hover:border-primary/30 hover:text-foreground transition-colors cursor-default"
                       style={{ animationDelay: `${idx * 20}ms` }}
                     >
                       {skill}
@@ -1796,6 +1775,15 @@ export default function CharacterSheetPage() {
                   const wizardSlots = classId === 'wizard' ? calculateWizardSlots(character.skills, character.skillLevels) : undefined
                   const bardSlots = classId === 'bard' ? calculateBardSlots(character.skills) : undefined
                   
+                  const hasChaoticMetamagic = classId === 'wizard' && character.skills.some(s => s.includes("Immeral's Chaotic Metamagic"))
+                  const chaoticSkill = hasChaoticMetamagic ? useSkillStore.getState().characterSkills[`sheet-${character.name}`]?.['wizard-chaotic-metamagic'] : null
+                  const chaosPoints = chaoticSkill ? { current: chaoticSkill.currentUses, max: chaoticSkill.maxUses } : { current: 0, max: 0 }
+                  
+                  const handleRefillWithChaos = (level: string) => {
+                    if (!hasChaoticMetamagic || chaosPoints.current <= 0) return
+                    useSkillStore.getState().decrementUses(`sheet-${character.name}`, 'wizard-chaotic-metamagic', 1)
+                  }
+                  
                   return (
                     <SpellCasting
                       characterId={`sheet-${character.name}`}
@@ -1804,6 +1792,9 @@ export default function CharacterSheetPage() {
                       bardSlots={bardSlots}
                       initialSlotState={spellSlotState}
                       onSlotStateChange={setSpellSlotState}
+                      hasChaoticMetamagic={hasChaoticMetamagic}
+                      chaosPoints={chaosPoints}
+                      onRefillWithChaos={handleRefillWithChaos}
                     />
                   )
                 })()}
@@ -1827,7 +1818,7 @@ export default function CharacterSheetPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-7 px-2 text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
+                        className="h-7 px-2 text-xs text-primary hover:text-primary/80 hover:bg-primary/10"
                         onClick={() => {
                           resetItemForm();
                           setNewItemType("item");

@@ -168,9 +168,9 @@ function EmptyState() {
             transition={{ delay: 0.2, duration: 0.6 }}
             className="relative inline-block mb-8"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-purple-600/20 rounded-full blur-2xl" />
-            <div className="relative p-8 rounded-full bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-amber-500/20">
-              <Crown className="w-16 h-16 text-amber-400/80" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full blur-2xl" />
+            <div className="relative p-8 rounded-full bg-card border border-primary/20">
+              <Crown className="w-16 h-16 text-primary" />
             </div>
             
             {/* Floating decorations */}
@@ -196,7 +196,7 @@ function EmptyState() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.6 }}
           >
-            <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-amber-200 to-purple-200 bg-clip-text text-transparent">
+            <h3 className="text-2xl font-bold mb-2 text-foreground">
               No Heroes Yet
             </h3>
             <p className="text-muted-foreground mb-8 max-w-md mx-auto">
@@ -213,7 +213,7 @@ function EmptyState() {
             <Button
               asChild
               size="lg"
-              className="btn-fantasy text-lg px-8 py-6"
+              className="fantasy-button-primary text-lg px-8 py-6"
             >
               <Link href="/builder">
                 <Plus className="w-5 h-5 mr-2" />
@@ -265,21 +265,21 @@ function CharacterCard({ character, onDelete, onExport }: CharacterCardProps) {
               <div className="flex items-center gap-4">
                 {/* Avatar with frame */}
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/30 to-purple-600/30 rounded-full blur-sm" />
-                  <Avatar className="relative w-16 h-16 border-2 border-amber-500/30 bg-gradient-to-br from-slate-800 to-slate-900">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30 rounded-full blur-sm" />
+                  <Avatar className="relative w-16 h-16 border-2 border-primary/30 bg-card">
                     <AvatarFallback className={`text-2xl font-bold ${theme.text}`}>
                       {initials}
                     </AvatarFallback>
                   </Avatar>
                   {/* Level indicator */}
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 border-2 border-slate-900 flex items-center justify-center">
-                    <Crown className="w-3 h-3 text-foreground" />
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary border-2 border-card flex items-center justify-center">
+                    <Crown className="w-3 h-3 text-primary-foreground" />
                   </div>
                 </div>
                 
                 {/* Name and class */}
                 <div>
-                  <h3 className="text-xl font-bold text-foreground group-hover:text-amber-200 transition-colors">
+                  <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
                     {character.name}
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
@@ -326,12 +326,12 @@ function CharacterCard({ character, onDelete, onExport }: CharacterCardProps) {
             
             {/* Stats row */}
             <div className="flex flex-wrap gap-2 mb-4">
-              <Badge variant="secondary" className="bg-slate-800/80 text-slate-200 border border-slate-700/50">
-                <Star className="w-3 h-3 mr-1 text-amber-400" />
+              <Badge variant="secondary" className="bg-muted text-muted-foreground border border-border">
+                <Star className="w-3 h-3 mr-1 text-primary" />
                 XP: {(character.data?.xp as number) || 0}
               </Badge>
-              <Badge variant="secondary" className="bg-slate-800/80 text-slate-200 border border-slate-700/50">
-                <Swords className="w-3 h-3 mr-1 text-red-400" />
+              <Badge variant="secondary" className="bg-muted text-muted-foreground border border-border">
+                <Swords className="w-3 h-3 mr-1 text-destructive" />
                 HP: {(character.data?.maxHp as number) || '?'}
               </Badge>
               <Badge className={theme.badge}>
@@ -382,8 +382,8 @@ export default function CharactersPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-950 via-purple-950/10 to-slate-950 flex items-center justify-center">
-        <div className="animate-pulse text-purple-400">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-primary">
           <Crown className="w-12 h-12 mx-auto mb-4" />
           <p>Loading heroes...</p>
         </div>
@@ -392,7 +392,7 @@ export default function CharactersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-purple-950/10 to-slate-950 relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Animated background elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse" />
@@ -410,8 +410,8 @@ export default function CharactersPage() {
         >
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <Crown className="w-8 h-8 text-amber-400" />
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-amber-200 via-purple-200 to-amber-200 bg-clip-text text-transparent">
+              <Crown className="w-8 h-8 text-primary" />
+              <h1 className="text-4xl md:text-5xl font-bold text-foreground">
                 Hall of Heroes
               </h1>
             </div>
@@ -428,7 +428,7 @@ export default function CharactersPage() {
             <Button
               asChild
               size="lg"
-              className="btn-fantasy text-lg px-8"
+              className="fantasy-button-primary text-lg px-8"
             >
               <Link href="/builder">
                 <Plus className="w-5 h-5 mr-2" />
@@ -476,7 +476,7 @@ export default function CharactersPage() {
                 <div className="p-2 rounded-full bg-red-900/20">
                   <Skull className="w-6 h-6 text-red-400" />
                 </div>
-                <AlertDialogTitle className="text-2xl text-red-200">
+                <AlertDialogTitle className="text-2xl text-foreground">
                   Banish This Hero?
                 </AlertDialogTitle>
               </div>

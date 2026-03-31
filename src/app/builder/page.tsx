@@ -1136,7 +1136,7 @@ small{color:#bfb7a6}
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <Badge variant="outline" className="parchment-frame text-amber-400/60 border-amber-500/30">v2.2.0-alpha</Badge>
+              <Badge variant="outline" className="parchment-frame text-amber-400/60 border-amber-500/30">HoS-v3.0.0</Badge>
               <Button size="sm" variant="outline" onClick={() => router.push("/builder?new=1")} className="parchment-frame hover:border-amber-500/50 hover:text-amber-400">New Character</Button>
               <Button size="sm" className="glass-button" onClick={saveToCharacterStorage} disabled={!canShowFinal}>
                 {editMode ? "Update Character" : "Show Character Sheet"}

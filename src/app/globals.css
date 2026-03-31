@@ -23,21 +23,22 @@
 }
 
 [data-theme="light"] {
-  --background: 35 50% 90%;
-  --foreground: 25 60% 10%;
-  --card: 35 45% 85%;
+  /* Warmer fantasy palette - richer parchment, bronze/brown primary, gold accents */
+  --background: 35 40% 88%;      /* warmer parchment */
+  --foreground: 25 60% 12%;
+  --card: 35 35% 82%;            /* slightly darker parchment */
   --card-foreground: 25 60% 10%;
-  --primary: 25 80% 35%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 25 50% 60%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 30 30% 80%;
-  --muted-foreground: 25 50% 25%;
-  --accent: 25 70% 45%;
-  --accent-foreground: 0 0% 100%;
+  --primary: 25 70% 30%;         /* bronze/brown */
+  --primary-foreground: 42 80% 96%;  /* cream text */
+  --secondary: 30 45% 75%;
+  --secondary-foreground: 25 60% 15%;
+  --muted: 35 35% 78%;
+  --muted-foreground: 25 50% 30%;
+  --accent: 43 80% 45%;          /* rich gold */
+  --accent-foreground: 25 60% 10%;
   --destructive: 0 75% 45%;
   --destructive-foreground: 0 0% 100%;
-  --border: 25 40% 65%;
+  --border: 30 50% 55%;
 }
 
 [data-theme="light"] .text-amber-400 {
@@ -70,6 +71,49 @@
 
 [data-theme="light"] .border-amber-700\/30 {
   border-color: rgba(217, 119, 6, 0.4) !important;
+}
+
+/* Light theme overrides for gradient text elements - force dark readable colors */
+[data-theme="light"] .title-gradient-text {
+  color: #78350f !important;
+}
+
+[data-theme="light"] .subtitle-gradient-text {
+  color: #5c280a !important;
+}
+
+/* Feature card icons - make text readable */
+[data-theme="light"] .text-amber-200 {
+  color: #fef3c7 !important;
+}
+
+[data-theme="light"] .text-violet-200 {
+  color: #ede9fe !important;
+}
+
+[data-theme="light"] .text-emerald-200 {
+  color: #d1fae5 !important;
+}
+
+/* Class theme badges - ensure readable in light theme */
+[data-theme="light"] .text-red-200 {
+  color: #92400e !important;
+}
+
+[data-theme="light"] .text-emerald-200 {
+  color: #065f46 !important;
+}
+
+[data-theme="light"] .text-purple-200 {
+  color: #5b21b6 !important;
+}
+
+[data-theme="light"] .text-amber-200 {
+  color: #78350f !important;
+}
+
+[data-theme="light"] .text-rose-200 {
+  color: #9f1239 !important;
 }
 
 @theme inline {
@@ -335,6 +379,72 @@ body {
   box-shadow: 
     0 4px 16px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Fantasy Button Styles - Bronze/Leather Theme */
+.fantasy-button-primary {
+  background: linear-gradient(
+    180deg,
+    #92400e 0%,
+    #78350f 50%,
+    #5c280a 100%
+  );
+  border: 2px solid #d97706;
+  border-radius: 10px;
+  color: #fef3c7;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow: 
+    0 4px 12px rgba(120, 53, 15, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.fantasy-button-primary:hover {
+  background: linear-gradient(
+    180deg,
+    #b45309 0%,
+    #92400e 50%,
+    #78350f 100%
+  );
+  border-color: #fbbf24;
+  box-shadow: 
+    0 6px 20px rgba(217, 119, 6, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.fantasy-button-secondary {
+  background: linear-gradient(
+    180deg,
+    hsl(35 35% 86%) 0%,
+    hsl(35 35% 82%) 100%
+  );
+  border: 2px solid #b45309;
+  border-radius: 10px;
+  color: #78350f;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 
+    0 2px 8px rgba(180, 83, 9, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.fantasy-button-secondary:hover {
+  background: linear-gradient(
+    180deg,
+    hsl(35 45% 88%) 0%,
+    hsl(35 40% 85%) 100%
+  );
+  border-color: #d97706;
+  box-shadow: 
+    0 4px 12px rgba(217, 119, 6, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
 }
 
 .glass-header {
