@@ -91,19 +91,19 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
   const isInitializingRef = useRef(false);
   const hasInitializedRef = useRef(false);
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
+  const isErrorRef = useRef(false);
 
   const initDiceBox = useCallback(async (canvasContainer: HTMLDivElement) => {
-    // Allow re-initialization if there was an error
-    if ((hasInitializedRef.current || isInitializingRef.current || diceBoxRef.current) && !isError) {
+    if ((hasInitializedRef.current || isInitializingRef.current || diceBoxRef.current) && !isErrorRef.current) {
       console.log("DiceBox initialization skipped - already initialized");
       return;
     }
 
-    // Reset initialization state for retry after error
-    if (isError) {
+    if (isErrorRef.current) {
       hasInitializedRef.current = false;
       isInitializingRef.current = false;
       diceBoxRef.current = null;
+      isErrorRef.current = false;
     }
 
     canvasContainerRef.current = canvasContainer;
@@ -177,6 +177,7 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
       console.error("Failed to initialize dice box:", err);
+      isErrorRef.current = true;
       setIsError(true);
       setError(`Failed to initialize dice: ${errorMessage}`);
     } finally {
@@ -274,9 +275,9 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
     const container = canvasContainerRef.current;
 
     try {
-      // Force-clear transient states so restart works even if a roll promise is stuck
       setIsRolling(false);
       isInitializingRef.current = false;
+      isErrorRef.current = false;
       setIsError(false);
       setError(null);
       setIsReady(false);
