@@ -54,6 +54,7 @@ AI_Resource_Tracker*.md
 
 # test results
 /test-results/
+BUN_TESTS_SETUP.md
 
 # screenshots
 *.png

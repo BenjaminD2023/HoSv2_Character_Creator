@@ -47,7 +47,7 @@ export default function HomePage() {
               size="lg" 
               className="fantasy-button-primary text-lg px-8 py-6 hover:scale-105 transition-transform"
             >
-              <Link href="/builder">
+              <Link href="/builder?new=1">
                 <Sword className="w-5 h-5 mr-2" />
                 Begin Creation
               </Link>
@@ -127,7 +127,7 @@ export default function HomePage() {
                   asChild
                   className="fantasy-button-secondary"
                 >
-                  <Link href="/builder">
+                  <Link href="/builder?new=1">
                     <Sparkles className="w-4 h-4 mr-2" />
                     Create New
                   </Link>

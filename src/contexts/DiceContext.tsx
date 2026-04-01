@@ -93,10 +93,17 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
 
   const initDiceBox = useCallback(async (canvasContainer: HTMLDivElement) => {
-    // STRICT: Never re-initialize if already initialized or initializing
-    if (hasInitializedRef.current || isInitializingRef.current || diceBoxRef.current) {
+    // Allow re-initialization if there was an error
+    if ((hasInitializedRef.current || isInitializingRef.current || diceBoxRef.current) && !isError) {
       console.log("DiceBox initialization skipped - already initialized");
       return;
+    }
+
+    // Reset initialization state for retry after error
+    if (isError) {
+      hasInitializedRef.current = false;
+      isInitializingRef.current = false;
+      diceBoxRef.current = null;
     }
 
     canvasContainerRef.current = canvasContainer;

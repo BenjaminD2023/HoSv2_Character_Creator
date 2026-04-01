@@ -116,6 +116,127 @@
   color: #9f1239 !important;
 }
 
+/* HP adjustment buttons - softer colors for light theme */
+[data-theme="light"] .bg-red-950\/60 {
+  background-color: rgba(254, 226, 226, 0.9) !important;
+}
+[data-theme="light"] .border-red-500\/40 {
+  border-color: rgba(248, 113, 113, 0.6) !important;
+}
+[data-theme="light"] .text-red-200 {
+  color: #991b1b !important;
+}
+[data-theme="light"] .hover\:bg-red-900\/60:hover {
+  background-color: rgba(254, 202, 202, 0.95) !important;
+}
+[data-theme="light"] .hover\:border-red-500\/60:hover {
+  border-color: rgba(239, 68, 68, 0.7) !important;
+}
+
+[data-theme="light"] .bg-emerald-950\/60 {
+  background-color: rgba(209, 250, 229, 0.9) !important;
+}
+[data-theme="light"] .border-emerald-500\/40 {
+  border-color: rgba(52, 211, 153, 0.6) !important;
+}
+[data-theme="light"] .text-emerald-200 {
+  color: #065f46 !important;
+}
+[data-theme="light"] .hover\:bg-emerald-900\/60:hover {
+  background-color: rgba(167, 243, 208, 0.95) !important;
+}
+[data-theme="light"] .hover\:border-emerald-500\/60:hover {
+  border-color: rgba(16, 185, 129, 0.7) !important;
+}
+
+[data-theme="light"] .bg-cyan-950\/60 {
+  background-color: rgba(207, 250, 254, 0.9) !important;
+}
+[data-theme="light"] .border-cyan-500\/40 {
+  border-color: rgba(34, 211, 238, 0.6) !important;
+}
+[data-theme="light"] .text-cyan-200 {
+  color: #0e7490 !important;
+}
+[data-theme="light"] .hover\:bg-cyan-900\/60:hover {
+  background-color: rgba(165, 243, 252, 0.95) !important;
+}
+
+/* Dice roller mode buttons - softer for light theme */
+[data-theme="light"] .bg-blue-700\/60 {
+  background-color: rgba(219, 234, 254, 0.95) !important;
+}
+[data-theme="light"] .text-blue-100 {
+  color: #1e40af !important;
+}
+[data-theme="light"] .bg-emerald-700\/60 {
+  background-color: rgba(209, 250, 229, 0.95) !important;
+}
+[data-theme="light"] .text-emerald-100 {
+  color: #065f46 !important;
+}
+[data-theme="light"] .bg-red-800\/60 {
+  background-color: rgba(254, 226, 226, 0.95) !important;
+}
+[data-theme="light"] .text-red-100 {
+  color: #991b1b !important;
+}
+[data-theme="light"] .bg-purple-700\/60 {
+  background-color: rgba(237, 233, 254, 0.95) !important;
+}
+[data-theme="light"] .text-purple-100 {
+  color: #5b21b6 !important;
+}
+[data-theme="light"] .hover\:bg-purple-600\/60:hover {
+  background-color: rgba(221, 214, 254, 0.95) !important;
+}
+
+/* Dark theme frame enhancements - more visible borders */
+html:not([data-theme="light"]) .parchment-frame {
+  border: 2px solid rgba(251, 191, 36, 0.35);
+  box-shadow: 
+    inset 0 0 30px hsl(var(--primary) / 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(251, 191, 36, 0.15),
+    0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+html:not([data-theme="light"]) .parchment-frame::after {
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+html:not([data-theme="light"]) .parchment-frame-aged {
+  border: 3px solid rgba(251, 191, 36, 0.4);
+  box-shadow: 
+    inset 0 0 50px hsl(var(--primary) / 0.15),
+    inset 2px 2px 8px rgba(0, 0, 0, 0.2),
+    0 6px 20px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(251, 191, 36, 0.2),
+    0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+html:not([data-theme="light"]) .parchment-frame-aged::after {
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+/* Dark theme cards - better border visibility */
+html:not([data-theme="light"]) .border-border {
+  border-color: rgba(251, 191, 36, 0.25) !important;
+}
+
+html:not([data-theme="light"]) .border-border\/50 {
+  border-color: rgba(251, 191, 36, 0.2) !important;
+}
+
+/* Dice canvas frame for dark theme */
+html:not([data-theme="light"]) #dice-box-container {
+  border: 2px solid rgba(251, 191, 36, 0.3);
+  border-radius: 12px;
+  box-shadow: 
+    inset 0 0 100px rgba(0, 0, 0, 0.3),
+    0 0 40px rgba(251, 191, 36, 0.1);
+}
+
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));

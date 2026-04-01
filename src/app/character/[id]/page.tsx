@@ -98,7 +98,7 @@ export default function CharacterPage() {
                 </Link>
               </Button>
               <Button asChild>
-                <Link href="/builder">Create New Character</Link>
+                <Link href="/builder?new=1">Create New Character</Link>
               </Button>
             </div>
           </CardContent>

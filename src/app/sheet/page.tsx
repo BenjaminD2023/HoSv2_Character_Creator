@@ -989,7 +989,7 @@ export default function CharacterSheetPage() {
                   className={cn(
                     "flex-1 py-2 rounded text-sm font-medium transition-colors",
                     rollMode === "normal"
-                      ? "bg-blue-600 text-foreground"
+                      ? "bg-blue-700/60 text-blue-100"
                       : "bg-muted text-muted-foreground hover:bg-muted/50"
                   )}
                 >
@@ -1000,7 +1000,7 @@ export default function CharacterSheetPage() {
                   className={cn(
                     "flex-1 py-2 rounded text-sm font-medium transition-colors",
                     rollMode === "advantage"
-                      ? "bg-emerald-600 text-foreground"
+                      ? "bg-emerald-700/60 text-emerald-100"
                       : "bg-muted text-muted-foreground hover:bg-muted/50"
                   )}
                 >
@@ -1011,7 +1011,7 @@ export default function CharacterSheetPage() {
                   className={cn(
                     "flex-1 py-2 rounded text-sm font-medium transition-colors",
                     rollMode === "disadvantage"
-                      ? "bg-red-600 text-foreground"
+                      ? "bg-red-800/60 text-red-100"
                       : "bg-muted text-muted-foreground hover:bg-muted/50"
                   )}
                 >
@@ -1034,7 +1034,7 @@ export default function CharacterSheetPage() {
 
             {/* Roll Button */}
             <Button
-              className="w-full bg-purple-600 hover:bg-purple-500"
+              className="w-full bg-purple-700/60 hover:bg-purple-600/60 text-purple-100"
               onClick={rollCustomDice}
               disabled={!isReady}
             >
@@ -1288,7 +1288,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs font-medium border-red-600 bg-red-600 hover:bg-red-700 text-white px-1"
+                    className="h-8 text-xs font-medium border-red-500/40 bg-red-950/60 hover:bg-red-900/60 hover:border-red-500/60 text-red-200 px-1"
                     onClick={() => applyDamage(10)}
                   >
                     <Minus className="w-3 h-3 mr-0.5" />
@@ -1297,7 +1297,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs font-medium border-red-600 bg-red-600 hover:bg-red-700 text-white px-1"
+                    className="h-8 text-xs font-medium border-red-500/40 bg-red-950/60 hover:bg-red-900/60 hover:border-red-500/60 text-red-200 px-1"
                     onClick={() => applyDamage(5)}
                   >
                     <Minus className="w-3 h-3 mr-0.5" />
@@ -1306,7 +1306,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs font-medium border-red-600 bg-red-600 hover:bg-red-700 text-white px-1"
+                    className="h-8 text-xs font-medium border-red-500/40 bg-red-950/60 hover:bg-red-900/60 hover:border-red-500/60 text-red-200 px-1"
                     onClick={() => applyDamage(2)}
                   >
                     <Minus className="w-3 h-3 mr-0.5" />
@@ -1315,7 +1315,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs font-medium border-red-600 bg-red-600 hover:bg-red-700 text-white px-1"
+                    className="h-8 text-xs font-medium border-red-500/40 bg-red-950/60 hover:bg-red-900/60 hover:border-red-500/60 text-red-200 px-1"
                     onClick={() => applyDamage(1)}
                   >
                     <Minus className="w-3 h-3 mr-0.5" />
@@ -1325,7 +1325,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs font-medium border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white px-1"
+                    className="h-8 text-xs font-medium border-emerald-500/40 bg-emerald-950/60 hover:bg-emerald-900/60 hover:border-emerald-500/60 text-emerald-200 px-1"
                     onClick={() => setCurrentHp((prev) => Math.min(prev + 1, character.maxHp))}
                   >
                     <Plus className="w-3 h-3 mr-0.5" />
@@ -1334,7 +1334,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs font-medium border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white px-1"
+                    className="h-8 text-xs font-medium border-emerald-500/40 bg-emerald-950/60 hover:bg-emerald-900/60 hover:border-emerald-500/60 text-emerald-200 px-1"
                     onClick={() => setCurrentHp((prev) => Math.min(prev + 2, character.maxHp))}
                   >
                     <Plus className="w-3 h-3 mr-0.5" />
@@ -1343,7 +1343,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs font-medium border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white px-1"
+                    className="h-8 text-xs font-medium border-emerald-500/40 bg-emerald-950/60 hover:bg-emerald-900/60 hover:border-emerald-500/60 text-emerald-200 px-1"
                     onClick={() => setCurrentHp((prev) => Math.min(prev + 5, character.maxHp))}
                   >
                     <Plus className="w-3 h-3 mr-0.5" />
@@ -1352,7 +1352,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs font-medium border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white px-1"
+                    className="h-8 text-xs font-medium border-emerald-500/40 bg-emerald-950/60 hover:bg-emerald-900/60 hover:border-emerald-500/60 text-emerald-200 px-1"
                     onClick={() => setCurrentHp((prev) => Math.min(prev + 10, character.maxHp))}
                   >
                     <Plus className="w-3 h-3 mr-0.5" />
@@ -1372,7 +1372,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-10 px-3 border-red-600 bg-red-600 hover:bg-red-700 text-white"
+                    className="h-10 px-3 border-red-500/40 bg-red-950/60 hover:bg-red-900/60 text-red-200"
                     onClick={handleDamage}
                     disabled={!hpInput}
                   >
@@ -1381,7 +1381,7 @@ export default function CharacterSheetPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-10 px-3 border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white"
+                    className="h-10 px-3 border-emerald-500/40 bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-200"
                     onClick={handleHeal}
                     disabled={!hpInput}
                   >
@@ -1392,7 +1392,7 @@ export default function CharacterSheetPage() {
                 {/* Temp HP Button */}
                 <Button
                   variant="outline"
-                  className="w-full h-9 mt-2 border-cyan-600 bg-cyan-600 hover:bg-cyan-700 text-white"
+                  className="w-full h-9 mt-2 border-cyan-500/40 bg-cyan-950/60 hover:bg-cyan-900/60 text-cyan-200"
                   onClick={handleAddTemp}
                 >
                   <Plus className="w-3 h-3 mr-1" />
@@ -1460,7 +1460,7 @@ export default function CharacterSheetPage() {
                               type="button"
                               size="sm"
                               variant={newItemType === "item" ? "default" : "outline"}
-                              className={newItemType === "item" ? "bg-blue-600" : ""}
+                              className={newItemType === "item" ? "bg-blue-700/60 text-blue-100" : ""}
                               onClick={() => setNewItemType("item")}
                             >
                               <Package className="w-3 h-3 mr-1" />
