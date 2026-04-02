@@ -164,7 +164,7 @@ type ShadowDiceEffect = {
 const SHADOW_DICE_TABLE: Record<number, ShadowDiceEffect> = {
   1: {
     name: "Fear",
-    description: "Your greatest fear appears in the direction you are facing, and you get frightened by it.",
+    description: "Your greatest fear appears in the direction you are facing, and you get frightened by it for the next round.",
   },
   2: {
     name: "Encouraged",
