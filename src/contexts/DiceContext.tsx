@@ -218,23 +218,45 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
 
   const rollDiceBatch = useCallback(
     async (items: DiceBatchItem[]): Promise<DiceResult[][]> => {
-      if (!diceBoxRef.current || isRolling || items.length === 0) return [];
+      if (!diceBoxRef.current) return [];
+      if (items.length === 0) return [];
+      
+      if (isRolling) {
+        return [];
+      }
 
       setIsRolling(true);
+
+      const ROLL_TIMEOUT_MS = 15000;
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+      const withTimeout = function<T>(promise: Promise<T>): Promise<T> {
+        return new Promise<T>((resolve, reject) => {
+          timeoutId = setTimeout(() => {
+            reject(new Error('Dice roll timeout'));
+          }, ROLL_TIMEOUT_MS);
+          promise.then(resolve).catch(reject).finally(function() {
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+              timeoutId = null;
+            }
+          });
+        });
+      };
 
       try {
         const [first, ...rest] = items;
 
-        const firstRollPromise = diceBoxRef.current.roll(first.notation, first.options);
+        const firstRollPromise = withTimeout(diceBoxRef.current.roll(first.notation, first.options));
 
         const additionalPromises = rest.map((item) => {
           if (typeof diceBoxRef.current!.add === "function") {
-            return diceBoxRef.current!.add(item.notation, {
+            return withTimeout(diceBoxRef.current!.add(item.notation, {
               ...item.options,
               newStartPoint: false,
-            });
+            }));
           }
-          return diceBoxRef.current!.roll(item.notation, item.options);
+          return withTimeout(diceBoxRef.current!.roll(item.notation, item.options));
         });
 
         const allPromises = [firstRollPromise, ...additionalPromises];
@@ -258,6 +280,10 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
         console.error("Batch roll failed:", error);
         return [];
       } finally {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
         setIsRolling(false);
       }
     },
