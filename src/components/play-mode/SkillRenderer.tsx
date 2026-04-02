@@ -22,6 +22,8 @@ interface SkillRendererProps {
     intelligence: number
     athletics: number
   }
+  charismaDie?: number
+  skillLevels?: Record<string, number>
 }
 
 const CLASS_ICONS = {
@@ -40,7 +42,7 @@ const CLASS_COLORS = {
   bard: 'text-purple-500',
 }
 
-export function SkillRenderer({ characterId, classId, skills, characterStats }: SkillRendererProps) {
+export function SkillRenderer({ characterId, classId, skills, characterStats, charismaDie, skillLevels }: SkillRendererProps) {
   const { initializeSkills } = useSkillStore()
   const hasInitialized = useRef(false)
 
@@ -164,7 +166,7 @@ export function SkillRenderer({ characterId, classId, skills, characterStats }: 
         }
 
         if (skill.type === 'expertise-roll') {
-          return <SkillExpertiseRoll key={skill.id} skillId={skill.id} characterId={characterId} characterStats={characterStats} />
+          return <SkillExpertiseRoll key={skill.id} skillId={skill.id} characterId={characterId} characterStats={characterStats} charismaDie={charismaDie} skillLevels={skillLevels} classId={classId} />
         }
 
         return null

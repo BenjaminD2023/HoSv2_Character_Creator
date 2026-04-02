@@ -92,6 +92,8 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
   const hasInitializedRef = useRef(false);
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
   const isErrorRef = useRef(false);
+  const isRollingRef = useRef(false);
+  const rollStartTimeRef = useRef<number | 0>(0);
 
   const initDiceBox = useCallback(async (canvasContainer: HTMLDivElement) => {
     if ((hasInitializedRef.current || isInitializingRef.current || diceBoxRef.current) && !isErrorRef.current) {
@@ -187,20 +189,40 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
 
   const rollDice = useCallback(
     async (notation: string, options?: DiceRollOptions): Promise<DiceResult[]> => {
-      if (!diceBoxRef.current || isRolling) return [];
+      if (!diceBoxRef.current) return [];
+      
+      const STUCK_THRESHOLD_MS = 20000;
+      const ROLL_TIMEOUT_MS = 15000;
+      
+      if (isRollingRef.current) {
+        const elapsed = Date.now() - rollStartTimeRef.current;
+        if (elapsed < STUCK_THRESHOLD_MS) {
+          return [];
+        }
+        isRollingRef.current = false;
+        setIsRolling(false);
+      }
 
+      isRollingRef.current = true;
+      rollStartTimeRef.current = Date.now();
       setIsRolling(true);
 
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
+      
       try {
-        // STRICT: Do NOT sync canvas size or call show() here - just roll on existing instance
-        const rollResult = await diceBoxRef.current.roll(notation, options);
+        const rollPromise = new Promise<DiceRollValue[]>((resolve, reject) => {
+          timeoutId = setTimeout(() => {
+            reject(new Error('Dice roll timeout'));
+          }, ROLL_TIMEOUT_MS);
+          diceBoxRef.current!.roll(notation, options).then(resolve).catch(reject);
+        });
+        
+        const rollResult = await rollPromise;
 
-        // Parse results - dice-box returns an array of roll results
         const parsedResults: DiceResult[] = rollResult.map((roll) => ({
           value: roll.value,
         }));
 
-        // Update results map with timestamp as key
         const newResults = new Map(results);
         newResults.set(Date.now().toString(), parsedResults[0] || { value: 0 });
         setResults(newResults);
@@ -210,10 +232,12 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
         console.error("Roll failed:", error);
         return [];
       } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+        isRollingRef.current = false;
         setIsRolling(false);
       }
     },
-    [isRolling, results]
+    [results]
   );
 
   const rollDiceBatch = useCallback(
@@ -221,25 +245,33 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
       if (!diceBoxRef.current) return [];
       if (items.length === 0) return [];
       
-      if (isRolling) {
-        return [];
+      const STUCK_THRESHOLD_MS = 20000;
+      if (isRollingRef.current) {
+        const elapsed = Date.now() - rollStartTimeRef.current;
+        if (elapsed < STUCK_THRESHOLD_MS) {
+          return [];
+        }
+        isRollingRef.current = false;
+        setIsRolling(false);
       }
 
+      isRollingRef.current = true;
+      rollStartTimeRef.current = Date.now();
       setIsRolling(true);
 
       const ROLL_TIMEOUT_MS = 15000;
-      let timeoutId: ReturnType<typeof setTimeout> | null = null;
+      const timeoutIds: ReturnType<typeof setTimeout>[] = [];
 
       const withTimeout = function<T>(promise: Promise<T>): Promise<T> {
         return new Promise<T>((resolve, reject) => {
-          timeoutId = setTimeout(() => {
+          const id = setTimeout(() => {
             reject(new Error('Dice roll timeout'));
           }, ROLL_TIMEOUT_MS);
+          timeoutIds.push(id);
           promise.then(resolve).catch(reject).finally(function() {
-            if (timeoutId) {
-              clearTimeout(timeoutId);
-              timeoutId = null;
-            }
+            clearTimeout(id);
+            const idx = timeoutIds.indexOf(id);
+            if (idx > -1) timeoutIds.splice(idx, 1);
           });
         });
       };
@@ -280,14 +312,13 @@ export function DiceProvider({ children }: { children: React.ReactNode }) {
         console.error("Batch roll failed:", error);
         return [];
       } finally {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          timeoutId = null;
-        }
+        timeoutIds.forEach(id => clearTimeout(id));
+        timeoutIds.length = 0;
+        isRollingRef.current = false;
         setIsRolling(false);
       }
     },
-    [isRolling, results]
+    [results]
   );
 
   const clearDice = useCallback(() => {

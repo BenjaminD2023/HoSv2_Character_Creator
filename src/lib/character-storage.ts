@@ -1,12 +1,31 @@
 export const CHARACTERS_KEY = "hos.characters.v2";
 export const SHEET_STATE_KEY = "hos.character-sheet.state";
 
+export type Personality = 'mayhem' | 'chaotic' | 'wild' | 'hyper' | 'frenzy';
+
+export const PERSONALITY_DICE: Record<Personality, number> = {
+  mayhem: 12,
+  chaotic: 10,
+  wild: 8,
+  hyper: 6,
+  frenzy: 4,
+};
+
+export const PERSONALITY_LABELS: Record<Personality, string> = {
+  mayhem: 'Mayhem (d12)',
+  chaotic: 'Chaotic (d10)',
+  wild: 'Wild (d8)',
+  hyper: 'Hyper (d6)',
+  frenzy: 'Frenzy (d4)',
+};
+
 export interface Character {
   id: string;
   name: string;
   className: string;
   createdAt: string;
   updatedAt: string;
+  personality?: Personality;
   data: Record<string, unknown>;
   sheetState?: {
     currentHp: number;

@@ -13,7 +13,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useDice } from "@/contexts";
 import { Sword, Brain, Zap, RotateCcw, Check, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { saveCharacter, getCharacter, createCharacter, Character } from "@/lib/character-storage";
+import { saveCharacter, getCharacter, createCharacter, Character, Personality, PERSONALITY_DICE, PERSONALITY_LABELS } from "@/lib/character-storage";
 
 type AttributeKey = "strength" | "intelligence" | "athletics";
 type Tier = "basic" | "intermediate" | "advanced" | "capstone";
@@ -91,6 +91,7 @@ type SavedCharacterState = {
   savedAt: string;
   activeStep: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   characterName: string;
+  personality: Personality;
   rolls: number[];
   rollBreakdown: number[][];
   assignment: Record<AttributeKey, string>;
@@ -287,6 +288,7 @@ const CLASS_DATA: Record<ClassId, ClassDefinition> = {
       { name: "Soothing Ballad", tier: "advanced" },
       { name: "Martial Epic", tier: "advanced" },
       { name: "Decoy", tier: "advanced" },
+      { name: "Bard of the World", tier: "capstone" },
     ],
   },
 };
@@ -320,6 +322,7 @@ function BuilderContent() {
   const { isReady, isRolling: isRollingDice, rollDice, rollDiceBatch, clearDice } = useDice();
   const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1);
   const [characterName, setCharacterName] = useState("");
+  const [personality, setPersonality] = useState<Personality>("mayhem");
   const [editMode, setEditMode] = useState(false);
   const [editCharacterId, setEditCharacterId] = useState<string | null>(null);
 
@@ -476,6 +479,7 @@ function BuilderContent() {
       savedAt: new Date().toISOString(),
       activeStep,
       characterName,
+      personality,
       rolls,
       rollBreakdown,
       assignment,
@@ -515,6 +519,7 @@ function BuilderContent() {
     manualMode,
     manualStats,
     maxHp,
+    personality,
     rollBreakdown,
     rolls,
     selectedClassId,
@@ -526,6 +531,7 @@ function BuilderContent() {
   const applySavedState = useCallback((parsed: SavedCharacterState) => {
     setActiveStep(parsed.activeStep ?? 1);
     setCharacterName(parsed.characterName ?? "");
+    setPersonality(parsed.personality ?? "mayhem");
     setRolls(Array.isArray(parsed.rolls) ? parsed.rolls : []);
     setRollBreakdown(Array.isArray(parsed.rollBreakdown) ? parsed.rollBreakdown : []);
     setAssignment(parsed.assignment ?? { strength: "", intelligence: "", athletics: "" });
@@ -544,6 +550,7 @@ function BuilderContent() {
 
   const resetBuilderState = useCallback(() => {
     setCharacterName("");
+    setPersonality("mayhem");
     setRolls([]);
     setRollBreakdown([]);
     setAssignment({ strength: "", intelligence: "", athletics: "" });
@@ -1000,8 +1007,7 @@ function BuilderContent() {
     }));
 
     try {
-      // Use dice context's batch roll directly (no staggering)
-      const groups = await rollDiceBatch(items);
+      const groups = await rollBatchWith3d(items);
 
       if (groups.length < extraDiceCount) {
         return;
@@ -1019,8 +1025,6 @@ function BuilderContent() {
       });
     } catch (error) {
       console.error("Extra HP roll failed:", error);
-    } finally {
-      setIsRolling3d(false);
     }
   };
 
@@ -1149,7 +1153,7 @@ small{color:#bfb7a6}
         <div className="mb-8 parchment-frame p-6">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-200 via-amber-100 to-orange-200 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold text-amber-800 dark:text-amber-100">
                 House of Shadows Character Builder
               </h1>
               <p className="text-sm text-muted-foreground mt-1">SRD-driven flow: Stats → Class → HP → XP → Skills → Sheet</p>
@@ -1210,7 +1214,7 @@ small{color:#bfb7a6}
         {activeStep === 1 && (
           <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
             <CardHeader className="glass-header">
-              <CardTitle className="text-2xl font-bold text-amber-100">Step 1: Core Stats</CardTitle>
+              <CardTitle className="text-2xl font-bold text-amber-800 dark:text-amber-100">Step 1: Core Stats</CardTitle>
               <CardDescription className="text-muted-foreground">Roll 4d6 drop lowest, one stat at a time; assign manually or enter direct scores.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1222,6 +1226,25 @@ small{color:#bfb7a6}
                 <div className="flex items-end gap-2">
                   <Button variant={manualMode ? "outline" : "default"} onClick={() => setManualMode(false)}>Roll Mode</Button>
                   <Button variant={manualMode ? "default" : "outline"} onClick={() => setManualMode(true)}>Manual Mode</Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-xs text-muted-foreground">Personality (Shadow Dice)</label>
+                <div className="flex flex-wrap gap-2">
+                  {(Object.keys(PERSONALITY_DICE) as Personality[]).map((p) => (
+                    <Button
+                      key={p}
+                      variant={personality === p ? "default" : "outline"}
+                      onClick={() => setPersonality(p)}
+                      className="flex items-center gap-2"
+                    >
+                      <span className="capitalize">{p}</span>
+                      <Badge variant="secondary" className="text-xs">
+                        d{PERSONALITY_DICE[p]}
+                      </Badge>
+                    </Button>
+                  ))}
                 </div>
               </div>
 
@@ -1464,7 +1487,7 @@ small{color:#bfb7a6}
         {activeStep === 2 && (
           <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
             <CardHeader className="glass-header">
-              <CardTitle className="text-2xl font-bold text-amber-100">Step 2: Class Selection</CardTitle>
+              <CardTitle className="text-2xl font-bold text-amber-800 dark:text-amber-100">Step 2: Class Selection</CardTitle>
               <CardDescription className="text-muted-foreground">Select your HoS class data profile.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1515,7 +1538,7 @@ small{color:#bfb7a6}
         {activeStep === 3 && (
           <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
             <CardHeader className="glass-header">
-              <CardTitle className="text-2xl font-bold text-amber-100">Step 3: Base HP Generation</CardTitle>
+              <CardTitle className="text-2xl font-bold text-amber-800 dark:text-amber-100">Step 3: Base HP Generation</CardTitle>
               <CardDescription className="text-muted-foreground">Roll 1 class hit die and add class-specific attribute modifier.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1569,7 +1592,7 @@ small{color:#bfb7a6}
         {activeStep === 4 && (
           <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
             <CardHeader className="glass-header">
-              <CardTitle className="text-2xl font-bold text-amber-100">Step 4: XP Input</CardTitle>
+              <CardTitle className="text-2xl font-bold text-amber-800 dark:text-amber-100">Step 4: XP Input</CardTitle>
               <CardDescription className="text-muted-foreground">Set starting XP and determine extra hit dice thresholds.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1604,7 +1627,7 @@ small{color:#bfb7a6}
         {activeStep === 5 && (
           <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
             <CardHeader className="glass-header">
-              <CardTitle className="text-2xl font-bold text-amber-100">Step 5: Extra HP Generation</CardTitle>
+              <CardTitle className="text-2xl font-bold text-amber-800 dark:text-amber-100">Step 5: Extra HP Generation</CardTitle>
               <CardDescription className="text-muted-foreground">Roll one extra hit die per full 3 XP, no modifiers added.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1675,7 +1698,7 @@ small{color:#bfb7a6}
         {activeStep === 6 && (
           <Card className="parchment-frame-aged animate-in fade-in slide-in-from-bottom-4 duration-300">
             <CardHeader className="glass-header">
-              <CardTitle className="text-2xl font-bold text-amber-100">Step 6: Skill Purchasing</CardTitle>
+              <CardTitle className="text-2xl font-bold text-amber-800 dark:text-amber-100">Step 6: Skill Purchasing</CardTitle>
               <CardDescription className="text-muted-foreground">Spend XP on class skills with active Tier UP/Tier MAX constraints.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1736,7 +1759,7 @@ small{color:#bfb7a6}
             <div className="corner-flourish bottom-left" />
             <div className="corner-flourish bottom-right" />
             <CardHeader className="fantasy-header">
-              <CardTitle className="text-2xl font-bold text-amber-100">Character Summary</CardTitle>
+              <CardTitle className="text-2xl font-bold text-amber-800 dark:text-amber-100">Character Summary</CardTitle>
               <CardDescription className="text-muted-foreground">D20 checks/saves, damage reduction armor, spell DC, and purchased skills.</CardDescription>
             </CardHeader>
           <CardContent className="space-y-4">

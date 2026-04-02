@@ -497,6 +497,15 @@ export const SKILL_DEFINITIONS: Record<string, SkillDefinition> = {
     refresh: 'Day',
     description: 'Create a decoy to distract enemies',
   },
+  'bard-bard-of-the-world': {
+    id: 'bard-bard-of-the-world',
+    name: 'Bard of the World',
+    uiType: 'Passive',
+    class: 'bard',
+    calculateMax: (sl) => sl,
+    refresh: 'Day',
+    description: '+SL to all Charisma Dice rolls. Can add/subtract SL*2 to Shadow Dice results (can exceed dice size, max 12).',
+  },
 }
 
 function createInitialSkillState(

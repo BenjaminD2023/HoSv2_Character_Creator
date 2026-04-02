@@ -17,6 +17,9 @@ interface SkillExpertiseRollProps {
     intelligence: number
     athletics: number
   }
+  charismaDie?: number
+  skillLevels?: Record<string, number>
+  classId?: 'fighter' | 'archer' | 'wizard' | 'priest' | 'bard'
 }
 
 type ExpertiseAttribute = 'strength' | 'athletics' | 'intelligence' | 'charisma'
@@ -44,6 +47,7 @@ const EXPERTISE_CONFIG: Record<ExpertiseAttribute, {
   label: string
   icon: typeof Swords
   color: string
+  diceSize?: number
   getModifier: (stats: { strength: number; intelligence: number; athletics: number }) => number
 }> = {
   strength: {
@@ -72,7 +76,7 @@ const EXPERTISE_CONFIG: Record<ExpertiseAttribute, {
   },
 }
 
-export function SkillExpertiseRoll({ skillId, characterId, className, characterStats }: SkillExpertiseRollProps) {
+export function SkillExpertiseRoll({ skillId, characterId, className, characterStats, charismaDie = 6, skillLevels = {}, classId }: SkillExpertiseRollProps) {
   const skill = useSkill(characterId, skillId)
   const { rollDice, isReady } = useDice()
   const [rollResult, setRollResult] = useState<{
@@ -91,11 +95,18 @@ export function SkillExpertiseRoll({ skillId, characterId, className, characterS
     if (!isReady || !characterStats) return
 
     const config = EXPERTISE_CONFIG[attr]
+    const isCharisma = attr === 'charisma'
+    const diceSize = isCharisma ? charismaDie : 20
+    
     const baseModifier = config.getModifier(characterStats)
     const skillBonus = skill.level
-    const totalModifier = baseModifier + skillBonus
+    
+    const hasBardOfTheWorld = classId === 'bard' && skillLevels['Bard of the World'] && isCharisma
+    const bardBonus = hasBardOfTheWorld ? skillLevels['Bard of the World'] : 0
+    
+    const totalModifier = baseModifier + skillBonus + bardBonus
 
-    const results = await rollDice('1d20', { theme: 'smooth', themeColor: config.color })
+    const results = await rollDice(`1d${diceSize}`, { theme: 'smooth', themeColor: config.color })
     const naturalRoll = results[0]?.value || 0
     const total = naturalRoll + totalModifier
 
@@ -105,7 +116,7 @@ export function SkillExpertiseRoll({ skillId, characterId, className, characterS
       modifier: totalModifier,
       total,
       type: attr,
-      diceSize: 20,
+      diceSize,
       skillBonus,
     })
   }
@@ -118,8 +129,11 @@ export function SkillExpertiseRoll({ skillId, characterId, className, characterS
           {(Object.keys(EXPERTISE_CONFIG) as ExpertiseAttribute[]).map((attr) => {
             const config = EXPERTISE_CONFIG[attr]
             const Icon = config.icon
+            const isCharisma = attr === 'charisma'
             const baseMod = characterStats ? config.getModifier(characterStats) : 0
-            const totalMod = baseMod + skill.level
+            const hasBardOfTheWorld = classId === 'bard' && skillLevels?.['Bard of the World'] && isCharisma
+            const bardBonus = hasBardOfTheWorld ? skillLevels['Bard of the World'] : 0
+            const totalMod = baseMod + skill.level + bardBonus
 
             return (
               <Button

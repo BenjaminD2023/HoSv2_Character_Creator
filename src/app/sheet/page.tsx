@@ -7,13 +7,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Edit2, Minus, Plus, Heart, Sword, Brain, Zap, Shield, Sparkles, Dices, Trash2, Package, Settings2, Moon } from "lucide-react";
+import { Edit2, Minus, Plus, Heart, Sword, Brain, Zap, Shield, Sparkles, Dices, Trash2, Package, Settings2, Moon, Skull } from "lucide-react";
 import { DiceCanvas } from "@/components/DiceCanvas";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { RollResultPopup, RollType } from "@/components/RollResultPopup";
 import { SkillRenderer, SpellCasting } from "@/components/play-mode";
 import { useDice } from "@/contexts";
 import { useSkillStore } from "@/stores/skillStore";
+import { getCharacter, Character, Personality, PERSONALITY_DICE, PERSONALITY_LABELS } from "@/lib/character-storage";
 import {
   Dialog,
   DialogContent,
@@ -54,6 +55,7 @@ type CharacterData = {
   armorPieces: { name: string; armor: number }[];
   totalStartingArmor: number;
   equipmentMisc: string[];
+  personality: Personality;
 };
 
 type SavedSheetState = {
@@ -150,6 +152,64 @@ const SKILL_NAME_TO_ID: Record<string, string> = {
   'Martial Epic': 'bard-martial-epic',
   'Evasion': 'bard-evasion',
   'Decoy': 'bard-decoy',
+  'Bard of the World': 'bard-bard-of-the-world',
+};
+
+// Shadow Dice Table
+type ShadowDiceEffect = {
+  name: string;
+  description: string;
+};
+
+const SHADOW_DICE_TABLE: Record<number, ShadowDiceEffect> = {
+  1: {
+    name: "Fear",
+    description: "Your greatest fear appears in the direction you are facing, and you get frightened by it.",
+  },
+  2: {
+    name: "Encouraged",
+    description: "You feel encouraged and you can add 1d4 to your next roll.",
+  },
+  3: {
+    name: "Trip",
+    description: "You trip and is restrained to your distance in the next round.",
+  },
+  4: {
+    name: "Support",
+    description: "You can choose up to 3 creatures and they get a +3 to their next roll.",
+  },
+  5: {
+    name: "Size (Small)",
+    description: "You turn as small as a rabbit, you can't move in the next round. You can't make melee or ranged attacks, and all your spell damage is halved.",
+  },
+  6: {
+    name: "Size (Giant)",
+    description: "You grow as large as a giant, all your melee attack damage double in the next round.",
+  },
+  7: {
+    name: "Earthquake",
+    description: "You feel like the ground shakes, and you fall prone for the next round.",
+  },
+  8: {
+    name: "Hold",
+    description: "You can hold a creature in place, and they cannot move for the next round.",
+  },
+  9: {
+    name: "Transformed",
+    description: "You randomly transform into an animal determined by the GM in the next round.",
+  },
+  10: {
+    name: "Wings",
+    description: "You grow temporary wings and you can fly until the next time you roll shadow dice or your next long rest.",
+  },
+  11: {
+    name: "Drain",
+    description: "You feel energy being drained from your bones, and your highest stat's score (STR, ATH, or INT) becomes 3 (-4). If you have more than one highest score, all of them become 3 (-4). The effect ends on the beginning of your next round.",
+  },
+  12: {
+    name: "Burst",
+    description: "You feel a burst of energy into your bones, and one of your stat's scores (STR, ATH, or INT) becomes 25 (+7) until the next time you roll shadow dice or your next long rest.",
+  },
 };
 
 function getModifier(value: number): number {
@@ -280,9 +340,22 @@ export default function CharacterSheetPage() {
     show: boolean;
     x: number;
     y: number;
-    type: "stat" | "roll" | "initiative" | "charisma";
+    type: "stat" | "roll" | "initiative" | "charisma" | "shadow";
     key?: AttributeKey | string;
   }>({ show: false, x: 0, y: 0, type: "stat" });
+
+  // Shadow Dice state
+  const [shadowDiceResult, setShadowDiceResult] = useState<{
+    roll: number;
+    modifiedRoll: number;
+    effect: ShadowDiceEffect;
+    effectNumber: number;
+    personality: Personality;
+    canModify: boolean;
+    modificationApplied: number;
+  } | null>(null);
+  const [showShadowDiceResult, setShowShadowDiceResult] = useState(false);
+  const [editingPersonality, setEditingPersonality] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(CHARACTER_STORAGE_KEY);
@@ -341,6 +414,7 @@ export default function CharacterSheetPage() {
           armorPieces: parsed.armorPieces || [],
           totalStartingArmor: parsed.totalStartingArmor || 0,
           equipmentMisc: parsed.equipmentMisc || [],
+          personality: parsed.personality || "mayhem",
         };
         setCharacter(charData);
 
@@ -677,6 +751,96 @@ export default function CharacterSheetPage() {
     setContextMenu(prev => ({ ...prev, show: false }));
   };
 
+  const getBardOfTheWorldSL = (): number => {
+    if (!character || character.className.toLowerCase() !== 'bard') return 0;
+    const hasBardOfTheWorld = character.skills.some(s => s === 'Bard of the World');
+    if (!hasBardOfTheWorld) return 0;
+    return character.skillLevels['Bard of the World'] || 0;
+  };
+
+  const rollShadowDice = async () => {
+    if (!isReady || !character) return;
+    setShowDice(true);
+    const diceSize = PERSONALITY_DICE[character.personality];
+    const results = await rollDice(`1d${diceSize}`, { theme: "smooth", themeColor: "#9333EA" });
+    const naturalRoll = results[0]?.value || 0;
+    const effectNumber = Math.min(naturalRoll, 12);
+    const effect = SHADOW_DICE_TABLE[effectNumber];
+    const bardSL = getBardOfTheWorldSL();
+    const canModify = bardSL > 0;
+
+    setShadowDiceResult({
+      roll: naturalRoll,
+      modifiedRoll: naturalRoll,
+      effect,
+      effectNumber,
+      personality: character.personality,
+      canModify,
+      modificationApplied: 0,
+    });
+    setShowShadowDiceResult(true);
+  };
+
+  const modifyShadowDice = (delta: number) => {
+    if (!shadowDiceResult) return;
+    const bardSL = getBardOfTheWorldSL();
+    const maxMod = bardSL * 2;
+    const newModification = Math.max(-maxMod, Math.min(maxMod, shadowDiceResult.modificationApplied + delta));
+    const newModifiedRoll = Math.max(1, Math.min(12, shadowDiceResult.roll + newModification));
+    const newEffectNumber = Math.min(newModifiedRoll, 12);
+    const newEffect = SHADOW_DICE_TABLE[newEffectNumber];
+
+    setShadowDiceResult({
+      ...shadowDiceResult,
+      modifiedRoll: newModifiedRoll,
+      effect: newEffect,
+      effectNumber: newEffectNumber,
+      modificationApplied: newModification,
+    });
+  };
+
+  const rollCharismaWithBonus = async (mode: "normal" | "advantage" | "disadvantage" = "normal") => {
+    if (!isReady || !character) return;
+    setShowDice(true);
+    const diceNotation = `1d${character.charismaDie}`;
+    const bardSL = getBardOfTheWorldSL();
+    let finalRoll: number;
+    let roll1: number | undefined;
+    let roll2: number | undefined;
+    let kept: "roll1" | "roll2" | undefined;
+
+    if (mode === "advantage" || mode === "disadvantage") {
+      const batchResults = await rollDiceBatch([
+        { notation: diceNotation, options: { theme: "smooth", themeColor: "#F4D03F" } },
+        { notation: diceNotation, options: { theme: "smooth", themeColor: "#F4D03F" } }
+      ]);
+      const results1 = batchResults[0] || [{ value: 0 }];
+      const results2 = batchResults[1] || [{ value: 0 }];
+      roll1 = results1[0]?.value || 0;
+      roll2 = results2[0]?.value || 0;
+      finalRoll = mode === "advantage" ? Math.max(roll1, roll2) : Math.min(roll1, roll2);
+      kept = mode === "advantage" ? (roll1 > roll2 ? "roll1" : "roll2") : (roll1 < roll2 ? "roll1" : "roll2");
+    } else {
+      const results = await rollDice(diceNotation, { theme: "smooth", themeColor: "#F4D03F" });
+      finalRoll = results[0]?.value || 0;
+    }
+
+    const modifier = bardSL;
+    setRollResult({
+      label: "Charisma",
+      naturalRoll: finalRoll,
+      modifier,
+      total: finalRoll + modifier,
+      type: "charisma",
+      diceSize: character.charismaDie,
+      mode,
+      roll1,
+      roll2,
+      kept,
+    });
+    setContextMenu(prev => ({ ...prev, show: false }));
+  };
+
   // Custom dice roller with advantage/disadvantage support
   const rollCustomDice = async () => {
     if (!isReady) return;
@@ -871,6 +1035,93 @@ export default function CharacterSheetPage() {
       <DiceCanvas visible={showDice} onClose={() => setShowDice(false)} />
       <RollResultPopup result={rollResult} onClose={() => setRollResult(null)} />
 
+      {showShadowDiceResult && shadowDiceResult && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowShadowDiceResult(false)}>
+          <Card className="w-full max-w-lg mx-4 bg-card border-purple-700/50 dark:border-purple-500/50 shadow-2xl shadow-purple-700/20 dark:shadow-purple-500/20" onClick={(e) => e.stopPropagation()}>
+            <CardContent className="p-6">
+              <div className="text-center mb-4">
+                <p className="text-xs text-purple-700 dark:text-purple-400 uppercase tracking-wider mb-1">Shadow Dice</p>
+                <p className="text-sm text-muted-foreground">{PERSONALITY_LABELS[shadowDiceResult.personality]}</p>
+              </div>
+              
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="text-5xl font-bold text-purple-700 dark:text-purple-400">
+                  {shadowDiceResult.modifiedRoll}
+                </div>
+                {shadowDiceResult.modificationApplied !== 0 && (
+                  <div className="text-sm text-muted-foreground">
+                    <span className="text-xs">rolled</span>
+                    <span className="mx-1">{shadowDiceResult.roll}</span>
+                    <span className="text-xs">{shadowDiceResult.modificationApplied > 0 ? '+' : ''}{shadowDiceResult.modificationApplied}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-purple-700/10 dark:bg-purple-500/10 border border-purple-700/30 dark:border-purple-500/30 rounded-lg p-4 mb-4" title={shadowDiceResult.effect.description}>
+                <p className="text-lg font-semibold text-purple-800 dark:text-purple-300 mb-2">
+                  {shadowDiceResult.effectNumber}. {shadowDiceResult.effect.name}
+                </p>
+                <p className="text-sm text-foreground leading-relaxed">{shadowDiceResult.effect.description}</p>
+              </div>
+
+              {shadowDiceResult.canModify && (
+                <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                  <p className="text-xs text-amber-600 dark:text-amber-400 text-center mb-2">Bard of the World: Modify Result</p>
+                  <div className="flex justify-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-red-500/50 text-red-500"
+                      onClick={() => modifyShadowDice(-2)}
+                      disabled={shadowDiceResult.modificationApplied <= -(getBardOfTheWorldSL() * 2) + 1}
+                    >
+                      -2
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-amber-500/50 text-amber-500"
+                      onClick={() => modifyShadowDice(-1)}
+                      disabled={shadowDiceResult.modificationApplied <= -(getBardOfTheWorldSL() * 2)}
+                    >
+                      -1
+                    </Button>
+                    <span className="flex items-center px-3 text-sm text-muted-foreground">
+                      {shadowDiceResult.modificationApplied}/{getBardOfTheWorldSL() * 2}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-emerald-500/50 text-emerald-500"
+                      onClick={() => modifyShadowDice(1)}
+                      disabled={shadowDiceResult.modificationApplied >= getBardOfTheWorldSL() * 2}
+                    >
+                      +1
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-emerald-500/50 text-emerald-500"
+                      onClick={() => modifyShadowDice(2)}
+                      disabled={shadowDiceResult.modificationApplied >= getBardOfTheWorldSL() * 2 - 1}
+                    >
+                      +2
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                className="w-full bg-purple-600 hover:bg-purple-500"
+                onClick={() => setShowShadowDiceResult(false)}
+              >
+                Close
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Context Menu */}
       {contextMenu.show && (
         <div
@@ -935,21 +1186,21 @@ export default function CharacterSheetPage() {
             <>
               <button
                 className="w-full px-3 py-2 text-left text-sm text-emerald-400 hover:bg-muted/50 transition-colors flex items-center gap-2"
-                onClick={() => rollCharismaWithMode("advantage")}
+                onClick={() => rollCharismaWithBonus("advantage")}
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 Advantage
               </button>
               <button
                 className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted/50 transition-colors flex items-center gap-2"
-                onClick={() => rollCharismaWithMode("normal")}
+                onClick={() => rollCharismaWithBonus("normal")}
               >
                 <span className="w-2 h-2 rounded-full bg-muted0" />
                 Flat Roll
               </button>
               <button
                 className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-muted/50 transition-colors flex items-center gap-2"
-                onClick={() => rollCharismaWithMode("disadvantage")}
+                onClick={() => rollCharismaWithBonus("disadvantage")}
               >
                 <span className="w-2 h-2 rounded-full bg-red-400" />
                 Disadvantage
@@ -1236,7 +1487,7 @@ export default function CharacterSheetPage() {
               </button>
             </div>
 
-            {/* Hit Die & Proficiency */}
+            {/* Hit Die & Inner Chaos */}
             <div className="grid grid-cols-2 gap-3">
               <Card className="parchment-frame">
                 <div className="corner-flourish top-left" />
@@ -1246,15 +1497,88 @@ export default function CharacterSheetPage() {
                   <p className="text-2xl font-bold text-foreground">d{character.hitDie}</p>
                 </CardContent>
               </Card>
-              <Card className="parchment-frame">
+              <Card className="parchment-frame border-purple-500/30">
                 <div className="corner-flourish top-left" />
                 <div className="corner-flourish top-right" />
-                <CardContent className="p-4 text-center">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Proficiency</p>
-                  <p className="text-2xl font-bold text-foreground">+{character.proficiencyBonus}</p>
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1">
+                      <Skull className="w-3 h-3 text-purple-500" />
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Inner Chaos</p>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] text-purple-600 dark:text-purple-400 border-purple-500/50">
+                      d{PERSONALITY_DICE[character.personality]}
+                    </Badge>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full h-8 text-xs font-semibold border-purple-500/50 bg-purple-100/80 dark:bg-purple-900/40 hover:bg-purple-200/80 dark:hover:bg-purple-800/50 hover:border-purple-500/60 text-purple-700 dark:text-purple-200"
+                    onClick={rollShadowDice}
+                    disabled={!isReady}
+                  >
+                    <Skull className="w-3 h-3 mr-1" />
+                    Roll
+                  </Button>
                 </CardContent>
               </Card>
             </div>
+
+            {/* Inventory */}
+            <Card className="parchment-frame">
+              <div className="corner-flourish top-left" />
+              <div className="corner-flourish top-right" />
+              <div className="corner-flourish bottom-left" />
+              <div className="corner-flourish bottom-right" />
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <Package className="w-3 h-3" />
+                    Inventory
+                  </p>
+                  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 px-2 text-xs text-primary hover:text-primary/80 hover:bg-primary/10"
+                        onClick={() => {
+                          resetItemForm();
+                          setNewItemType("item");
+                        }}
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add
+                      </Button>
+                    </DialogTrigger>
+                  </Dialog>
+                </div>
+
+                <div className="space-y-2 max-h-[150px] overflow-y-auto">
+                  {items.length === 0 ? (
+                    <p className="text-sm text-foreground/30 text-center py-3">No items</p>
+                  ) : (
+                    items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-2 rounded-lg bg-background border border-border/50 hover:border-blue-500/30 hover:bg-blue-500/5 transition-colors cursor-pointer"
+                        onClick={() => startEditItem(item)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Package className="w-3 h-3 text-blue-400" />
+                          <span className="text-xs text-foreground">{item.name}</span>
+                        </div>
+                        {item.quantity > 1 && (
+                          <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">
+                            x{item.quantity}
+                          </Badge>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Middle Column - HP & Weapons */}
@@ -1697,14 +2021,17 @@ export default function CharacterSheetPage() {
                   </button>
 
                   <button
-                    onClick={rollCharisma}
+                    onClick={() => rollCharismaWithBonus("normal")}
                     onContextMenu={(e) => handleContextMenu(e, "charisma")}
                     disabled={!isReady}
                     className="group relative overflow-hidden rounded-xl p-4 border border-border bg-card transition-transform hover:scale-105 hover:border-amber-500/30"
                   >
                     <Sparkles className="w-6 h-6 text-muted-foreground mb-2 mx-auto group-hover:scale-110 transition-transform" />
                     <p className="text-sm font-medium text-foreground">Charisma</p>
-                    <p className="text-xs text-muted-foreground">d{character.charismaDie}</p>
+                    <p className="text-xs text-muted-foreground">
+                      d{character.charismaDie}
+                      {getBardOfTheWorldSL() > 0 && <span className="text-amber-400"> +{getBardOfTheWorldSL()}</span>}
+                    </p>
                   </button>
                 </div>
               </CardContent>
@@ -1768,6 +2095,8 @@ export default function CharacterSheetPage() {
                       classId={character.className.toLowerCase() as 'fighter' | 'archer' | 'wizard' | 'priest' | 'bard'}
                       skills={mappedSkills}
                       characterStats={character.stats}
+                      charismaDie={character.charismaDie}
+                      skillLevels={character.skillLevels}
                     />
                   )
                 })()}
