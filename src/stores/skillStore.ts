@@ -46,7 +46,7 @@ export const SKILL_DEFINITIONS: Record<string, SkillDefinition> = {
     class: 'fighter',
     calculateMax: () => 0,
     refresh: 'Day',
-    description: '+3 Melee damage. Rolling 10 knocks target Prone.',
+    description: '+SL*2 melee damage',
   },
   'fighter-enchanted-weapon': {
     id: 'fighter-enchanted-weapon',
@@ -65,7 +65,7 @@ export const SKILL_DEFINITIONS: Record<string, SkillDefinition> = {
     class: 'fighter',
     calculateMax: () => 0,
     refresh: 'Day',
-    description: 'Describe heroic action for GM advantage',
+    description: 'Perform a heroic deed',
   },
   'fighter-rage': {
     id: 'fighter-rage',
@@ -79,7 +79,7 @@ export const SKILL_DEFINITIONS: Record<string, SkillDefinition> = {
   'fighter-zephyrus-echo': {
     id: 'fighter-zephyrus-echo',
     name: "Zephyrus' Echo",
-    uiType: 'Action',
+    uiType: 'Tracker',
     class: 'fighter',
     calculateMax: (sl) => sl,
     refresh: 'Day',
@@ -93,6 +93,16 @@ export const SKILL_DEFINITIONS: Record<string, SkillDefinition> = {
     calculateMax: (sl) => sl,
     refresh: 'Day',
     description: 'Resist debilitating effects',
+  },
+  'fighter-grappler': {
+    id: 'fighter-grappler',
+    name: 'Grappler',
+    uiType: 'Action',
+    class: 'fighter',
+    calculateMax: () => 0,
+    refresh: 'Day',
+    description: 'Use your action to grapple a target within melee range. Roll an opposed STR check (succeed if you roll higher than target). On success, target is grappled. Grappled targets take SL + STR damage at start of their turn, and your attacks on them deal double damage. Target can attempt opposed STR check at end of their turn to escape.',
+    specialRules: ['grapple'],
   },
   'archer-flexible-shots': {
     id: 'archer-flexible-shots',
@@ -391,11 +401,11 @@ export const SKILL_DEFINITIONS: Record<string, SkillDefinition> = {
   'bard-expertise': {
     id: 'bard-expertise',
     name: 'Expertise',
-    uiType: 'Config',
+    uiType: 'ExpertiseRoll',
     class: 'bard',
     calculateMax: (sl) => sl,
     refresh: 'Day',
-    description: 'Select a skill for +SL bonus',
+    description: 'Add SL to STR, ATH, INT, and CHA checks when rolling from this skill.',
   },
   'bard-professional-influencer': {
     id: 'bard-professional-influencer',
@@ -570,6 +580,9 @@ export const useSkillStore = create<SkillStore>()(
                   existingSkill.maxUses = newMaxUses
                   existingSkill.currentUses = Math.min(newCurrentUses, newMaxUses)
                 }
+                existingSkill.name = definition.name
+                existingSkill.description = definition.description
+                existingSkill.refresh = definition.refresh
                 continue
               }
 

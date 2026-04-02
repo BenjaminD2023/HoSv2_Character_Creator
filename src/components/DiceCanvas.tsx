@@ -23,6 +23,8 @@ export function DiceCanvas({ className, visible = true, onClose }: DiceCanvasPro
   }, []);
 
   const portalTarget = mounted ? document.body : null;
+  
+  const shouldBeVisible = visible || isRolling;
 
   // STRICT: Only run initialization ONCE on mount
   useEffect(() => {
@@ -51,7 +53,7 @@ export function DiceCanvas({ className, visible = true, onClose }: DiceCanvasPro
     <div
       className={cn(
         "fixed inset-0 z-50 pointer-events-none transition-opacity duration-300",
-        visible ? "opacity-100" : "opacity-0",
+        shouldBeVisible ? "opacity-100" : "opacity-0",
         className
       )}
     >
@@ -59,7 +61,7 @@ export function DiceCanvas({ className, visible = true, onClose }: DiceCanvasPro
       <div
         className={cn(
           "pointer-events-auto absolute top-4 left-1/2 -translate-x-1/2 z-[60] transition-opacity duration-300",
-          visible && isRolling ? "opacity-100" : "opacity-0 pointer-events-none"
+          shouldBeVisible && isRolling ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
       >
         <div className="bg-background/95 border border-border/50 rounded-lg px-4 py-2 shadow-lg flex items-center gap-3">
@@ -76,8 +78,8 @@ export function DiceCanvas({ className, visible = true, onClose }: DiceCanvasPro
         style={{
           width: "100vw",
           height: "100vh",
-          pointerEvents: visible ? "auto" : "none",
-          opacity: visible ? 1 : 0,
+          pointerEvents: shouldBeVisible ? "auto" : "none",
+          opacity: shouldBeVisible ? 1 : 0,
           transition: "opacity 300ms ease",
         }}
       >
@@ -88,7 +90,7 @@ export function DiceCanvas({ className, visible = true, onClose }: DiceCanvasPro
       <div
         className={cn(
           "fixed inset-0 pointer-events-auto cursor-pointer transition-opacity duration-300",
-          visible && !isRolling ? "opacity-100" : "opacity-0 pointer-events-none"
+          shouldBeVisible && !isRolling ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
         onClick={handleClose}
         style={{ zIndex: 52, background: "transparent" }}
@@ -98,7 +100,7 @@ export function DiceCanvas({ className, visible = true, onClose }: DiceCanvasPro
       <div
         className={cn(
           "fixed inset-0 flex items-center justify-center bg-background/90 pointer-events-auto transition-opacity duration-300",
-          visible && !isReady && !isError ? "opacity-100 z-[53]" : "opacity-0 pointer-events-none z-0"
+          shouldBeVisible && !isReady && !isError ? "opacity-100 z-[53]" : "opacity-0 pointer-events-none z-0"
         )}
       >
         <div className="text-center space-y-2">
@@ -111,7 +113,7 @@ export function DiceCanvas({ className, visible = true, onClose }: DiceCanvasPro
       <div
         className={cn(
           "fixed inset-0 flex items-center justify-center bg-background/90 pointer-events-auto transition-opacity duration-300",
-          visible && isError ? "opacity-100 z-[53]" : "opacity-0 pointer-events-none z-0"
+          shouldBeVisible && isError ? "opacity-100 z-[53]" : "opacity-0 pointer-events-none z-0"
         )}
       >
         <div className="text-center space-y-3 max-w-md px-4">
@@ -134,7 +136,7 @@ export function DiceCanvas({ className, visible = true, onClose }: DiceCanvasPro
         onClick={handleClose}
         className={cn(
           "pointer-events-auto absolute top-4 right-4 p-2 bg-background/90 hover:bg-muted rounded-full transition-colors border border-border/50 shadow-lg",
-          visible && onClose ? "opacity-100 z-[54]" : "opacity-0 pointer-events-none z-0"
+          shouldBeVisible && onClose ? "opacity-100 z-[54]" : "opacity-0 pointer-events-none z-0"
         )}
       >
         <X className="h-5 w-5" />

@@ -10,6 +10,7 @@ export type UIType =
   | 'Passive' 
   | 'Action' 
   | 'Toggle & Tracker'
+  | 'ExpertiseRoll'
 
 export type RefreshTiming = 'Day' | 'Combat' | 'Sleep' | 'Per Combat Round'
 

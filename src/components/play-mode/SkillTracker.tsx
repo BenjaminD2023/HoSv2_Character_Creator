@@ -39,70 +39,61 @@ export function SkillTracker({
   }
 
   return (
-    <div className={cn('flex items-center justify-between gap-4 p-3 rounded-lg border bg-card', className)}>
-      <div className="flex flex-col gap-1">
-        <span className="font-medium text-sm">{skill.name}</span>
-        <div className="flex items-center gap-2">
-          <Badge
-            variant={isAtZero ? 'destructive' : isAtMax ? 'default' : 'secondary'}
-            className="text-xs"
-          >
-            {skill.refresh}
-          </Badge>
-          {skill.description && (
-            <span className="text-xs text-muted-foreground line-clamp-1">
-              {skill.description}
-            </span>
-          )}
-        </div>
+    <div className={cn('flex items-center justify-between gap-2 py-2 border-b border-border/50 last:border-0', className)}>
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="font-medium text-sm truncate">{skill.name}</span>
+        <Badge
+          variant={isAtZero ? 'destructive' : isAtMax ? 'default' : 'secondary'}
+          className="text-[10px] px-1.5 py-0 h-4 shrink-0"
+        >
+          {skill.refresh}
+        </Badge>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 shrink-0">
         {showRegainButton && (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={handleRegain}
-            className="h-9 px-2 border-green-500/50 hover:bg-green-500/10"
+            className="h-7 w-7 p-0 text-green-500 hover:text-green-600 hover:bg-green-500/10"
             title="Regain 2 uses (rolled 6 on damage)"
           >
-            <RotateCcw className="h-4 w-4 text-green-500" />
-            <span className="ml-1 text-xs text-green-600">+2</span>
+            <RotateCcw className="h-3.5 w-3.5" />
           </Button>
         )}
 
         <Button
-          variant="outline"
-          size="icon"
+          variant="ghost"
+          size="sm"
           onClick={() => decrementUses(characterId, skillId)}
           disabled={isAtZero}
-          className="h-9 w-9 min-w-[44px] min-h-[44px]"
+          className="h-7 w-7 p-0"
           aria-label={`Decrease ${skill.name} uses`}
         >
-          <Minus className="h-4 w-4" />
+          <Minus className="h-3.5 w-3.5" />
         </Button>
 
         <div
           className={cn(
-            'min-w-[60px] px-3 py-1 rounded-md text-center font-bold text-lg tabular-nums',
+            'min-w-[40px] px-2 py-0.5 rounded text-center font-bold text-sm tabular-nums',
             usageRatio <= 0.25 && 'text-destructive bg-destructive/10',
             usageRatio > 0.25 && usageRatio < 1 && 'text-foreground bg-muted',
             usageRatio >= 1 && 'text-green-600 bg-green-500/10'
           )}
         >
-          {skill.currentUses}
-          <span className="text-muted-foreground text-sm font-normal">/{skill.maxUses}</span>
+          {skill.currentUses}/{skill.maxUses}
         </div>
 
         <Button
-          variant="outline"
-          size="icon"
+          variant="ghost"
+          size="sm"
           onClick={() => incrementUses(characterId, skillId)}
           disabled={isAtMax}
-          className="h-9 w-9 min-w-[44px] min-h-[44px]"
+          className="h-7 w-7 p-0"
           aria-label={`Increase ${skill.name} uses`}
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-3.5 w-3.5" />
         </Button>
       </div>
     </div>

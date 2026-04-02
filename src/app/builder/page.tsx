@@ -30,6 +30,7 @@ type Weapon = {
   damageDice?: string;
   flatDamage?: number;
   mod?: AttributeKey;
+  skillDamageBonus?: { skillName: string; multiplier: number };
 };
 
 type Equipment = {
@@ -109,8 +110,9 @@ type SavedCharacterState = {
   charismaDie: number;
   baseHpModifierAttr: AttributeKey;
   primaryStat: AttributeKey;
+  maxHp: number;
   skills: string[];
-  weapons: { name: string; damageDice?: string; flatDamage?: number; mod?: AttributeKey }[];
+  weapons: { name: string; damageDice?: string; flatDamage?: number; mod?: AttributeKey; skillDamageBonus?: { skillName: string; multiplier: number } }[];
   armorPieces: { name: string; armor: number }[];
   totalStartingArmor: number;
   saves: string[];
@@ -168,8 +170,9 @@ const CLASS_DATA: Record<ClassId, ClassDefinition> = {
     skills: [
       { name: "Ferocious Attack", tier: "basic" },
       { name: "Second Wind", tier: "basic" },
+      { name: "Grappler", tier: "basic" },
       { name: "Block", tier: "intermediate" },
-      { name: "Great Weapon Fighting", tier: "intermediate", once: true },
+      { name: "Great Weapon Fighting", tier: "intermediate" },
       { name: "Enchanted Weapon", tier: "advanced" },
       { name: "Heroic Deed", tier: "advanced", once: true },
       { name: "Rage", tier: "advanced" },
@@ -453,6 +456,21 @@ function BuilderContent() {
   const buildSavedState = useCallback((): SavedCharacterState => {
     const cls = selectedClassId ? CLASS_DATA[selectedClassId] : null;
     const purchasedSkills = cls ? cls.skills.filter((s) => (skillLevels[s.name] ?? 0) > 0).map((s) => s.name) : [];
+    
+    let weapons = cls?.equipment.weapons ?? [];
+    const gwfLevel = skillLevels["Great Weapon Fighting"] ?? 0;
+    if (gwfLevel > 0) {
+      const hasGreatsword = weapons.some(w => w.name === "Greatsword (Great Weapon Fighting)");
+      if (!hasGreatsword) {
+        weapons = [...weapons, {
+          name: "Greatsword (Great Weapon Fighting)",
+          damageDice: "1d10",
+          mod: "strength",
+          skillDamageBonus: { skillName: "Great Weapon Fighting", multiplier: 2 },
+        }];
+      }
+    }
+    
     return {
       version: 1,
       savedAt: new Date().toISOString(),
@@ -477,8 +495,9 @@ function BuilderContent() {
       charismaDie: cls?.charismaDie ?? 6,
       baseHpModifierAttr: cls?.baseHpModifierAttr ?? "strength",
       primaryStat: cls?.baseHpModifierAttr ?? "strength",
+      maxHp: maxHp ?? 10,
       skills: purchasedSkills,
-      weapons: cls?.equipment.weapons ?? [],
+      weapons,
       armorPieces: cls?.equipment.armorPieces ?? [],
       totalStartingArmor: cls?.totalStartingArmor ?? 0,
       saves: cls ? [cls.baseHpModifierAttr, "athletics"] : ["strength", "athletics"],
@@ -495,6 +514,7 @@ function BuilderContent() {
     extraHpRolls,
     manualMode,
     manualStats,
+    maxHp,
     rollBreakdown,
     rolls,
     selectedClassId,

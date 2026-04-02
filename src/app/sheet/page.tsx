@@ -34,6 +34,7 @@ type InventoryItem = {
   flatDamage?: number;
   mod?: AttributeKey;
   customMod?: number;
+  skillDamageBonus?: { skillName: string; multiplier: number };
 };
 
 type CharacterData = {
@@ -102,52 +103,53 @@ const ATTR_GRADIENTS: Record<AttributeKey, string> = {
 };
 
 const SKILL_NAME_TO_ID: Record<string, string> = {
-  'Ferocious Attack': 'ferocious-attack',
-  'Second Wind': 'second-wind',
-  'Block': 'block',
-  'Great Weapon Fighting': 'great-weapon-fighting',
-  'Enchanted Weapon': 'enchanted-weapon',
-  'Heroic Deed': 'heroic-deed',
-  'Rage': 'rage',
-  "Zephyrus' Echo": 'zephyrus-echo',
-  'Indomitable': 'indomitable',
-  'Flexible Shots': 'flexible-shots',
-  'Sneak Attack': 'sneak-attack',
-  'Enchanted Bow': 'enchanted-bow',
-  'Covering Fire': 'covering-fire',
-  'Dash': 'dash',
-  'Precision Attack': 'precision-attack',
-  'Ambush': 'ambush',
-  'Explosive Bounding': 'explosive-bounding',
-  'Lightning Speed': 'lightning-speed',
-  "Immeral's Chaotic Metamagic": 'chaotic-metamagic',
-  "Opheria's Bardic Magic": 'bardic-magic',
-  'Concentration': 'concentration',
-  'Control Time': 'control-time',
-  'Lay on Hands': 'lay-on-hands',
-  'Mass Heal': 'mass-heal',
-  'Holy Smite': 'holy-smite',
-  'Bulwark': 'bulwark',
-  'Quick Heal': 'quick-heal',
-  'Divine Formation I': 'divine-formation-i',
-  'Divine Formation II': 'divine-formation-ii',
-  'Divine Formation III': 'divine-formation-iii',
-  'Holy Aura': 'holy-aura',
-  'Holy Light': 'holy-light',
-  'Clerical Recovery': 'clerical-recovery',
-  'Inspired Insight': 'inspired-insight',
-  'Inspiration': 'inspiration',
-  'Expertise': 'expertise',
-  'Professional Influencer': 'professional-influencer',
-  'Battle Support': 'battle-support',
-  'Deception': 'deception',
-  'Pacify': 'pacify',
-  'Loremaster': 'loremaster',
-  'Soothing Ballad': 'soothing-ballad',
-  "Skald's War Beat": 'skald-war-beat',
-  'Martial Epic': 'martial-epic',
-  'Evasion': 'evasion',
-  'Decoy': 'decoy',
+  'Ferocious Attack': 'fighter-ferocious-attack',
+  'Second Wind': 'fighter-second-wind',
+  'Grappler': 'fighter-grappler',
+  'Block': 'fighter-block',
+  'Great Weapon Fighting': 'fighter-great-weapon-fighting',
+  'Enchanted Weapon': 'fighter-enchanted-weapon',
+  'Heroic Deed': 'fighter-heroic-deed',
+  'Rage': 'fighter-rage',
+  "Zephyrus' Echo": 'fighter-zephyrus-echo',
+  'Indomitable': 'fighter-indomitable',
+  'Flexible Shots': 'archer-flexible-shots',
+  'Sneak Attack': 'archer-sneak-attack',
+  'Enchanted Bow': 'archer-enchanted-bow',
+  'Covering Fire': 'archer-covering-fire',
+  'Dash': 'archer-dash',
+  'Precision Attack': 'archer-precision-attack',
+  'Ambush': 'archer-ambush',
+  'Explosive Bounding': 'archer-explosive-bounding',
+  'Lightning Speed': 'archer-lightning-speed',
+  "Immeral's Chaotic Metamagic": 'wizard-chaotic-metamagic',
+  "Opheria's Bardic Magic": 'wizard-bardic-magic',
+  'Concentration': 'wizard-concentration',
+  'Control Time': 'wizard-control-time',
+  'Lay on Hands': 'priest-lay-on-hands',
+  'Mass Heal': 'priest-mass-heal',
+  'Holy Smite': 'priest-holy-smite',
+  'Bulwark': 'priest-bulwark',
+  'Quick Heal': 'priest-quick-heal',
+  'Divine Formation I': 'priest-divine-formation-i',
+  'Divine Formation II': 'priest-divine-formation-ii',
+  'Divine Formation III': 'priest-divine-formation-iii',
+  'Holy Aura': 'priest-holy-aura',
+  'Holy Light': 'priest-holy-light',
+  'Clerical Recovery': 'priest-clerical-recovery',
+  'Inspired Insight': 'priest-inspired-insight',
+  'Inspiration': 'bard-inspiration',
+  'Expertise': 'bard-expertise',
+  'Professional Influencer': 'bard-professional-influencer',
+  'Battle Support': 'bard-battle-support',
+  'Deception': 'bard-deception',
+  'Pacify': 'bard-pacify',
+  'Loremaster': 'bard-loremaster',
+  'Soothing Ballad': 'bard-soothing-ballad',
+  "Skald's War Beat": 'bard-skald-war-beat',
+  'Martial Epic': 'bard-martial-epic',
+  'Evasion': 'bard-evasion',
+  'Decoy': 'bard-decoy',
 };
 
 function getModifier(value: number): number {
@@ -248,6 +250,7 @@ export default function CharacterSheetPage() {
     diceSize?: number;
     crit?: boolean;
     critFail?: boolean;
+    prone?: boolean;
     mode?: "normal" | "advantage" | "disadvantage";
     roll1?: number;
     roll2?: number;
@@ -296,16 +299,26 @@ export default function CharacterSheetPage() {
         }));
 
         // Convert weapons to inventory format
-        const startingWeapons: InventoryItem[] = (parsed.weapons || []).map((w: { name: string; damageDice?: string; flatDamage?: number; mod?: AttributeKey; customMod?: number }) => ({
-          id: generateId(),
-          name: w.name,
-          quantity: 1,
-          type: "weapon",
-          damageDice: w.damageDice,
-          flatDamage: w.flatDamage,
-          mod: w.mod,
-          customMod: w.customMod,
-        }));
+        const startingWeapons: InventoryItem[] = (parsed.weapons || []).map((w: { name: string; damageDice?: string; flatDamage?: number; mod?: AttributeKey; customMod?: number; skillDamageBonus?: { skillName: string; multiplier: number } }) => {
+          const weapon: InventoryItem = {
+            id: generateId(),
+            name: w.name,
+            quantity: 1,
+            type: "weapon",
+            damageDice: w.damageDice,
+            flatDamage: w.flatDamage,
+            mod: w.mod,
+            customMod: w.customMod,
+            skillDamageBonus: w.skillDamageBonus,
+          };
+          
+          // Auto-add skillDamageBonus for GWF Greatsword if missing
+          if (w.name === "Greatsword (Great Weapon Fighting)" && !w.skillDamageBonus) {
+            weapon.skillDamageBonus = { skillName: "Great Weapon Fighting", multiplier: 2 };
+          }
+          
+          return weapon;
+        });
 
         const charData: CharacterData = {
           name: parsed.characterName || "Unnamed",
@@ -319,7 +332,7 @@ export default function CharacterSheetPage() {
             athletics: parsed.rolls?.[Number(parsed.assignment.athletics)] || 10,
             intelligence: parsed.rolls?.[Number(parsed.assignment.intelligence)] || 10,
           } : { strength: 10, intelligence: 10, athletics: 10 },
-          maxHp: parsed.maxHp || 10,
+          maxHp: parsed.maxHp ?? (((parsed.baseHpRoll ?? 0) + (parsed.extraHpRolls?.reduce((a: number, b: number) => a + b, 0) ?? 0)) || 10),
           xp: parsed.startingXp ?? parsed.xp ?? 0,
           proficiencyBonus: parsed.proficiencyBonus || 2,
           skills: parsed.skills || [],
@@ -511,24 +524,33 @@ export default function CharacterSheetPage() {
     setEditingItem(null);
   };
 
-  const rollDamage = async (weaponName: string, damageDice: string, mod: number) => {
+  const rollDamage = async (
+    weaponName: string,
+    damageDice: string,
+    mod: number,
+    skillDamageBonus?: { skillName: string; multiplier: number; sl: number; bonus: number }
+  ) => {
     if (!isReady) return;
     setShowDice(true);
     const results = await rollDice(damageDice, { theme: "smooth", themeColor: "#E63946" });
-    // Dice stay visible until user clicks close
     const naturalTotal = results.reduce((sum, r) => sum + r.value, 0);
-    const total = naturalTotal + mod;
+    const skillBonus = skillDamageBonus?.bonus ?? 0;
+    const total = naturalTotal + mod + skillBonus;
 
     const diceMatch = damageDice.match(/d(\d+)/);
     const diceSize = diceMatch ? parseInt(diceMatch[1]) : 6;
+    
+    const maxDiceRolled = naturalTotal === diceSize;
+    const isGWFWeapon = weaponName.includes("Great Weapon Fighting");
 
     setRollResult({
       label: weaponName,
       naturalRoll: naturalTotal,
-      modifier: mod,
+      modifier: mod + skillBonus,
       total,
       type: "damage",
       diceSize,
+      prone: maxDiceRolled && isGWFWeapon,
     });
   };
 
@@ -1047,12 +1069,11 @@ export default function CharacterSheetPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Main container - optimized for 2.5k display */}
-      <div className="relative z-10 h-screen p-4 md:p-6 lg:p-8 flex flex-col">
+      <div className="relative z-10 min-h-screen p-2 sm:p-4 md:p-6 flex flex-col">
         {/* Header - Character Identity */}
         <header
           className={cn(
-            "parchment-frame p-4 mb-6 transition-opacity duration-700",
+            "parchment-frame p-3 sm:p-4 mb-3 sm:mb-6 transition-opacity duration-700",
             isLoaded ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
           )}
         >
@@ -1073,7 +1094,7 @@ export default function CharacterSheetPage() {
                 </div>
               </div>
               <div>
-                <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-amber-100 via-amber-200 to-orange-200 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold tracking-tight text-foreground dark:bg-gradient-to-r dark:from-amber-100 dark:via-amber-200 dark:to-orange-200 dark:bg-clip-text dark:text-transparent">
                   {character.name}
                 </h1>
                 <p className="text-sm text-muted-foreground">
@@ -1097,12 +1118,12 @@ export default function CharacterSheetPage() {
           </div>
         </header>
 
-        {/* Main Grid Layout */}
-        <div className="flex-1 grid grid-cols-12 gap-4 min-h-0">
-          {/* Left Column - Stats & XP (4 cols) */}
+        {/* Main Grid Layout - responsive */}
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 min-h-0">
+          {/* Left Column - Stats & XP */}
           <div
             className={cn(
-              "col-span-4 flex flex-col gap-4 transition-opacity duration-700 delay-100",
+              "md:col-span-4 flex flex-col gap-3 sm:gap-4 transition-opacity duration-700 delay-100",
               isLoaded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
             )}
           >
@@ -1236,10 +1257,10 @@ export default function CharacterSheetPage() {
             </div>
           </div>
 
-          {/* Middle Column - HP & Weapons (4 cols) */}
+          {/* Middle Column - HP & Weapons */}
           <div
             className={cn(
-              "col-span-4 flex flex-col gap-4 transition-opacity duration-700 delay-200",
+              "md:col-span-4 flex flex-col gap-3 sm:gap-4 transition-opacity duration-700 delay-200",
               isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             )}
           >
@@ -1581,8 +1602,18 @@ export default function CharacterSheetPage() {
                     weapons.map((w) => {
                       const statMod = w.mod ? getModifier(character.stats[w.mod]) : 0;
                       const customMod = w.customMod || 0;
-                      const totalMod = statMod + customMod;
-                      const hasAnyMod = w.mod || customMod !== 0;
+                      const flatDmg = w.flatDamage || 0;
+                      const baseMod = statMod + customMod + flatDmg;
+                      
+                      const skillBonus = w.skillDamageBonus ? {
+                        ...w.skillDamageBonus,
+                        sl: character.skillLevels[w.skillDamageBonus.skillName] || 1,
+                        bonus: (character.skillLevels[w.skillDamageBonus.skillName] || 1) * w.skillDamageBonus.multiplier,
+                      } : undefined;
+                      
+                      const totalMod = baseMod + (skillBonus?.bonus ?? 0);
+                      const hasAnyMod = w.mod || customMod !== 0 || flatDmg !== 0 || skillBonus;
+                      
                       return (
                         <div
                           key={w.id}
@@ -1594,9 +1625,8 @@ export default function CharacterSheetPage() {
                             {hasAnyMod && (
                               <p className="text-xs text-muted-foreground">
                                 {w.mod && `${ATTR_LABELS[w.mod]} ${formatMod(statMod)}`}
-                                {w.mod && customMod !== 0 && " + "}
-                                {customMod !== 0 && `custom ${formatMod(customMod)}`}
-                                {totalMod !== 0 && ` = ${formatMod(totalMod)}`}
+                                {skillBonus && ` + SL*${skillBonus.multiplier} (${skillBonus.bonus})`}
+                                {flatDmg !== 0 && ` +${flatDmg}`}
                               </p>
                             )}
                           </div>
@@ -1607,7 +1637,7 @@ export default function CharacterSheetPage() {
                               className="h-8 px-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 hover:border-red-500/50"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                rollDamage(w.name, w.damageDice!, totalMod);
+                                rollDamage(w.name, w.damageDice!, baseMod, skillBonus);
                               }}
                               disabled={!isReady}
                             >
@@ -1628,10 +1658,10 @@ export default function CharacterSheetPage() {
             </Card>
           </div>
 
-          {/* Right Column - Skills & Inventory (4 cols) */}
+          {/* Right Column - Skills & Inventory */}
           <div
             className={cn(
-              "col-span-4 flex flex-col gap-4 transition-opacity duration-700 delay-300",
+              "md:col-span-4 flex flex-col gap-3 sm:gap-4 transition-opacity duration-700 delay-300",
               isLoaded ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
             )}
           >
@@ -1680,44 +1710,17 @@ export default function CharacterSheetPage() {
               </CardContent>
             </Card>
 
-            {/* Skills */}
+            {/* Skill & Spellcasting */}
             <Card className="parchment-frame">
               <div className="corner-flourish top-left" />
               <div className="corner-flourish top-right" />
               <div className="corner-flourish bottom-left" />
               <div className="corner-flourish bottom-right" />
-              <CardContent className="p-5">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <Sparkles className="w-3 h-3" />
-                  Skills
-                </p>
-                <div className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto">
-                  {character.skills.map((skill, idx) => (
-                    <Badge
-                      key={skill}
-                      variant="secondary"
-                      className="px-3 py-1.5 text-xs bg-muted border border-border text-muted-foreground hover:bg-muted/80 hover:border-primary/30 hover:text-foreground transition-colors cursor-default"
-                      style={{ animationDelay: `${idx * 20}ms` }}
-                    >
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-
-            {/* Resource Tracker */}
-            <Card className="parchment-frame">
-              <div className="corner-flourish top-left" />
-              <div className="corner-flourish top-right" />
-              <div className="corner-flourish bottom-left" />
-              <div className="corner-flourish bottom-right" />
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-4">
+              <CardContent className="p-3 sm:p-5">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <p className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                     <Shield className="w-3 h-3" />
-                    Resources
+                    Skill & Spellcasting
                   </p>
                   <div className="flex gap-1">
                     <Button
@@ -1735,7 +1738,7 @@ export default function CharacterSheetPage() {
                         onClick={() => setResourceTab('spells')}
                         className="h-7 px-2 text-xs"
                       >
-                        Spell Casting
+                        Spells
                       </Button>
                     )}
                   </div>
@@ -1751,8 +1754,8 @@ export default function CharacterSheetPage() {
                         return null
                       }
                       return {
-                        id: `${classPrefix}-${skillId}`,
-                        level: 1,
+                        id: skillId,
+                        level: character.skillLevels[skillName] || 1,
                       }
                     })
                     .filter(Boolean) as Array<{ id: string; level: number }>
@@ -1764,6 +1767,7 @@ export default function CharacterSheetPage() {
                       characterId={`sheet-${character.name}`}
                       classId={character.className.toLowerCase() as 'fighter' | 'archer' | 'wizard' | 'priest' | 'bard'}
                       skills={mappedSkills}
+                      characterStats={character.stats}
                     />
                   )
                 })()}

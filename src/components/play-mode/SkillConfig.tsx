@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useSkill, useSkillActions, SKILL_DEFINITIONS } from '@/stores/skillStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { Settings, Check } from 'lucide-react'
 
@@ -35,22 +34,17 @@ export function SkillConfig({ skillId, characterId, className }: SkillConfigProp
 
   if (hasOptions) {
     return (
-      <div className={cn('p-3 rounded-lg border bg-card', className)}>
-        <div className="flex items-center gap-2 mb-3">
-          <Settings className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium">{skill.name}</span>
+      <div className={cn('py-2 border-b border-border/50 last:border-0', className)}>
+        <div className="flex items-center gap-2 mb-2">
+          <Settings className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <span className="font-medium text-sm truncate">{skill.name}</span>
           {skill.configValue && (
-            <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded">
+            <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded shrink-0">
               {skill.configValue}
             </span>
           )}
         </div>
-        
-        {skill.description && (
-          <p className="text-sm text-muted-foreground mb-3">{skill.description}</p>
-        )}
-
-        <div className="grid grid-cols-1 gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {definition.configOptions?.map((option) => {
             const isSelected = skill.configValue === option
             return (
@@ -59,12 +53,9 @@ export function SkillConfig({ skillId, characterId, className }: SkillConfigProp
                 variant={isSelected ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handleOptionSelect(option)}
-                className={cn(
-                  'justify-start',
-                  isSelected && 'ring-2 ring-primary ring-offset-2'
-                )}
+                className="h-7 px-2 text-xs"
               >
-                {isSelected && <Check className="h-3 w-3 mr-2" />}
+                {isSelected && <Check className="h-3 w-3 mr-1" />}
                 {option}
               </Button>
             )
@@ -76,36 +67,25 @@ export function SkillConfig({ skillId, characterId, className }: SkillConfigProp
 
   if (isExpertise) {
     return (
-      <div className={cn('p-3 rounded-lg border bg-card', className)}>
-        <div className="flex items-center gap-2 mb-3">
-          <Settings className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium">{skill.name}</span>
+      <div className={cn('py-2 border-b border-border/50 last:border-0', className)}>
+        <div className="flex items-center gap-2 mb-2">
+          <Settings className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <span className="font-medium text-sm truncate">{skill.name}</span>
           {skill.configValue && (
-            <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded">
+            <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded shrink-0">
               +{skill.level} {skill.configValue}
             </span>
           )}
         </div>
-        
-        {skill.description && (
-          <p className="text-sm text-muted-foreground mb-3">{skill.description}</p>
-        )}
-
         <div className="flex gap-2">
-          <div className="flex-1">
-            <Label htmlFor={`${skillId}-expertise`} className="sr-only">
-              Expertise Skill
-            </Label>
-            <Input
-              id={`${skillId}-expertise`}
-              type="text"
-              placeholder="e.g., Persuasion, Stealth, etc."
-              value={textValue}
-              onChange={(e) => setTextValue(e.target.value)}
-              className="h-9"
-            />
-          </div>
-          <Button size="sm" onClick={handleTextSave} disabled={!textValue}>
+          <Input
+            type="text"
+            placeholder="Skill name..."
+            value={textValue}
+            onChange={(e) => setTextValue(e.target.value)}
+            className="h-7 text-xs"
+          />
+          <Button size="sm" onClick={handleTextSave} disabled={!textValue} className="h-7 px-2 text-xs">
             Set
           </Button>
         </div>

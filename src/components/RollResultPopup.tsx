@@ -36,7 +36,7 @@ interface RollResult {
   diceSize?: number;
   crit?: boolean;
   critFail?: boolean;
-  // For advantage/disadvantage display
+  prone?: boolean;
   roll1?: number;
   roll2?: number;
   kept?: "roll1" | "roll2";
@@ -63,6 +63,7 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
   const [isClosing, setIsClosing] = useState(false);
   const isCrit = result?.crit || false;
   const isCritFail = result?.critFail || false;
+  const isProne = result?.prone || false;
 
   const handleClose = useCallback(() => {
     if (isClosing) return;
@@ -102,7 +103,7 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
   return (
     <>
       {/* Full screen cinematic effect for crits */}
-      {(isCrit || isCritFail) && (
+      {(isCrit || isCritFail || isProne) && (
         <div
           onClick={handleClose}
           className={cn(
@@ -116,12 +117,13 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
             className={cn(
               "absolute inset-0 transition-opacity duration-300",
               isCrit && "bg-gradient-to-b from-yellow-500/20 via-amber-500/10 to-transparent",
-              isCritFail && "bg-gradient-to-b from-red-600/30 via-red-900/20 to-transparent"
+              isCritFail && "bg-gradient-to-b from-red-600/30 via-red-900/20 to-transparent",
+              isProne && !isCrit && !isCritFail && "bg-gradient-to-b from-purple-500/20 via-violet-500/10 to-transparent"
             )}
           />
 
           {/* Static glow effect instead of animated particles */}
-          <CritGlow isCrit={isCrit} isCritFail={isCritFail} />
+          <CritGlow isCrit={isCrit || isProne} isCritFail={isCritFail} />
 
           {/* Center banner for crit */}
           <div
@@ -134,22 +136,25 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
               className={cn(
                 "px-12 py-6 rounded-2xl border-2",
                 isCrit && "bg-gradient-to-r from-yellow-500/90 via-amber-500/90 to-yellow-500/90 border-yellow-300 shadow-2xl shadow-yellow-500/50",
-                isCritFail && "bg-gradient-to-r from-red-600/90 via-red-800/90 to-red-600/90 border-red-400 shadow-2xl shadow-red-600/50"
+                isCritFail && "bg-gradient-to-r from-red-600/90 via-red-800/90 to-red-600/90 border-red-400 shadow-2xl shadow-red-600/50",
+                isProne && !isCrit && !isCritFail && "bg-gradient-to-r from-purple-500/90 via-violet-500/90 to-purple-500/90 border-purple-300 shadow-2xl shadow-purple-500/50"
               )}
             >
               <div className="flex items-center gap-4">
                 {isCrit && <Sparkles className="w-12 h-12 text-white" />}
                 {isCritFail && <Skull className="w-12 h-12 text-white" />}
+                {isProne && !isCrit && !isCritFail && <Sparkles className="w-12 h-12 text-white" />}
                 <div>
                   <p className={cn("text-4xl font-black text-white uppercase tracking-wider", isCrit && "text-shadow-lg")}>
-                    {isCrit ? "Critical Success!" : "Critical Fail!"}
+                    {isCrit ? "Critical Success!" : isCritFail ? "Critical Fail!" : isProne ? "Target Prone!" : ""}
                   </p>
                   <p className="text-xl text-white/90 font-bold mt-1">
-                    Rolled a {result.naturalRoll}!
+                    {isProne && !isCrit && !isCritFail ? "Max damage rolled!" : `Rolled a ${result.naturalRoll}!`}
                   </p>
                 </div>
                 {isCrit && <Sparkles className="w-12 h-12 text-white" />}
                 {isCritFail && <Skull className="w-12 h-12 text-white" />}
+                {isProne && !isCrit && !isCritFail && <Sparkles className="w-12 h-12 text-white" />}
               </div>
             </div>
           </div>
@@ -160,7 +165,11 @@ export function RollResultPopup({ result, onClose }: RollResultPopupProps) {
             style={{
               background: isCrit
                 ? "radial-gradient(circle at center, transparent 30%, rgba(234, 179, 8, 0.2) 70%, rgba(234, 179, 8, 0.3) 100%)"
-                : "radial-gradient(circle at center, transparent 30%, rgba(220, 38, 38, 0.3) 70%, rgba(220, 38, 38, 0.4) 100%)",
+                : isCritFail
+                ? "radial-gradient(circle at center, transparent 30%, rgba(220, 38, 38, 0.3) 70%, rgba(220, 38, 38, 0.4) 100%)"
+                : isProne
+                ? "radial-gradient(circle at center, transparent 30%, rgba(139, 92, 246, 0.2) 70%, rgba(139, 92, 246, 0.3) 100%)"
+                : "none",
             }}
           />
         </div>

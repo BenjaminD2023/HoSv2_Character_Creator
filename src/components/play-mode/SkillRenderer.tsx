@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useEffect } from 'react'
 import { Sword, Crosshair, Sparkles, Shield, Music } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { useSkillStore, SKILL_DEFINITIONS } from '@/stores/skillStore'
 import { SkillTracker } from './SkillTracker'
@@ -10,12 +10,18 @@ import { SkillToggle } from './SkillToggle'
 import { SkillConfig } from './SkillConfig'
 import { SkillPassive } from './SkillPassive'
 import { SkillAction } from './SkillAction'
+import { SkillExpertiseRoll } from './SkillExpertiseRoll'
 import { DivineFormationConfig } from './DivineFormationConfig'
 
 interface SkillRendererProps {
   characterId: string
   classId: 'fighter' | 'archer' | 'wizard' | 'priest' | 'bard'
   skills: Array<{ id: string; level: number }>
+  characterStats?: {
+    strength: number
+    intelligence: number
+    athletics: number
+  }
 }
 
 const CLASS_ICONS = {
@@ -34,8 +40,8 @@ const CLASS_COLORS = {
   bard: 'text-purple-500',
 }
 
-export function SkillRenderer({ characterId, classId, skills }: SkillRendererProps) {
-  const { initializeSkills, characterSkills } = useSkillStore()
+export function SkillRenderer({ characterId, classId, skills, characterStats }: SkillRendererProps) {
+  const { initializeSkills } = useSkillStore()
   const hasInitialized = useRef(false)
 
   useEffect(() => {
@@ -53,6 +59,7 @@ export function SkillRenderer({ characterId, classId, skills }: SkillRendererPro
       configs: [] as typeof skills,
       passives: [] as typeof skills,
       actions: [] as typeof skills,
+      expertiseRolls: [] as typeof skills,
       divineFormation: null as typeof skills[0] | null,
     }
 
@@ -84,24 +91,20 @@ export function SkillRenderer({ characterId, classId, skills }: SkillRendererPro
         case 'Action':
           result.actions.push(skill)
           break
+        case 'ExpertiseRoll':
+          result.expertiseRolls.push(skill)
+          break
       }
     })
 
     return result
   }, [skills])
 
-  const Icon = CLASS_ICONS[classId]
-  const colorClass = CLASS_COLORS[classId]
-
   const hasContent = skills.length > 0
 
   if (!hasContent) {
     return (
-      <Card>
-        <CardContent className="p-8 text-center">
-          <p className="text-muted-foreground">No skills available for this character</p>
-        </CardContent>
-      </Card>
+      <p className="text-sm text-muted-foreground py-2">No skills available</p>
     )
   }
 
@@ -112,10 +115,11 @@ export function SkillRenderer({ characterId, classId, skills }: SkillRendererPro
     ...categorizedSkills.configs.map(s => ({ ...s, type: 'config' as const })),
     ...categorizedSkills.passives.map(s => ({ ...s, type: 'passive' as const })),
     ...categorizedSkills.actions.map(s => ({ ...s, type: 'action' as const })),
+    ...categorizedSkills.expertiseRolls.map(s => ({ ...s, type: 'expertise-roll' as const })),
   ]
 
   return (
-    <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+    <div className="space-y-0">
       {categorizedSkills.divineFormation && classId === 'priest' && (
         <DivineFormationConfig characterId={characterId} />
       )}
@@ -125,7 +129,7 @@ export function SkillRenderer({ characterId, classId, skills }: SkillRendererPro
 
         if (skill.type === 'toggle-tracker') {
           return (
-            <div key={skill.id} className="space-y-2">
+            <div key={skill.id}>
               <SkillToggle skillId={skill.id} characterId={characterId} />
               <SkillTracker skillId={skill.id} characterId={characterId} />
             </div>
@@ -156,7 +160,11 @@ export function SkillRenderer({ characterId, classId, skills }: SkillRendererPro
         }
 
         if (skill.type === 'action') {
-          return <SkillAction key={skill.id} skillId={skill.id} characterId={characterId} />
+          return <SkillAction key={skill.id} skillId={skill.id} characterId={characterId} characterStats={characterStats} />
+        }
+
+        if (skill.type === 'expertise-roll') {
+          return <SkillExpertiseRoll key={skill.id} skillId={skill.id} characterId={characterId} characterStats={characterStats} />
         }
 
         return null
